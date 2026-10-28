@@ -1,0 +1,8 @@
+[package]
+name = "fireline"
+version = "0.0.0"
+edition = "2024"
+description = "Reserved name: the interface crates (both sides of each interface) between Fuel and the other ML projects, one crate per interface. Placeholder, no functionality yet."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ThinkersJournal/fireline"
+readme = "README.md"
