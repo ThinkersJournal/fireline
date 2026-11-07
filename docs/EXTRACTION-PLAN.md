@@ -1,0 +1,163 @@
+# FireLine extraction plan (task 2, draft for the PM)
+
+2026-11-07, FireLine lane. Inputs: `docs/SEAM-INVENTORY.md` (PR #2, head `12b9195`) and the Fuel, Unpopped#315 and KISS plans named there.
+Facts carry the inventory's verified / PEER / UNVERIFIED marks; this page proposes, it decides nothing. Crate names are placeholders.
+
+## 1. Rules this plan applies (CireSnave, 2026-10-25/28 via HANDOFF)
+One project, one crate per interface; pre-1.0 a break moves that crate's SECOND digit alone; crates meet at a common version at majors; **consumers require `~` or exact, never `^`**, enforced by a CI check in every consumer and here. Only what has no dependency on a project's internals moves. Not an Ant.
+
+## 2. What moves, in order
+
+| Wave | Crate (placeholder) | Takes | Retires | Why this position |
+|---|---|---|---|---|
+| 1 | `fireline-announce` | `SeamHello`, `SEAM_MAGIC`, caps, `negotiate_with_role` | `fuel-kernel-seam-announce` (0 published dependents, C4) and the copy in `baracuda-seam` | dependency-free; kills the only **duplicate** wire definition; fewest consumers |
+| 1 | `fireline-grammar` | `OpTag`, `OpAttrs`, `RegionKey`, `PatternNode`, `UnresolvedAttr`, region conversion | `fuel-kernel-seam-types` (6 published dependents, 3 outside Fuel's own graph crates) | Fuel-to-producer seam hurts now (HANDOFF) |
+| 1 | `fireline-synth` | `Synthesizer`, `Jit*`, `SynthArtifact`, `LinkEntry` | `fuel-kernel-seam` (3 dependents) | depends on grammar |
+| 2 | `fireline-ir`, `-lowering`, `-caps` | Unpopped IR, `Backend` contract, capability sets | moved items of `unpopped` (re-exported under old paths) | 5 emitter/parser crates break at once on type identity: one coordinated window |
+| 2 | `fireline-vocab` | `unpopped-vocab` | itself | already a leaf; rename needs KISS citation agreement |
+| 3 | KISS codec crates | structure_key, region wire, contract, announce, OpAttrs, `shape_expr` | private copies | blocked on KISS 0.9.0 (section 4) |
+| all | `fireline-conformance` | one suite both sides run (inventory C, Fuel note section 5, Unpopped 6, KISS) | `unpopped-conformance` | built first for each wave, red before the move |
+
+**Stays put:** `kiss-vulkan-vocab` (vulkane's by KISS-Classify 6.8; vulkane's answer), `baracuda-cuda-vocab` (baracuda agrees, 2026-11-07: no baracuda crate depends on it, 0 crates.io dependents, control `baracuda-cuda-emit` returns 1; KISS cites it in `spec/namespaces/cuda.md:15` with a stale pre-transfer GitHub link), `mlmf-core` (already one published crate shared by Fuel and ml-convertant), the planner and lifts in Unpopped, OpenAI-compatible API (a wire format with a Python consumer; at most a golden request/response corpus later). Nothing for lightbulb, OverMind or Synapse (inventory B, C2, C3).
+
+## 3. Conflicts, as options (not picked for the lanes)
+
+**A. Who owns the grammar crate.** Fuel's plan moves `fuel-kernel-seam-types` as FireLine's grammar crate; KISS's plan moves a region codec out of `kiss-conformance` as `fireline-kiss-region`. Both encode the same region wire.
+- Option 1: one crate, built from Fuel's types, validated against KISS vectors (KISS plan: truth flows spec, vectors, crates; KISS CI never imports FireLine). No second codec in FireLine.
+- Option 2: two crates (Fuel's types; KISS wire codec) with a conformance test that they agree. More drift surface.
+- **Recommend option 1.** Agreed by the PM and by Fuel (2026-11-07, `op_to_tag`/`match_region` stay graph-side in Fuel); KISS pending. Needs Fuel + KISS + PM agreement; `shape_expr` follows the grammar crate for now (Fuel's proposal), golden vectors stay KISS's.
+
+**B. Timing of the first release.** Fuel: waves 1 now. KISS: after its 0.9.0 batch (breaking wire changes). Unpopped: all start at 0.1.0.
+- Option 1: wave 1 now at 0.1.0; KISS crates and any 0.9.0-shaped changes land later as second-digit bumps (cheap, because each crate versions alone).
+- Option 2: wait for 0.9.0 before anything. Delays the seam that hurts.
+- **Recommend option 1**: per-crate versioning is exactly what makes an early release safe. KISS's concern applies to the KISS codec crates, which are wave 3 here. A CireSnave ruling is needed only on "start at 0.1.0" (Unpopped's open question, HANDOFF: common number at majors).
+
+**C. `Frontend`/`lift_*`/`convert` (vulkane and fishstringer import them; Unpopped#315 keeps them).** Option 1 keep in Unpopped, consumers keep `unpopped` with `~` (thin); option 2 a `fireline-frontend` crate. **Recommend 1** until a parser outside Unpopped's tree needs it independently; `convert` pulls tree-sitter, which would force FireLine to carry a `links =` dependency.
+
+**D. Capability names.** FDX vs DLPACK_EXT, PROVISION_ON_REQUEST vs JIT_ON_REQUEST: KISS Announce lane decides; FireLine freezes bits 0-5, 32, 33 and leaves 34/35 provisional, with the check that no side advertises a provisional bit (baracuda's addition).
+
+## 4. How each side migrates (one coordinated breaking release, once)
+
+Each consumer's PR swaps its private copy or `^` pin for `~` FireLine requirements, deletes the retired crate, and adds the tilde check and a single-copy check (`cargo tree -d` shows one version of each FireLine crate). Order: FireLine publishes, patent sweep first (`PATENT-SWEEP.md`); Fuel and baracuda each build against the published crates; both release; the old crates stay published until both land. baracuda keeps one release re-exporting FireLine's `SeamHello` so a graph never holds two. Per the Fuel note: Fuel rewrites 37 files mechanically; baracuda's `tests/seam_pin.rs` (caret-only) is rewritten to require `~`.
+
+## 5. Ease rule (EXPECTATIONS 6.24: hello-world first)
+Each crate ships with a runnable example that does the smallest real thing (announce: negotiate a profile between two in-process roles; grammar: round-trip one `PatternNode`; synth: a mock `Synthesizer` through `synthesize` then `take_kernel`). A crate with no such example is not released.
+
+## 6. Tests that fail on drift
+Per wave: golden bytes and offsets, negotiation matrix, grammar round trip against KISS vectors, mock-synthesizer live call, single-copy check, and "every advertised capability is allocated". Seed a mutant per check (rename a bit, reorder a field, drop a variant) and show each caught, red-first.
+
+## 7. Patent sweep
+Before any publish, `PATENT-SWEEP.md` is completed for each crate; provenance for anything vendored from KISS (generated tables, vectors) keeps its record and licence.
+
+## 8. Next, and who must answer
+Task 3: skeleton workspace + tilde-lint, then wave 1 `fireline-announce`, red-first. **Needs:** Fuel + KISS (A, D), PM (B's version start, C), baracuda (answered: nothing outside `baracuda-seam` links its copy; 0 crates.io dependents; private repos outside `C:\Projects` not checked), an `[ASK]` to CireSnave only if the PM wants his ruling on B. Unmeasured: wave 2's real consumer count (Unpopped#315 is unmerged), whether `artifact` can be cut from `capset`.
+
+## 9. Every backend against the seam (PM task 2026-11-07, for CireSnave: "What about Fuel's other backends? Vulkane? AOCL? etc.")
+
+Measured at Fuel `origin/main@d010189e` by reading each backend's `Cargo.toml` with a TOML parser (names below are its dependency tables) and `git grep`; the Fuel lane's own table (notice 2026-11-07, "not built/run") agrees except where marked. "Seam" means the kernel seam (announce, grammar, synth); "lowering" means Unpopped's `Backend::lower` contract. Control for the grep shape: it finds `fuel_kernel_seam*` in `fuel-dispatch` and `fuel-kiss-ref-backend`, so a null elsewhere means absent, not unreadable.
+
+| Backend | Crosses seam today | Crosses lowering | What it is instead (evidence) | Meant to join later? | Depends on if it did |
+|---|---|---|---|---|---|
+| **CUDA** `fuel-cuda-backend`, `fuel-cuda-dispatch` | **Only the JIT path.** The static kernels (cuBLAS, cuDNN, cutlass through `baracuda-*`) are custom wiring: `fuel-tensor/src/cpu_accel.rs` `ensure_installed` calls `fuel_cuda_dispatch::install_global()`. The seam is used only for JIT synthesis. The backend crates name no seam crate; `fuel-dispatch` does: `Cargo.toml:47` `fuel-kernel-seam`, `:76` `baracuda-cuda-seam`, features `jit` (`:180`) and `jit-synth` (`:185`); `src/jit_adopt.rs:29` `use fuel_kernel_seam::{JitRequest, JitResponse, SynthArtifact, Synthesizer}` | via baracuda: `baracuda-cuda-emit` implements `Backend` (Unpopped#315 census, PEER) | calls vendor libs only through `baracuda-*` crates (`fuel-cuda-backend/Cargo.toml` deps: `baracuda-cublas`, `-cudnn`, `-cutlass`, `-nccl`, `-nvrtc`, `-driver`, ...) | the JIT path is already on the seam; the static kernels are not (section 10) | announce, grammar, synth (wave 1) for JIT; the provider track (section 10) for the rest |
+| **Vulkan** `fuel-vulkan-backend`, `-dispatch`, `-kernels` | **No.** Deps: `vulkane`, `fuel-vulkan-kernels` (committed SPIR-V, per its manifest description), no seam crate; `src/lib.rs:39` `use vulkane::safe::*` | no (Fuel does not call a Vulkane emitter; Vulkane's emitters are Unpopped backends) | Fuel-internal: hand-built SPIR-V plus the `vulkane` Vulkan wrapper; installs its table via `fuel_vulkan_dispatch::install_global` (`fuel-tensor/src/cpu_accel.rs`) | Fuel ROADMAP row 52 "Vulkan synthesis and verification for the ingestion service": open, low urgency, **not scheduled** (Fuel lane); intent of CireSnave **UNVERIFIED** | announce + grammar + synth; and a Vulkane/Slang provider that implements synth (nothing exists: vulkane uses no Fuel seam crate, its own grep) |
+| **Metal** `fuel-metal-backend`, `-kernels` | No | No | `objc2`, `objc2-metal`, `objc2-foundation` only (manifests); kernels not wired to the binding table (Fuel lane, ROADMAP row 49: NOT re-read by me) | none stated | same as Vulkan |
+| **AOCL CPU** `fuel-aocl-cpu-backend` | No | No | `aocl-blas`, `aocl-types`; registered into Fuel's own binding table behind feature `aocl`: `fuel-tensor/src/cpu_accel.rs:84` calls `register_aocl_cpu_kernels` | none stated | not a kernel producer; would need a synthesizer wrapper |
+| **MKL CPU** `fuel-mkl-cpu-backend` | No | No | `onemkl`; `cpu_accel.rs:72` calls `register_mkl_cpu_kernels` behind feature `onemkl` | none stated | as AOCL |
+| **CPU** `fuel-cpu-backend` | No | No | `gemm`, optional `intel-mkl-src`/`accelerate-src` (features `mkl`, `accelerate`), `fuel-cpu-kernels` | none stated | as AOCL |
+| **KISS reference** `fuel-kiss-ref-backend` | **Grammar only**: `Cargo.toml:14` `fuel-kernel-seam-types`; `src/lib.rs:18` `use fuel_kernel_seam_types::OpTag` | no | an op-tag-to-KISS adapter over `kiss-ref-core`, no GPU | n/a (a checker, not a device) | grammar (wave 1) |
+| **baracuda** (provider) | **Yes for JIT: both sides of announce and synth**: `baracuda-seam` (own `SeamHello` copy), `baracuda-cuda-seam` (`Synthesizer`) | yes (`baracuda-cuda-emit`, 92 `unpopped::ir` imports, PEER) | | already | wave 1 and wave 2 |
+| **vulkane** emitters (`vulkane-slang-emit`, `-spirv-emit`, `-hlsl-emit`) | **No Fuel seam crate** (vulkane's own grep, with control) | **Yes**: `unpopped 0.43.2`, `unpopped-vocab` | Unpopped back ends; HLSL also uses `convert` | already, via Unpopped | wave 2 |
+| **fishstringer** (Slang emitter + parser) | No | **Yes** (`Backend`, `Lowering`, `KernelPlan`, `Frontend`; its own report) | | already | wave 2 |
+| **ROCm / HIP** | **Does not exist.** No crate named rocm/hip/amd in Fuel, baracuda, Unpopped, vulkane, KISS, fishstringer, mlmf or lightbulb at `origin/main`; `Rocm` is only a topology enum variant (`fuel-parallel/src/topology.rs:42`); Fuel's own audit says "Fuel has no ROCm/HIP backend" (`docs/design-notes/2026-10-30-qwen35-27b-audit.md:124`) | n/a | Fuel ROADMAP: "Blocked on whatever Rust FFI we settle on for ROCm" (`ROADMAP.md:2420`) | **UNVERIFIED**; a backend contract doc names it as a future pluggable backend (`docs/architecture/05-backend-contract.md:397`, `:611`), which is Fuel's own contract, not the seam | would be a new provider on announce + grammar + synth, or an Unpopped emitter (wave 2) |
+| **OpenCL** | **Not a backend.** It appears as a source language Unpopped's `convert` lifts (Unpopped `CHANGELOG`: `lift_elementwise` from OpenCL C; openclownfish X2); no OpenCL crate exists | via `convert`, a front end | | n/a | stays in Unpopped (section 3 C) |
+
+**Findings for the lanes.**
+1. **Only CUDA's JIT path, through baracuda, crosses the kernel seam today** (CUDA's static kernels are Fuel-internal wiring too). Every other device backend is Fuel-internal (a vendor library or hand-built kernels called directly) and imports no seam crate. The HANDOFF reading "every kernel-executing backend implements the same seam" is **not true of the code**; it holds only as an intent, and no Fuel ROADMAP row except Vulkan (52, unscheduled) puts another backend on it. **Superseded by CireSnave 2026-11-07 (via the PM, verbatim): "All Fuel backends will talk with Fuel via FireLine.  Unpopped will also talk with Fuel via FireLine.  We should have a clean seam between Fuel and each external thing it connects to.  Custom wiring one directly into Fuel is the wrong approach.  That most likely means AOCL, oneMKL, and the rest need to change."** The question is now how, not whether: section 10.
+2. **Wave 1 (announce, grammar, synth) changes code in Fuel and baracuda only** (Fuel: `fuel-graph` 25 `.rs`, `fuel-dispatch` 6, `fuel-kiss-ref-backend` 4, per Fuel's note; baracuda: `baracuda-seam`, `baracuda-cuda-seam`). No Vulkan, Metal, AOCL, MKL or CPU crate needs a change.
+3. **Wave 2 changes code in Unpopped and its emitters** (vulkane's three, fishstringer's two, `baracuda-cuda-emit`): a type-identity change, one window.
+4. **Not later or never any more:** the vendor-library and other backends follow wave 1 through the provider track (section 10).
+5. **Correction owed by Fuel's table:** it says the AOCL and MKL registrars have "0 callers (row 49)". At `d010189e` both are called (`fuel-tensor/src/cpu_accel.rs:72`, `:84`), feature-gated, and `fuel-ir/tests/registrar_callers.rs` guards it; the module doc says it was a bug fixed. Still Fuel-internal either way.
+
+## 10. Provider adoption: every Fuel boundary onto the seam (PM task 2026-11-07, CireSnave ruling quoted in section 9 finding 1)
+
+Measured at Fuel `origin/main@d010189e` unless marked. **Rule applied:** FireLine holds interfaces only; a provider implementation lives in its own project and depends on FireLine crates by `~` version, never the reverse. **Fuel's core then knows only the seam.**
+
+### 10.1 What the seam already covers, and what it does not
+
+Kernel-Seam Interop Profile v1 (`docs/specs/kernel-seam-interop.md`, Fuel) already names a **"future FKC provider: any backend shipping kernels"** (section 1 table, line 54ff) with full FDX (DLPack-extension buffers), FKC (kernel contracts) and optional JIT; its obligations are in section 4.3 (lines 266-279). KISS-Announce (KISS `6780c09`) defines three stages: handshake (6.1), **kernel availability** as identity triples `(structure_key, op_identity, revision_hash)` (6.3), and **contract queries** (6.4), with `PROVISION_ON_REQUEST` (bit 32) as only the build-on-miss branch of provision. So a vendor library that serves **prebuilt** entry points is, on paper, an FKC provider with bit 32 unset: nothing in the standard requires it to synthesise. What is missing is in **code**, not in the standard:
+
+| Piece a provider needs | Standard | Rust implementation today | FireLine crate |
+|---|---|---|---|
+| Handshake | KISS-Announce 6.1, 7 | two copies (inventory A1) | `fireline-announce` (wave 1, built) |
+| Region grammar + JIT call | KISS-Grammar, Synth | `fuel-kernel-seam-types`, `fuel-kernel-seam` | `fireline-grammar`, `fireline-synth` (wave 1) |
+| Buffers across the seam (DLPack + sidecar, FDX) | Fuel `docs/specs/dlpack-extension.md` (a Fuel spec, not KISS's) | `fuel-ir/src/dlpack/{abi,codes,sidecar,header_check}.rs` (about 1,000 lines importing only `core`) and `include/fuel_dlpack_ext.h`; `convert.rs` imports Fuel's `DType`/`Extent`/`BackendId`, so it stays; `validate.rs` (1,816 lines) imports `abi`, `codes`, `sidecar` in its `use` list, **whether it needs more UNVERIFIED** | **`fireline-dlpack`** (new, a move, no design) |
+| Availability list and contract-query frames | KISS-Announce 6.3, 6.4 | KISS `kiss-conformance` reference codecs (`publish = false`) and Fuel's FKC importer in `fuel-dispatch` | `fireline-contract` (KISS plan's `fireline-kiss-contract` plus the frames) |
+| **The callable**: how a consumer invokes a provider's entry point | FKC 12.6 `link_registry: &[(symbol, KernelRef)]` | `KernelRef` and `KernelBindingTable` are **Fuel dispatch types** (`fuel-dispatch/src/kernel.rs:961`); `ArtifactKind` is only `Ptx` and `Cubin` | **none: this is the gap** |
+
+### 10.2 The hard question: a vendor-library provider (a BLAS call, not a synthesised kernel)
+
+- **Option P1, cover it with the existing crates plus small additions.** The provider announces availability and answers contract queries without bit 32; `ArtifactKind` (add `#[non_exhaustive]`) gains a native-symbol kind; Fuel keeps `KernelRef` for binding. Cheapest, but the callable stays defined by Fuel's dispatch types, so a provider still has to link Fuel's types: **that is the custom wiring CireSnave ruled out.**
+- **Option P2, a new interface crate `fireline-provider` (types only).** It defines the neutral callable: a C-ABI entry signature over FDX tensors (`*const DLTensor` plus sidecars, an execution context, a typed status), a `ProviderRegistry` (`symbol -> entry`) that replaces `KernelRef` at the seam, and the provider trait (announce, availability, contract query, bind). The synthesizer becomes one capability of a provider (bit 32). Fuel needs **one** generic adapter that turns a bound entry into a `KernelBindingTable` row; every backend then looks the same to it.
+- **Option P3, keep per-backend glue behind a Fuel-side trait.** What exists (`fuel-backend-contract`). Not neutral and not shared: rejected by the ruling.
+- **Recommendation: P2, built in this order, each step with a hello-world first (EXPECTATIONS 6.24):** (1) `fireline-dlpack`, a pure move that any provider needs and that has no design question; (2) `fireline-contract`; (3) `fireline-provider`, proved by **one pilot vendor-library provider end to end** before any other backend moves. Pilot choice is open (10.4): the CPU `gemm` path runs on hosted CI with no vendor library; AOCL and oneMKL need a self-hosted runner (Fuel's own `cpu_accel.rs` notes "no hosted runner has oneMKL or AOCL"; CireSnave 2026-10-16: such tests run on self-hosted runners).
+
+**Open for Fuel and the KISS Provision/Consume owners** (asked 2026-11-07): is the FDX ABI + FKC contract + a C-ABI entry enough for a provider that never synthesises; who owns the callable's signature (Fuel's FKC 12.6 or KISS-Provision); does `ImplId` / `structure_key` already identify a vendor entry point such as an `sgemm`; async and stream model (vulkane asked the same, (d)); and cross-provider copies (a Vulkan buffer-device-address is meaningful only inside one `VkDevice`, vulkane's question (a)).
+
+### 10.3 Every boundary: provider, owner, what moves, order
+
+"Fuel dependencies today" are the backend crate's own `Cargo.toml` dependency names (TOML-parsed); each is a type the provider must stop depending on.
+
+| # | Boundary | Provider crate (placeholder) and owner | Fuel dependencies today (to cut) | What leaves Fuel's workspace | Order |
+|---|---|---|---|---|---|
+| 0 | **CUDA JIT** | exists: `baracuda-cuda-seam` (baracuda) | none new | nothing; swap `fuel-kernel-seam*` for FireLine (wave 1) | **wave 1** |
+| 1 | **Unpopped to Fuel** | `fireline-vocab` (FireLine). Unpopped's note: Fuel depends on `unpopped-vocab 0.43.2` **only** (no core, no cpu-c, no `Backend`), used by `fuel-dispatch` (feature `jit`), `fuel-kernel-seam`, `fuel-kernel-seam-types`; about 22 `ElementKind` and 21 `OperandDesc` sites, `ArchSku` hand-mapped in `baracuda_provider.rs` (Unpopped lane, at `d010189e`). Fuel never calls Unpopped at run time | none beyond the vocab | nothing (vocab is already a leaf) | **wave 2**, trivial: a rename and a `~` pin; the first Fuel use of `fireline-ir`/`-lowering` would be the unstarted Slang row (Unpopped's note) |
+| 2 | **CPU / `gemm`** | provider in a new project, owner **decision needed** (10.4) | `fuel-backend-contract`, `fuel-cpu-kernels`, `fuel-ir`, `fuel-quantized`, plus `accelerate-src`, `intel-mkl-src` features | `fuel-cpu-backend`, `fuel-cpu-kernels` | pilot candidate |
+| 3 | **AOCL CPU** | provider wrapping `aocl-blas`/`aocl-types` (crates.io owner `ciresnave`, repo `ciresnave/aocl`) | `fuel-conv`, `fuel-cpu-backend`, `fuel-dispatch`, `fuel-ir`, `fuel-memory` | `fuel-aocl-cpu-backend`, its `register_aocl_cpu_kernels` call in `fuel-tensor/src/cpu_accel.rs:84` | after the pilot |
+| 4 | **oneMKL CPU** | provider wrapping `onemkl` (owner `ciresnave`, repo `ciresnave/onemkl`) | same set | `fuel-mkl-cpu-backend`, call at `cpu_accel.rs:72` | after the pilot |
+| 5 | **Vulkan** | `vulkane-fireline` in vulkane's repo (vulkane's recommendation, mine too: FireLine holds no providers) over `vulkane` plus kernel supply from FishStringer (Slang to SPIR-V). Vulkane has the safe API, three Unpopped emitters and the vocab, **no provider yet** (vulkane lane, `f7fa204`) | `fuel-conv`, `fuel-graph`, `fuel-ir`, `fuel-vulkan-kernels`, `fuel-backend-contract`; Fuel pins `vulkane 0.9.0`, so a vulkane publish comes first | `fuel-vulkan-backend`, `-dispatch`, `-kernels`; the `install_global` call in `cpu_accel.rs` | after AOCL/oneMKL; Fuel ROADMAP rows 52 and 101 touch it |
+| 6 | **Metal** | new provider over `objc2-metal` (upstream-owned, not ours); **owner decision needed**; no Metal lane or hardware here (UNVERIFIED) | `fuel-backend-contract`, `fuel-cpu-backend`, `fuel-ir`, `fuel-quantized`; kernels never wired (Fuel ROADMAP row 49) | `fuel-metal-backend`, `-kernels` | last; cannot be CI-tested here |
+| 7 | **CUDA static kernels** (cuBLAS, cuDNN, cutlass, nccl) | provider in baracuda (it already holds `baracuda-cublas`, `-cudnn`, `-cutlass`, `-nccl`) | `fuel-backend-contract`, `fuel-cpu-backend`, `fuel-graph`, `fuel-ir`, `fuel-quantized` | `fuel-cuda-backend`, `fuel-cuda-dispatch` | largest; after the pilot. `jit_cuda_load` moving to `fuel-cuda-dispatch` in Fuel #617 should wait for the design |
+
+**Other things Fuel connects to** (same ruling, not in the table above): `kiss-ref-core`/`kiss-ops-vocab`/`kiss-classify-vocab` (published crates behind `fuel-kiss-ref-backend`; KISS plan wave 3) and `mlmf-core` (a published crate already shared with ml-convertant, inventory B; whether Fuel's requirement on it is a tilde is **UNVERIFIED**). Both are already crates.io boundaries rather than custom wiring.
+
+### 10.4 Rulings needed (to go to CireSnave as an [ASK] through the PM)
+
+1. **Where do provider implementations live?** Recommended: each in its own project (baracuda, vulkane, a new project for CPU, vendor-CPU and Metal), none in FireLine, so FireLine stays interface-only. Alternative: one `fireline-providers` project. This decides who the CPU, AOCL, oneMKL and Metal owners are.
+2. **Is the reference CPU backend also a provider**, or does Fuel keep one built-in CPU path as the fallback so it can run with no provider installed? "Fuel's core knows only the seam" can be read either way, and the answer sets whether `fuel-cpu-backend` leaves the workspace.
+3. **The pilot.** Recommended: the CPU `gemm` path first (hosted CI, no vendor library, so the seam is proved without a self-hosted runner), then AOCL.
+
+Not measured: the size of each cut (how many Fuel types each backend uses beyond its manifest list), Metal ownership, anything needing hardware I cannot run. No code moves until Fuel and the KISS owners answer 10.2.
+
+### 10.5 Fuel's answers to 10.2 (Fuel lane, `d010189e`, static reads, not built; received 2026-11-07)
+
+- **P2 agreed.** Fuel will adopt whatever signature FireLine/KISS-Provision fixes, provided it carries **tensors and sidecars, an attrs blob, an execution context and a typed status**. Fuel does not insist on FKC 12.6.
+- **Callable (1):** Fuel's `KernelRef` is `fn(inputs: &[Arc<RwLock<Storage>>], outputs: &mut [..], layouts: &[Layout], params: &OpParams) -> Result<()>` (`fuel-dispatch/src/kernel.rs:187`). For an `sgemm`-class entry the tensors suffice, the attrs do not: `OpParams::Matmul { lhs_batch_dims, rhs_batch_dims, m, n, k, m_compute }`; `m`, `n`, `k`, batch dims and strides fall out of `DLTensor` shape, strides and byte offset, but **`m_compute` (`MatmulM::Rows`, at most `m`, the rest left zeroed) does not**, so the entry takes **canonical `OpAttrs` bytes from the grammar crate**, an **execution context** (threads or queue) and a **typed status**. Fuel's matmul has no alpha/beta today. Quantised formats ride the FDX sidecar, not `DLTensor`.
+- **Identity (2):** `ImplId = (backend, op, dtypes, kernel_source, kernel_revision_hash: u64)` (`fuel-dispatch/src/telemetry/impl_id.rs`); `kernel_source` already names vendors (`VENDOR_SOURCES`: cublas, cudnn, cutlass, rocblas, mkl, aocl, onednn); `structure_key` rides the FDX operand description. **Gap: no entry-point symbol in `ImplId`** (derived from the `kernel_source` tag until FKC `entry_point` is threaded) and `revision_hash` is 0 (untracked) for non-FKC kernels; what the AOCL/MKL registrations carry was not checked. A `u64` maps to KISS's new 8-byte hash.
+- **`fireline-dlpack` (3): yes.** `fuel-ir/src/dlpack/validate.rs` uses only `super::{abi, codes, sidecar}` plus `thiserror` with a local error type; its tests import only `crate::dlpack::{abi, sidecar}`. Sizes: `abi` 121, `codes` 326, `sidecar` 544, `header_check` 320 (private, checks `include/fuel_dlpack_ext.h`), `validate` 1,816 plus tests. `convert.rs` stays in Fuel. Outside users: `fuel-ir/src/stype.rs`, `fuel-memory/src/dlpack_view.rs`; `fuel-ir` can `pub use fireline_dlpack::{abi, codes, sidecar, validate}` so those paths survive. This **closes** the `validate.rs` UNVERIFIED in 10.1.
+- **The one Fuel adapter (4)** turns a bound entry into `KernelBindingTable::register_full_with_source` (`kernel.rs:1119`: `OpKind`, `&[DType]` key, `BackendId`, `KernelRef`, `KernelCaps`, `PrecisionGuarantee`, cost fn). It needs `OpKind`, `DType`, `BackendId`, `KernelRef`, `KernelCaps`, `PrecisionGuarantee`, `OpParams` (to build the attrs blob), `Storage` + `Layout` (to build `DLTensor` + sidecar), and `ImplId`/`kernel_source`. **Precision and cost must come from the provider's contract**, where today they are hand-written per registrar (AOCL: `PrecisionGuarantee { bit_stable_on_same_hardware.. }`, `unknown_cost`).
+- **Pilot (5): CPU `gemm`, then AOCL.** Beyond hosted CI: the `(MatMul, F32, Cpu)` slot is where mkl and aocl already register as siblings of the portable kernel and the Judge picks, so a `gemm` provider exercises the whole path (discover, bind, pick, run) with no vendor library. Fuel's constraints: **provider discovery must finish before the bridge snapshots the global table** (`fuel-tensor/src/cpu_accel.rs` `ensure_installed`; `tests/vulkan_install_before_snapshot.rs`), else its kernels are invisible with no error; and gemm-vs-scalar tolerances are sabotage-calibrated, not inherited (accumulation order differs).
+- **Not decided on Fuel's side:** async/stream model and cross-device copies; Fuel's own plan (after publish, #617 and wave 1) takes the answer from FireLine/KISS.
+
+**Consequence for `fireline-provider`:** its entry signature is `(tensors + sidecars, attrs bytes, context, status)`; a provider **contract** must carry precision and cost (not only availability); the entry identity needs the symbol and a real revision hash; discovery has an ordering rule (before the first snapshot). Still open: KISS-Provision's answer on who owns the signature, and async/stream/cross-device.
+
+### 10.6 KISS's answer (KISS lane, `origin/main` `6780c09`, grep; received 2026-11-07)
+
+**Not ruled.** No KISS clause pins how a consumer **invokes** a provider's entry: `consume.md:449` and `announce.md:402` only call the artifact "callable", and there is **no `spec/provision.md`** at that ref. KISS therefore treats "who owns the callable signature" as a design ruling and has sent it to the PM for CireSnave rather than choosing. KISS's recommendation: **KISS-Provision/Consume owns the callable signature, with Fuel's FKC `KernelRef` mapping onto it.** The same applies to the availability-list and contract-query codecs (`SAVL`, `CYRQ`, `CRSP`, `CDEC`) as a `fireline-contract` crate validated against KISS vectors: KISS will not claim it until ruled.
+
+**Effect on the plan:** `fireline-dlpack` (a pure move, Fuel confirmed) does not wait on this and can start now. `fireline-contract` and `fireline-provider` wait on the ruling. If CireSnave rules for KISS ownership, the signature is specified in KISS first and FireLine implements it (truth flows spec, vectors, crates); if for Fuel, FKC 12.6 is extended and KISS adopts it. Either way Fuel has said it will adopt the result (10.5), so the order of crates in 10.2 holds.
+
+## 11. Migration hazards found by building wave 1 (for Fuel and baracuda; measured at Fuel `d010189e`, baracuda `8bf6705b`)
+
+Moving a crate left three kinds of coupling behind that no compiler reports:
+1. **A guard that stays behind.** `PatternNode` is `EXHAUSTIVE-BY-DESIGN` (baracuda's `region_op_id` matches it exhaustively), enforced by Fuel's `fuel-ir/tests/exhaustive_by_design_marker.rs`. Once the type leaves Fuel that scan cannot see it: Fuel's own reach assertion (`EXPECTED_MARKED` lists `PatternNode`) goes red, and FireLine would have had no guard. **Done:** `fireline-grammar` carries `tests/exhaustive_by_design.rs` (both arms sabotage-checked). **Fuel to do:** drop `PatternNode` from `EXPECTED_MARKED` in the same PR as the move.
+2. **Tests cited by file path.** `fuel-dispatch/tests/kiss_clause_ledger.rs` names tests as `fuel-kernel-seam-types/src/...` and `.../tests/kiss_ops_619_divergence.rs::...` (lines 234, 352, 360, 368, 377, 386, 395 at `d010189e`). The move invalidates those paths. **Fuel to do:** repoint them to `fireline-grammar` (a path in a sibling repo, or a published-crate citation, whichever the ledger supports; whether it can cite outside the workspace is Fuel's to say).
+3. **Rules that conflict.** Unpopped's plan says every public enum is `#[non_exhaustive]`; `PatternNode` must not be. **Resolved in `fireline-grammar` by the marker and its guard**: a closed-by-design enum is a declared exception, and the guard keeps the two exclusive. Unpopped's `fireline-ir` rule should name the same exception.
+
+Also deferred from wave 1: baracuda's region conversion (`to_internal`, `hash_region`, `region_op_id`, `MAX_REGION_DEPTH`) converts to `unpopped::PatternNode`, so it cannot live in the dependency-free grammar crate; it waits for wave 2, when Unpopped's IR types have a FireLine home.
+
+**Two more, found by the Fuel lane (2026-11-07, `d010189e`, static) because my search covered only `.rs` files:**
+4. `fuel-ir/tests/crate_dependency_tiers.txt` names the seam crates (a tier list that a ratchet reads): the move changes the list.
+5. `docs/provenance/FILES.tsv` rows and the packaged-notice copies for the three crates (`spdx_header_ratchet`, regenerated by `scripts/provenance.py`).
+And a note on item 2: the ledger must cite wherever the divergence test lands (`fireline-grammar/tests/kiss_ops_619_divergence.rs`), and its `test:` path format may need a cross-repo form.
+
+**Method lesson for every migrating lane:** before moving a crate, search the **whole tree, every file type** (`.rs`, `.txt`, `.tsv`, `.toml`, `.md`, `.yml`), for the crate's name, path and each of its tests' names; a Rust-only grep found two of five. Fuel will make the wave-1 PR when the crates are published: it needs the crate names and versions (`fireline-announce`, `fireline-grammar`, each `0.1.0`, once published).
