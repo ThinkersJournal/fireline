@@ -6,7 +6,7 @@ CireSnave 2026-11-07, verbatim: "Yes." (wave 1 now, each crate at 0.1.0). And: "
 
 ## State (19:05Z)
 - main = 6878008, 0.0.4 (#1 to #4 merged: inventory, skeleton + lint, plan + patent first pass + one shared `[workspace.package]` version).
-- **PR #5** `lane/fireline-lint-fixes` 8e1d9a8, version 0.0.5 PROVISIONAL (PM restamps), OPEN, `[READY]` sent 19:03Z: Pip's three Low findings on #3. Worktree `C:/Projects/fireline-wt-skeleton`.
+- #5 (Pip's three Low findings on #3) MERGED 19:21Z as 818ba46, kept 0.0.5; its branch and worktree are gone. main = 818ba46.
 - **Next PR: `lane/fireline-docs-addendum`** (this worktree, built from main 6878008 + one commit): patent addendum (ideas 4 and 11 searched, US 10,936,769 row 6, needs-review for Fuel's formula) + plan section 12 (`fireline-dlpack` whole-tree findings, Fuel's and KISS's answers) + this HANDOFF. Needs a version stamp (0.0.6 if #5 merges first) = edit `[workspace.package]` + CHANGELOG, `cargo metadata`, commit, `verify2.sh`, push, PR. Old branch `lane/fireline-patent-add` is its backup; delete after the docs PR merges.
 - Then the three crate PRs, one at a time, `[READY]` each, naming the CodeRipper [High] version-consistency finding in each body (PM merges past the advisory check; coderipper lane is adding a per-interface mode; NEVER silence it): `lane/fireline-announce` 95bf99f, `lane/fireline-grammar` ed30aee, `lane/fireline-synth` 6328855 (stacked on grammar). They sit on 6accbcb: rebase each onto the new main (`git rebase --onto origin/main 6accbcb <branch>`; synth onto the new grammar tip with `--onto <grammar tip> ed30aee`), resolve Cargo.toml `members`/`default-members` and Cargo.lock by hand + `cargo metadata`, CHANGELOG by hand, add a root version bump at the PM's stamp, check shape and sign, commit, `verify2.sh`, push. The three crates must NOT use `version.workspace` (their own version, 0.1.0); crate source files may need an SPDX header if the sweep flags them. Worktrees `C:/Projects/fireline-wt-{announce,grammar,synth}`.
 
@@ -16,7 +16,7 @@ CireSnave 2026-11-07, verbatim: "Yes." (wave 1 now, each crate at 0.1.0). And: "
 
 ## Decided / open
 Grammar option A. Frontend/lift/convert stay in Unpopped. Caps `DLPACK_EXT`, `PROVISION_ON_REQUEST`; bits 34/35 not allocated here. Fuel agrees P2 (`fireline-provider`, plan 10) and will do its wave-1 PR once crates are PUBLISHED (send names + versions). `fireline-contract` and `fireline-provider` wait for CireSnave's ruling on who owns the provider callable (plan 10.6). Region conversion waits for wave 2 (needs `unpopped`).
-**FDX spec home (plan 12): asked 18:12Z; Fuel confirmed the couplings and agrees (a) the spec moves with the code; KISS keeps (a) as its working assumption and asked the PM about adopting FDX; the PM rules.** It blocks only the join test (`dlpack_spec_validator_join.rs`), not the crate. KISS's `rfcs/d7-fdx-successor-sidecar.md` is UNREAD: read it before fixing `fireline-dlpack`'s API.
+**FDX spec home (plan 12): asked 18:12Z; Fuel confirmed the couplings and agrees (a) the spec moves with the code; KISS keeps (a) as its working assumption and asked the PM about adopting FDX; the PM rules.** It blocks only the join test (`dlpack_spec_validator_join.rs`), not the crate. KISS's `rfcs/d7-fdx-successor-sidecar.md` is READ (plan 12): adopted as an informative annex, wire form undecided; `fireline-dlpack` implements FDX, not "the" quantisation sidecar, and must not be documented as the final interface.
 
 ## Next (do not wait to be told)
 1. As each PR merges: clean up (capture status + HEAD, remove worktree/branch, verify the remote branch absent with a positive control), then open the next in the order above.
@@ -24,7 +24,7 @@ Grammar option A. Frontend/lift/convert stay in Unpopped. Caps `DLPACK_EXT`, `PR
 3. `fireline-dlpack`, red-first, as a pure move from Fuel `origin/main` `fuel-ir/src/dlpack/{abi,codes,sidecar,header_check,validate(+tests)}.rs` + `include/fuel_dlpack_ext.h` (`convert.rs` STAYS in Fuel; `fuel-ir` re-exports so paths survive). Plan 12 lists the 7 couplings Fuel must repoint (CI legs and anchor test name, the fuel-dispatch text-read test and its hand-copied table, the join test, `fdx_field_coverage.py`, the path-keyed allowlists and FILES.tsv). Needs its own `docs/PATENT-SWEEP.md` entry before any publish.
 4. Not measured: size of each backend cut; Metal ownership; whether Fuel's `fuel-loaders` requirement on `mlmf-core` is a tilde; the reserved-bytes mechanism and the unread patents in `docs/PATENT-SWEEP.md`.
 
-WAIT: PR #5 merged | check: gh pr view 5 --json state,mergedAt | wake: 2026-11-07T20:00:00Z
+WAIT: docs PR merged (open it after verification) | check: gh pr view 6 --json state,mergedAt | wake: 2026-11-07T21:00:00Z
 WAIT: fireline queue branches still pushed (work safe) | check: git ls-remote --heads origin lane/fireline-synth | wake: 2026-11-07T21:00:00Z
 
 ## Housekeeping
