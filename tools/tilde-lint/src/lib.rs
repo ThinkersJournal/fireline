@@ -43,18 +43,40 @@ fn check_req(req: &str) -> Result<(), String> {
         };
         return Err(format!("`{req}` is {why}; use `~x.y` or `=x.y.z`"));
     };
-    let rest = rest.trim();
-    let valid = rest.starts_with(|c: char| c.is_ascii_digit())
-        && rest
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
-    if valid {
+    if is_version(rest.trim()) {
         Ok(())
     } else {
         Err(format!(
-            "`{req}` is not a numeric `~x.y` or `=x.y.z` requirement"
+            "`{req}` is not a well-formed `~x[.y[.z]]` or `=x.y.z` requirement (numeric core of 1 to 3 parts, optional `-pre` and `+build`)"
         ))
     }
+}
+
+/// `x[.y[.z]][-pre][+build]`: a numeric core of one to three non-empty digit parts, then optional dot-separated, non-empty
+/// `[0-9A-Za-z-]` identifiers after `-` and after `+`. Narrower than a free "looks like digits" test, so `0.1..2`, `0.`, `1.x` and `1.2.3.4` fail here
+/// rather than at Cargo's resolve time.
+fn is_version(v: &str) -> bool {
+    let identifiers_ok = |ids: &str| {
+        !ids.is_empty()
+            && ids.split('.').all(|id| {
+                !id.is_empty() && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+            })
+    };
+    let (before_build, build) = match v.split_once('+') {
+        Some((b, build)) => (b, Some(build)),
+        None => (v, None),
+    };
+    let (core, pre) = match before_build.split_once('-') {
+        Some((c, p)) => (c, Some(p)),
+        None => (before_build, None),
+    };
+    let parts: Vec<&str> = core.split('.').collect();
+    (1..=3).contains(&parts.len())
+        && parts
+            .iter()
+            .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+        && pre.is_none_or(identifiers_ok)
+        && build.is_none_or(identifiers_ok)
 }
 
 fn check_entry(table: &str, key: &str, value: &Value, out: &mut Vec<Violation>) {
@@ -127,6 +149,28 @@ pub fn check_manifest(text: &str) -> Result<Vec<Violation>, String> {
             for kind in KINDS {
                 if let Some(t) = body.get(kind).and_then(Value::as_table) {
                     check_table(&format!("target.{cfg}.{kind}"), t, &mut out);
+                }
+            }
+        }
+    }
+    // `[patch.<registry>]` can swap the source of any dependency, so it is the same bypass as a direct `git` or `path` dependency
+    // (the `[patch.crates-io]` unification hack this project exists to retire). `[replace]` is legacy Cargo and is not read.
+    if let Some(patches) = doc.get("patch").and_then(Value::as_table) {
+        for (registry, body) in patches {
+            let Some(entries) = body.as_table() else {
+                continue;
+            };
+            for (key, value) in entries {
+                let package = value.get("package").and_then(Value::as_str).unwrap_or(key);
+                let sourced_elsewhere = ["git", "path", "registry"]
+                    .iter()
+                    .any(|k| value.get(k).is_some());
+                if is_fireline(package) && sourced_elsewhere {
+                    out.push(Violation {
+                        table: format!("patch.{registry}"),
+                        name: key.clone(),
+                        reason: "a `[patch]` entry that replaces a FireLine crate with a `git`, `path` or other-registry source; FireLine crates come from crates.io".into(),
+                    });
                 }
             }
         }
