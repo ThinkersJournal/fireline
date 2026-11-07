@@ -9,9 +9,9 @@ readme = "README.md"
 
 [workspace]
 resolver = "3"
-members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar"]
+members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar", "crates/synth"]
 # Without this, a bare `cargo test` / `clippy` / `build` covers only the root package and CI would skip every member.
-default-members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar"]
+default-members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar", "crates/synth"]
 
 # The one project version: the root package and every non-interface tool inherit it (`version.workspace = true`), so a bump is one edit and the tools
 # cannot drift from it (CodeRipper version-consistency). Interface crates (crates/*) do NOT inherit it: each versions by its own interface.
