@@ -17,6 +17,10 @@ name = "fireline-announce"
 version = "0.1.0"
 
 [[package]]
+name = "fireline-grammar"
+version = "0.1.0"
+
+[[package]]
 name = "fireline-tilde-lint"
 version = "0.0.7"
 dependencies = [
