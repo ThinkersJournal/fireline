@@ -6,7 +6,7 @@ this is the Rust implementation both sides compile, so neither can drift from th
 
 - **Dependency-free.** No region grammar, no graph types.
 - **Require it with a tilde** (`fireline-announce = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
-- **Hello world:** `cargo run -p fireline-announce --example hello_world`, or the doctest on the crate root.
+- **Hello world:** `cargo run -p fireline-announce --example announce_hello_world`, or the doctest on the crate root.
 
 ## Provenance
 
