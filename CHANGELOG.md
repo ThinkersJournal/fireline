@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.9] - 2026-11-07
+
+- New crate `fireline-synth` 0.1.0 (not published): the kernel-seam JIT-on-request envelope, the `Synthesizer` trait and the `JitRequest`, `JitBudget`, `JitResponse`, `SynthArtifact` and `LinkEntry` types, moved from Fuel's `fuel-kernel-seam`. It depends on `fireline-grammar ~0.1` and `unpopped-vocab 0.43.2`. The root version here is provisional; the crate versions by its own interface.
+
 ## [0.0.8] - 2026-11-07
 
 - New crate `fireline-grammar` 0.1.0 (not published): the kernel-seam region grammar (`OpTag`, `OpAttrs` with canonical bytes, `RegionKey`, `PatternNode`, the shape-expression codec), moved from Fuel's `fuel-kernel-seam-types` with a guard that keeps `PatternNode` a closed enum. The root version here is provisional; the crate versions by its own interface.
