@@ -25,8 +25,8 @@ Grammar option A. Frontend/lift/convert stay in Unpopped. Caps `DLPACK_EXT`, `PR
 3. `fireline-dlpack`, red-first, as a pure move from Fuel `origin/main` `fuel-ir/src/dlpack/{abi,codes,sidecar,header_check,validate(+tests)}.rs` + `include/fuel_dlpack_ext.h` (`convert.rs` STAYS in Fuel; `fuel-ir` re-exports so paths survive). Plan 12 lists the 7 couplings Fuel must repoint (CI legs and anchor test name, the fuel-dispatch text-read test and its hand-copied table, the join test, `fdx_field_coverage.py`, the path-keyed allowlists and FILES.tsv). Needs its own `docs/PATENT-SWEEP.md` entry before any publish.
 4. Not measured: size of each backend cut; Metal ownership; whether Fuel's `fuel-loaders` requirement on `mlmf-core` is a tilde; the reserved-bytes mechanism and the unread patents in `docs/PATENT-SWEEP.md`.
 
-WAIT: docs PR merged (open it after verification) | check: gh pr view 6 --json state,mergedAt | wake: 2026-11-07T21:00:00Z
-WAIT: fireline queue branches still pushed (work safe) | check: git ls-remote --heads origin lane/fireline-synth | wake: 2026-11-07T21:00:00Z
+WAIT: docs PR merged (open it after verification) | check: gh pr view 6 --json state,mergedAt | wake: 2026-11-07T21:45:00Z
+WAIT: fireline queue branches still pushed (work safe) | check: git ls-remote --heads origin lane/fireline-synth | wake: 2026-11-07T21:45:00Z
 
 ## Housekeeping
 Untracked `supertool` in this worktree is not mine; never add it. Primary checkout `C:/Projects/fireline` is on main at 6b7bb3e (stale; `tools/sync-checkouts.sh` fast-forwards it; not mine to force).
