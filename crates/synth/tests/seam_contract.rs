@@ -2,12 +2,12 @@
 //! Contract tests for the synthesizer envelope, relocated from the inline `mod tests` of Fuel's `fuel-kernel-seam` (Fuel `d010189e`).
 //! They use only the public API, so they are the same test a provider's own crate can run against its `Synthesizer`.
 
-use fireline_synth::*;
-use unpopped_vocab::{ArchSku, OperandDesc};
 use fireline_grammar::{OpAttrs, OpTag, PatternNode};
+use fireline_synth::*;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use unpopped_vocab::ElementKind;
+use unpopped_vocab::{ArchSku, OperandDesc};
 
 fn relu_add() -> PatternNode {
     PatternNode::Op {
