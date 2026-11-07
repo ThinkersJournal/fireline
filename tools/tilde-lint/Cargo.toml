@@ -1,6 +1,6 @@
 [package]
 name = "fireline-tilde-lint"
-version = "0.0.3"
+version.workspace = true
 edition = "2024"
 description = "CI check: every requirement on a FireLine crate must be a tilde or exact version, never a caret (or an implicit one)."
 license = "MIT OR Apache-2.0"
