@@ -10,7 +10,7 @@ Two steps, so a kernel the consumer's cost gate declines costs nothing: `synthes
   may be in a build**, or `OperandDesc` is two different types; wave 2 replaces it with a FireLine vocabulary crate.
 - What is **not** here: how a consumer adopts an artifact (import the contract, load, bind, register the fused op). That needs the consumer's
   dispatch layer and stays with it.
-- **Hello world:** `cargo run -p fireline-synth --example hello_world`.
+- **Hello world:** `cargo run -p fireline-synth --example synth_hello_world`.
 
 ## Provenance
 
