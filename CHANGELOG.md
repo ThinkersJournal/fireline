@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.8] - 2026-11-07
+
+- New crate `fireline-grammar` 0.1.0 (not published): the kernel-seam region grammar (`OpTag`, `OpAttrs` with canonical bytes, `RegionKey`, `PatternNode`, the shape-expression codec), moved from Fuel's `fuel-kernel-seam-types` with a guard that keeps `PatternNode` a closed enum. The root version here is provisional; the crate versions by its own interface.
+
 ## [0.0.7] - 2026-11-07
 
 - New crate `fireline-announce` 0.1.0 (not published): the kernel-seam handshake, the frozen 56-byte `SeamHello`, capability bits and role-aware negotiation, merged from Fuel's `fuel-kernel-seam-announce` and baracuda's `baracuda-seam`. The root version here is provisional; the crate versions by its own interface.
