@@ -1,0 +1,12 @@
+[package]
+name = "fireline-tilde-lint"
+version = "0.0.3"
+edition = "2024"
+description = "CI check: every requirement on a FireLine crate must be a tilde or exact version, never a caret (or an implicit one)."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ThinkersJournal/fireline"
+# Not published yet: consumers run it from a FireLine checkout until the PM publishes it.
+publish = false
+
+[dependencies]
+toml = "1.2"

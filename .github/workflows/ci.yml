@@ -46,6 +46,9 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --locked --no-deps
 
+      - name: tilde lint (FireLine crates are required with ~ or =, never ^)
+        run: cargo run --locked -p fireline-tilde-lint
+
   deny:
     name: cargo deny (advisories, licences, bans, sources)
     runs-on: ubuntu-latest
