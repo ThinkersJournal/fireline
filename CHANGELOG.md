@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.5] - 2026-11-07
+
+- Tilde lint: `[patch]` tables are scanned, untracked manifests are included, requirement versions are validated strictly, and a manifest listed but missing on disk is reported instead of aborting the run (reviewer findings on #3, each reproduced first). Tool only; nothing published.
+
 ## [0.0.4] - 2026-11-07
 
 - Extraction plan (`docs/EXTRACTION-PLAN.md`, sections 1-11) and the lane HANDOFF.
