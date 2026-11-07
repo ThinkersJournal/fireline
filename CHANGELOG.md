@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.7] - 2026-11-07
+
+- New crate `fireline-announce` 0.1.0 (not published): the kernel-seam handshake, the frozen 56-byte `SeamHello`, capability bits and role-aware negotiation, merged from Fuel's `fuel-kernel-seam-announce` and baracuda's `baracuda-seam`. The root version here is provisional; the crate versions by its own interface.
+
 ## [0.0.6] - 2026-11-07
 
 - Patent sweep addendum (ideas 4 and 11 searched, two more patents read), plan section 12 (`fireline-dlpack` whole-tree findings and the open FDX-spec-home decision), and the lane HANDOFF. Docs only.
