@@ -53,7 +53,10 @@ Search was the web-search tool restricted to `patents.google.com` (US-only index
 | Q3 | 7, 8, 9 | `patent region identity key hash of fused operator subgraph structure excluding scalar values kernel cache neural network canonical encoding of operation attributes` |
 | Q4 | 10 | `patent symbolic tensor shape expression serialization wire format evaluator dynamic shape dimension arithmetic expression kernel provider` |
 
-**Not searched at all:** idea 4 (advertise only allocated bits), idea 11 (ULP band), and idea 1's reserved-bytes mechanism specifically. The Q1 to Q4 results are single-pass; none of them is a claim-language or CPC-class search.
+| Q5 | 4 | `patent verifying advertised capability bits against registry of allocated bits reserved provisional bit rejected handshake extension negotiation` (added later the same day, see the addendum) |
+| Q6 | 11 | `patent numerical tolerance for fused kernel computed from per-operation ulp error ceilings sum transcendental functions verifying generated kernel against reference` (addendum) |
+
+**Not searched at all:** idea 1's reserved-bytes mechanism specifically. Ideas 4 and 11 were searched once each (Q5, Q6; addendum). The Q1 to Q6 results are single-pass; none of them is a claim-language or CPC-class search.
 
 ## Hits
 
@@ -69,6 +72,19 @@ Read by me: the **independent claims in full** (all three claim blocks of each),
 
 **Rows 1 and 2 have an in-force term to about 2030 on Google's estimate**, which is longer than the 2027 the '680 page was reported to show; any "wait for expiry" reasoning must cite 2030.
 
+### Addendum 2026-11-07 (later): ideas 4 and 11, searched at the PM's request
+
+Same method and reading standard as above: independent claims read in full by me.
+
+| # | Patent | Title | Assignee | Status (Google) | Claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 6 | US 10,936,769 B2 | Systems and methods for measuring error in terms of unit in last place | MathWorks Inc | Active | 1, 34, 35, 46, 49 (independent; 5 blocks) | The claims need an **executable simulation model** with model elements, **a lookup of stored ULP error values for each element**, **inferring those values through the model**, **computing a total ULP error value**, and **presenting it** (claims 1, 34, 35) or **generating code** for part of the model (claims 46, 49). The nearest hit for idea 11: summing per-op ULP ceilings into a tolerance for a fused region is a per-element lookup propagated into a total. | The three crates **compute no ULP value at all**: `fireline-grammar` holds only a table of *expected results* (`advisory_band_reference_cases`), a test fixture that pins two formulas implemented elsewhere (Fuel `fuel_dispatch::jit_ingest::advisory_ulp_band` and `fuel_kiss_ref_backend::region_advisory_tolerance`). Even for those, whether a neural-network computation graph is "an executable simulation model that simulates a behavior of a system" is a limiting term I cannot settle. | **clear** for the three crates (they perform none of the claimed steps). **needs-review for the formula where it is implemented** (Fuel and kiss-ref), to the PM and Fuel. |
+| 7 | US 8,493,857 B2 | Multiple logical channels for use in network devices | Broadcom Corp (now Avago) | Expired - Fee Related; estimate 2022-12-15 (Google) | 1, 8 (independent) | The only reason it surfaced is Q5's "capability bits exchanged during a handshake" in its description. | The claims are about **flow control between network devices**: a congestion flow message, an Ethernet frame interpreted as a pause frame, halting selected packets. Nothing resembles an envelope or a capability word. Also expired on Google's estimate. | **clear** |
+
+**Idea 4 (advertise only allocated capability bits): one search, no matching patent found.** Q5 surfaced TLS handshake-extension and capability-verification families (WO 2015/032732 A1, US 2016/0182232 A1, US 9,668,139 B2, WO 2010/027314 A1) and other capability-register patents (US 9,036,643, US 8,023,413, US 7,372,899 B2, EP 1997344 A1); **none of those claims was read**, so they carry no verdict. A search that finds nothing proves nothing: this is "not found in one pass", not "clear".
+
+**Design gate extension:** if the ULP-band formula (or any per-op error-ceiling aggregation) ever moves into a FireLine crate, US 10,936,769 must be re-read against that code before the release.
+
 ### Design gate (binding on later releases)
 
 Rows 1 and 2 are "clear" **only because the crates contain no selection step and no kernel library.** `fireline-provider` (plan section 10, vendor-library providers announcing **prebuilt entry points**) is precisely a precompiled, processor-specific kernel in a library, and a consumer that chooses among providers per operation is the "choosing a type of processing element" step. **No FireLine crate may take on either step without re-reading US 8,458,680 and US 8,108,844 first**, and that re-read goes to the PM before release. The same applies to Fuel's own Judge; that is Fuel's record.
@@ -81,13 +97,14 @@ US 4,953,210 A (feature negotiation protocol, synchronous modem; a 1980s family,
 
 1. **US 2023/0025245 A1** (Nvidia, pending): see row 3. Re-check the USPTO record for a grant and read the granted claims before the first publish; Fuel already carries it as medium for Fuel as a whole.
 2. **The design gate** above, for any future crate that selects a processing element or serves prebuilt kernels.
+3. **US 10,936,769 B2** (MathWorks): clear for these crates, but the fused-region ULP band formula in Fuel and kiss-ref is not swept by this record; row 6.
 
 ## Limitations
 
 - AI-assisted search and reading; not legal advice; not a freedom-to-operate opinion; a lawyer's review is a separate purchase.
-- The idea list is written by the lane from the code and its own design notes; a mechanism nobody wrote down is not swept. **Ideas 4 and 11 and the reserved-bytes part of idea 1 were not searched.**
+- The idea list is written by the lane from the code and its own design notes; a mechanism nobody wrote down is not swept. **The reserved-bytes part of idea 1 was not searched on its own**; ideas 4 and 11 were searched once each (addendum).
 - Search covered one query per idea group through a US-only web index limited to `patents.google.com`; USPTO, Espacenet and WIPO were not searched directly; no CPC-class or inventor search was run. A search that finds nothing proves nothing.
-- Only **five** patents were read by this lane, independent claims only. **Nine of Fuel's twelve rows and every "surfaced, not read" patent were not read by me.** Claim text is machine-converted; check the official record before relying on a quotation.
+- Only **seven** patents were read by this lane (five in the first pass, two in the addendum), independent claims only. **Nine of Fuel's twelve rows and every "surfaced, not read" patent were not read by me.** Claim text is machine-converted; check the official record before relying on a quotation.
 - Statuses, expiry dates and fee states are Google's display and estimates; **no USPTO record, prosecution history, term adjustment, maintenance-fee state or foreign family was checked.**
 - The comparison is a static reading of the three crates at the swept branches; nothing was run for this purpose.
-- Pacing: 4 searches and 5 claim fetches, spread across the session; no HTTP 503 was seen.
+- Pacing: 6 searches and 7 claim fetches, spread across the session; no HTTP 503 was seen.
