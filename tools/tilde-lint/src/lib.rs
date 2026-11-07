@@ -242,4 +242,62 @@ mod tests {
     fn malformed_toml_is_an_error_not_a_pass() {
         assert!(check_manifest("[dependencies\n").is_err());
     }
+
+    #[test]
+    fn a_patch_table_cannot_substitute_a_git_or_path_source_for_a_fireline_crate() {
+        // [patch.crates-io] can swap any dependency's source, so it is the same bypass as a direct `git` dependency.
+        let git = "[patch.crates-io]\nfireline-a = { git = \"https://github.com/ThinkersJournal/fireline\" }\n";
+        let path = "[patch.crates-io]\nfireline-b = { path = \"../b\" }\n";
+        let other_registry = "[patch.'https://example.com/index']\nfireline-c = { path = \"x\" }\n";
+        let renamed = "[patch.crates-io]\nx = { package = \"fireline-d\", git = \"https://example.com/d\" }\n";
+        assert_eq!(
+            bad(git),
+            [("patch.crates-io".to_string(), "fireline-a".to_string())]
+        );
+        assert_eq!(names(&bad(path)), ["fireline-b"]);
+        assert_eq!(
+            bad(other_registry),
+            [(
+                "patch.https://example.com/index".to_string(),
+                "fireline-c".to_string()
+            )]
+        );
+        assert_eq!(names(&bad(renamed)), ["x"]);
+    }
+    #[test]
+    fn a_patch_table_for_other_crates_is_none_of_this_lints_business() {
+        assert!(
+            bad("[patch.crates-io]\nserde = { git = \"https://github.com/serde-rs/serde\" }\n")
+                .is_empty()
+        );
+    }
+    #[test]
+    fn a_requirement_must_be_a_well_formed_version_not_just_digit_like() {
+        for req in [
+            "~0.1..2",
+            "~0.",
+            "~.1",
+            "~1.2.3.4",
+            "~0.1-",
+            "~1.x",
+            "=1.0.0-",
+            "~0.1.2+",
+            "~1.2.3-a..b",
+            "~ ",
+        ] {
+            let m = format!("[dependencies]\nfireline-a = \"{req}\"\n");
+            assert_eq!(bad(&m).len(), 1, "{req:?} should be refused");
+        }
+        for req in [
+            "~1",
+            "~1.2",
+            "~1.2.3",
+            "~0.1.2-alpha.1",
+            "=1.0.0-rc.1+build.5",
+            "=1.0.0+20260101",
+        ] {
+            let m = format!("[dependencies]\nfireline-a = \"{req}\"\n");
+            assert!(bad(&m).is_empty(), "{req:?} should pass");
+        }
+    }
 }
