@@ -32,9 +32,9 @@ codecs (Fuel, KISS ref, whatever baracuda decodes with) (PEER). (c) `baracuda-cu
 | Model/weight loading (`mlmf-*`: gguf, safetensors, onnx, pt2, ...) | Fuel loaders, lightbulb, ml-convertant <-> mlmf | `mlmf-core` and format crates | `ml-convertant-mlmf` pins `mlmf-* ~0.7.26` (tilde, verified). Fuel's `fuel-loaders`/`fuel-formats` use is **UNVERIFIED** | partial |
 | Conversion/quantization (`ml-convertant-core`: "error-measurement contract and conversion trait") | ml-convertant crates <-> callers | `ml-convertant-core` 0.1.x | Interface is a trait + error contract; callers other than `ml-convertant-mlmf` UNVERIFIED | manifest verified |
 | OpenAI-compatible HTTP API | lightbulb <-> clients (OverMind) | `lightbulb/src/api/openai/*`; OverMind has `LIGHTBULB-OPENAI-COMPAT-CHECKLIST.md` | a wire format, not a crate; no shared types crate exists. Contents not read | UNVERIFIED (file names only) |
-| Latent-state API | lightbulb <-> ? | `lightbulb/src/api/lightbulb.rs`, `cache/*` (guess from names) | I could not identify the contract from names alone | UNVERIFIED |
-| Fuel <-> lightbulb model hand-off | lightbulb <-> Fuel | `lightbulb/src/api/fuel_loader.rs` | whether it is a crate dependency or a wire is not established | UNVERIFIED |
-| OverMind <-> lightbulb local dispatch | OverMind <-> lightbulb | OverMind `LOCAL-MODEL-DISPATCH-DESIGN.md` (file exists; I did not read it; OverMind has no `Cargo.toml` listed at `origin/main` in my crate search) | design only as far as I can tell | UNVERIFIED |
+| ~~Latent-state API~~ | withdrawn | no document or lane identifies one (see C2, C3) | | withdrawn |
+| Fuel <-> lightbulb model hand-off | lightbulb -> Fuel | `lightbulb/src/api/fuel_loader.rs` | **internal to lightbulb** per lightbulb (C2); Fuel guarantees `from_gguf`, not a FireLine interface | lane-reported |
+| OverMind <-> lightbulb local dispatch | OverMind -> lightbulb | OpenAI-compatible HTTP; OverMind `LIGHTBULB-OPENAI-COMPAT-CHECKLIST.md` | wire format, Python consumer, no Rust crate; see C3 | read at `2920f08` |
 | Synapse message and client protocol | every lane <-> `synapsed` | `synapse` 6.0.0-rc.220, `synapsed-client`, `synapse-mcp-server`, `synapse-security` | internal to Synapse; clients use the MCP adapter or `synapsed-client`. Candidate only if non-Synapse projects need to share its wire types; **no evidence they do** | manifests verified |
 | Vulkane kernel sources (`vulkane-kernels-source`) | vulkane <-> consumers (Fuel) | vulkane 0.21.6 | source files, not an interface crate; Fuel's `SLANG-SEAM-REQUIREMENTS.md` is not yet answered by Unpopped's plan (PEER) | manifest verified |
 
@@ -48,9 +48,36 @@ codecs (Fuel, KISS ref, whatever baracuda decodes with) (PEER). (c) `baracuda-cu
 6. **Conformance addition from baracuda (PEER, notice 2026-11-07, baracuda main `8bf6705b`):** every capability bit a side *advertises* must be allocated in the shared crate, none provisional.
    Today baracuda-seam defines bits 34 (`KISC_FRAMING`) and 35 (`RECIPE_IMPORT`) but `BARACUDA_CAPABILITIES` omits them; the check keeps it so until KISS Announce co-allocates them. Bits to freeze now: 0-5, 32, 33 (Fuel note section 8).
 
+## C2. Lane replies to the must-have ask (received 2026-11-07; the lane's own measurement, not re-measured by me)
+
+- **lightbulb** (at `9dda603`): the only wire format it shares outward is the OpenAI-compatible HTTP API (`src/api/openai/{chat,completions,models}.rs`, `model_select.rs`; `/v1/models` adds `lightbulb_loaded`/`lightbulb_device`). It is a binary with no library API. `fuel_loader.rs` is **internal** to lightbulb. It found **no latent-state API**: the row in section B is withdrawn unless someone points at a file and symbol. It needs Fuel's `from_gguf` and decode-step plan-once (GAP-359, awaiting release) and mlmf's sharded-GGUF reader (B5) and source-hub listing/resume (F1): guarantees from Fuel and mlmf, **not FireLine interfaces**.
+- **vulkane** (origin/main 2026-11-07, grep with control): uses **no** Fuel kernel-seam crate and no Provision/announce; consumes only `unpopped`/`unpopped-vocab` 0.43.2 (+ `unpopped-cpu-c` dev). `kiss-vulkan-vocab` **stays** in vulkane (KISS-Classify 6.8 assigns the `vulkan:` namespace to Vulkane; moving it is a PM/KISS ruling). Its must-haves from the Unpopped crates: `Backend`/`KernelPlan`/`GeneratedKernel`/`DtypeSupport`/`LowerError`, `try_generate`, `OpDef` + `BinaryOp`/`UnaryOp`/`Expr`, `StructureKey`/`ElementKind`/`OperandDesc`, `Frontend` + `lift_*` with the `convert` feature, `unpopped::cfamily`; a breaking change breaks 5 emitter/parser crates at once, so it wants notice and a version. Note `Frontend`/`lift_*`/`convert` are in Unpopped's "stays" list (Unpopped#315 section 3): a conflict for task 2.
+- **mlmf** (`de8de26`; grep of `mlmf_core::` over **working trees**, not origin/main; partial): cross-project set is `DType`, `Encoding`, `MetaValue`, `MetadataSource`, `TensorContainer`, `ByteSource`, `Report`/`UnrecognizedKind`/`DeclaredType`, all re-exported from `mlmf-core/src/lib.rs`. Consumers: Fuel (`fuel-loaders/src/quantized/gguf_file.rs`, `safetensors.rs`) and `ml-convertant-mlmf`. lightbulb: 0 hits (its `src/gguf` is its own reader). **These already live in one published crate (`mlmf-core`)**, so mlmf is not a FireLine candidate unless a second crate is wanted: mlmf's own judgement, mine to rule on in task 2.
+- **fishstringer** (vulkane `9cdc2d4` `src/lib.rs`, read not built): `fishstringer-slang-emit` imports `unpopped::backend::{Backend, Decline, DeclinedOp, DtypeSupport, GeneratedKernel, LowerError, Lowering, Spelling, const_lit, lower_dag}`, `cfamily::{assert_no_int_div_or_const, dtype_tag}`, `ir::{BinaryOp, ExprDag, ScalarExpr, UnaryOp}`, `plan::{KernelPlan, Schedule}`, `unpopped_vocab::{ElementKind, TargetId}`; `fishstringer-slang-parse` imports `unpopped::convert::Frontend` (+ `lift*`, `LiftError`; needs the `convert` feature and tree-sitter on the same minor as unpopped). It wants semver-stable `Backend`/`Lowering`/`Frontend` and the `lift_*` fns, and unpopped/unpopped-vocab/cpu-c moving together. **This supersedes Unpopped#315's "no fishstringer import found" for the emitter and parser crates.** Both it and vulkane import `convert::Frontend`/`lift*`, which Unpopped#315 section 3 keeps in Unpopped: task 2 must decide.
+
+## C3. OverMind (read at `ciresnave/OverMind` origin/main `2920f08`; design documents, not a crate)
+
+OverMind is a **consumer of a wire format**, not a crate owner, as the PM said. What the two documents settle:
+- `LIGHTBULB-OPENAI-COMPAT-CHECKLIST.md` lists what OverMind needs from an OpenAI-compatible endpoint, read from its code (`providers.py`, `agent.py`, `gate.py`): MUST accept `POST {base_url}/chat/completions` (line 25), request fields `model`, `messages`, `temperature`, `max_tokens` (lines 36-39, `tools` optional line 40); response `choices[0].message` MUST be present (line 48), `content`, `tool_calls`, `finish_reason`, `usage` OPTIONAL (lines 49-52); `Authorization: Bearer` must be tolerated (line 58); no streaming, no `stream` field (lines 28, 42); native `tool_calls` strongly preferred (line 77). The document's own header (line 3) says line numbers predate #151 and that it is not recorded whether Lightbulb scored itself against it.
+- That is a **request/response shape**, already carried by lightbulb's `src/api/openai/*` and nothing shared by type. No Rust type crosses this boundary (OverMind is Python), so **no FireLine crate applies**; the only candidate is a conformance corpus (golden request/response pairs run against lightbulb). Not a decision.
+- `LOCAL-MODEL-DISPATCH-DESIGN.md` is design: `Provider.local`, the `rig` provider and `probe/rig_probe.py` landed in #151 (lines 3, 190-198); the rest, including the context window and whether Lightbulb serves a real checkpoint end to end, is explicitly **not settled** (lines 151-186). I mark those UNVERIFIED. The "latent-state API" I had listed under lightbulb is **not mentioned in either OverMind document** (checked by reading both whole); lightbulb also found none. **The row is withdrawn.**
+
+## C4. crates.io reverse dependencies (queried 2026-11-07 ~12:10Z)
+
+Query: `GET https://crates.io/api/v1/crates/<crate>/reverse_dependencies?per_page=100`, one page each (the largest result was 27, under the 100 limit, so each count is complete). Positive control: the same query for `fuel-ir` returns 27 dependents, so the query shape works.
+| Crate | Published reverse dependencies |
+|---|---|
+| `fuel-kernel-seam-announce` | **0** |
+| `fuel-kernel-seam` | 3: `baracuda-cuda-seam` (`^0.43`), `baracuda-kernelgen` (`^0.10.3`), `fuel-dispatch` (`^0.36.7`) |
+| `fuel-kernel-seam-types` | 6: the same three, plus `fuel-graph`, `fuel-kiss-ref-backend` (`^0.36.7`), `fuel-kernel-seam` (`^0.43.0`) |
+No dependent outside Fuel and baracuda. The recorded requirements are those of each dependent's **newest published version**, and several still name old Fuel numbers (`^0.36.7`): this counts crates.io dependents only, not unpublished repos (vulkane showed none by its own grep).
+
+## C5. Still open
+- OverMind: no lane to ask; documents read above.
+
 ## D. Not measured
 
-- crates.io reverse dependencies of `fuel-kernel-seam`, `-types`, `-announce` (the Fuel lane asked; **not queried**, to be done in task 2 with a positive control).
-- Every item marked UNVERIFIED above, notably lightbulb's and OverMind's APIs, mlmf's public surface, and whether fishstringer will import anything.
-- No lane has yet stated its must-haves directly to me; the three plans above are their written input. Ask lightbulb, OverMind, mlmf, ml-convertant, vulkane and fishstringer (task 1 requires it).
+- Whether OverMind's Python code still matches its checklist (line numbers predate #151).
+- Every item marked UNVERIFIED above, notably Fuel's `fuel-loaders` use of mlmf at `origin/main` (mlmf's grep was of working trees), and ml-convertant's own must-haves (not asked: no live lane found for it).
+- The three PEER plans' claims remain theirs; must-haves were asked of lightbulb, mlmf, vulkane and fishstringer and answered (C2).
 - Counts quoted from the Fuel note (4,593 lines; 31/6 `.rs` users; 37 files to rewrite) were not recomputed.
