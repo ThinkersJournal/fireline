@@ -2,8 +2,8 @@
 //! Spec-stated sizes, computed sizes and frozen field offsets of the FDX sidecar structs, relocated from the inline `mod tests` of Fuel's `fuel-ir/src/dlpack/sidecar.rs` (Fuel `078e578a3540204f50ec402546c13b668bbfe4af`).
 //! They use only public items, so they are the layout contract any consumer of the ABI can run.
 
-use fireline_dlpack::sidecar::*;
 use core::mem::{offset_of, size_of};
+use fireline_dlpack::sidecar::*;
 
 // ── Spec-STATED sizes (§5.4): these MUST equal the spec's numbers. ───────
 #[cfg(target_pointer_width = "64")]

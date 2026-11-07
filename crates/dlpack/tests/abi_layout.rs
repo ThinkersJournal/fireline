@@ -2,8 +2,8 @@
 //! Byte-for-byte size pins and flag bits of the standard DLPack structs, relocated from the inline `mod tests` of Fuel's `fuel-ir/src/dlpack/abi.rs` (Fuel `078e578a3540204f50ec402546c13b668bbfe4af`).
 //! They use only public items, so they are the layout contract any consumer of the ABI can run.
 
-use fireline_dlpack::abi::*;
 use core::mem::size_of;
+use fireline_dlpack::abi::*;
 
 // ABI byte-for-byte size pins (64-bit LE target, §5). A struct-layout
 // change that would break the C-header match fails the build here.
