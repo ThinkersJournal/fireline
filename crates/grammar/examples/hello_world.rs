@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Hello world: describe a region (`relu(add(a, b))`), read its external inputs, key it, and encode an op's attributes to canonical bytes.
 //! No graph, no device: this is the grammar a consumer sends and a provider reads.
 
