@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Hello world: a provider implements `Synthesizer`; a consumer asks it for a kernel, then adopts it. No device, no compiler: the "kernel" is
 //! two bytes. This is the whole two-step handover.
 
