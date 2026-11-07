@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Hello world: a consumer and a provider each advertise, then negotiate. No device, no kernel.
 
 use fireline_announce::{

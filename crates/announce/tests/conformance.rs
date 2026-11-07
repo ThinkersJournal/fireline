@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Conformance for `fireline-announce`: the frozen layout, the wire codec, role-aware negotiation, the KISS vectors, and the rule that
 //! a side may only advertise capability bits this crate has allocated. Public API only, so the same file is the contract for both sides.
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! The kernel-seam **handshake**: the frozen 56-byte [`SeamHello`] envelope, the capability bits, and role-aware profile negotiation
 //! between a kernel *consumer* (an orchestrator such as Fuel) and a kernel *provider* (a backend such as baracuda).
 //!
