@@ -11,7 +11,10 @@ fn tracked_manifests() -> Result<Vec<String>, String> {
         .output()
         .map_err(|e| format!("cannot run git ls-files: {e}"))?;
     if !out.status.success() {
-        return Err(format!("git ls-files failed: {}", String::from_utf8_lossy(&out.stderr)));
+        return Err(format!(
+            "git ls-files failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        ));
     }
     Ok(String::from_utf8_lossy(&out.stdout)
         .split('\0')
@@ -33,7 +36,10 @@ fn main() -> ExitCode {
     } else {
         (args, "arguments")
     };
-    println!("fireline-tilde-lint: {} manifest(s) from {source}", paths.len());
+    println!(
+        "fireline-tilde-lint: {} manifest(s) from {source}",
+        paths.len()
+    );
     if paths.is_empty() {
         eprintln!("error: no Cargo.toml found; refusing to pass on an empty set");
         return ExitCode::from(2);
