@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Tilde lint: every requirement on a FireLine crate must be `~x.y[.z]` or `=x.y.z`.
 //!
 //! Why: FireLine's crates version by their own interface, and a caret on `0.n` (or any bare version, which Cargo reads as a caret) lets a

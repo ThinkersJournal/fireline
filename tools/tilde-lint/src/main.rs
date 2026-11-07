@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! `fireline-tilde-lint [Cargo.toml ...]`: exit 0 when every FireLine requirement is tilde or exact, 1 on a violation, 2 on an error.
 //!
 //! With no arguments it checks every `Cargo.toml` that git tracks (`git ls-files`), never a walk of the disk, because a disk walk sees other
