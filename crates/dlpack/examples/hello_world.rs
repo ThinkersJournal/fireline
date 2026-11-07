@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Hello world: build an FDX sidecar header and run the first validator (V1) on it. No device, no tensor data.
 
 use core::mem::size_of;
