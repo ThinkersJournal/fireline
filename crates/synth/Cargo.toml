@@ -1,0 +1,18 @@
+[package]
+name = "fireline-synth"
+version = "0.1.0"
+edition = "2024"
+description = "The kernel-seam JIT-on-request envelope: the Synthesizer trait a kernel provider implements, and the JitRequest, JitBudget, JitResponse, SynthArtifact and LinkEntry types a consumer calls it with."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ThinkersJournal/fireline"
+readme = "README.md"
+keywords = ["kernel", "jit", "synthesizer", "ml"]
+# The first publish is the PM's (patent sweep first, PATENT-SWEEP.md). Until then nothing can publish it by accident.
+publish = false
+
+[dependencies]
+# A FireLine crate by path AND a tilde version: the tilde lint reads this very line.
+fireline-grammar = { path = "../grammar", version = "~0.1" }
+# The vocabulary a request is described in. Newest published is 0.43.2 (crates.io, 2026-11-07); Unpopped's repo is at 0.44.x, unpublished.
+# One copy of this crate must be in a consumer's build or `OperandDesc` is two types (plan section 11); wave 2 retires it for `fireline-vocab`.
+unpopped-vocab = "0.43.2"
