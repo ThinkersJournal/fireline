@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.12] - 2026-11-08
+
+- Publish-metadata fixes (PM): `rust-version = "1.88"` on `fireline-announce`, `fireline-grammar` and `fireline-synth`, and `categories` on `fireline-synth`; the three crates go 0.1.0 to 0.1.1 (metadata only, no code change). 0.1.0 of all three is on crates.io. The root version here is provisional; the PM restamps at the gate.
+
 ## [0.0.11] - 2026-11-07
 
 - New crate `fireline-dlpack` 0.1.0, **unpublished by decision** (`publish = false`): FDX, the DLPack extension (C-ABI structs, codes, sidecar, V-numbered validators, the co-maintained C header), moved from Fuel's `fuel-ir/src/dlpack`. It implements FDX only, not the final quantisation sidecar. Patent section added to `docs/PATENT-SWEEP.md`. The root version here is provisional; the crate versions by its own interface.
