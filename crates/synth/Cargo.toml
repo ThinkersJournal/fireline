@@ -7,8 +7,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
 keywords = ["kernel", "jit", "synthesizer", "ml"]
-# The first publish is the PM's (patent sweep first, PATENT-SWEEP.md). Until then nothing can publish it by accident.
-publish = false
 
 [dependencies]
 # A FireLine crate by path AND a tilde version: the tilde lint reads this very line.

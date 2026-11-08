@@ -7,8 +7,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
 keywords = ["kernel", "handshake", "ffi", "ml"]
-# The first publish is the PM's (patent sweep first, PATENT-SWEEP.md). Until then nothing can publish it by accident.
-publish = false
 
 # Intentionally dependency-free: a provider that only negotiates must not pull in the region grammar or anything else.
 [dependencies]

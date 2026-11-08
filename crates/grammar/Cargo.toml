@@ -7,8 +7,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
 keywords = ["kernel", "grammar", "wire-format", "ml"]
-# The first publish is the PM's (patent sweep first, PATENT-SWEEP.md). Until then nothing can publish it by accident.
-publish = false
 
 # Intentionally dependency-free: a synthesizer backend depends on this small crate without pulling a graph layer. The Op -> OpTag
 # projection and the structural matcher stay in the consumer (they need its graph).
