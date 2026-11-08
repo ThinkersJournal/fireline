@@ -1,12 +1,14 @@
 [package]
 name = "fireline-synth"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
+rust-version = "1.88"
 description = "The kernel-seam JIT-on-request envelope: the Synthesizer trait a kernel provider implements, and the JitRequest, JitBudget, JitResponse, SynthArtifact and LinkEntry types a consumer calls it with."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
 keywords = ["kernel", "jit", "synthesizer", "ml"]
+categories = ["development-tools", "algorithms"]
 
 [dependencies]
 # A FireLine crate by path AND a tilde version: the tilde lint reads this very line.

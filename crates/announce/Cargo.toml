@@ -1,7 +1,8 @@
 [package]
 name = "fireline-announce"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
+rust-version = "1.88"
 description = "The kernel-seam handshake between a kernel consumer and a kernel provider: the frozen 56-byte SeamHello envelope, capability bits, and role-aware profile negotiation. Dependency-free."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
