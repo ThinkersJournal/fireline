@@ -1,0 +1,15 @@
+[package]
+name = "fireline-dlpack"
+version = "0.1.0"
+edition = "2024"
+description = "FDX, the DLPack extension: the C-ABI structs, codes, sidecar and validators for tensor interchange between a kernel consumer and a kernel provider, plus the co-maintained C header. FDX only; not the final quantisation sidecar."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ThinkersJournal/fireline"
+readme = "README.md"
+keywords = ["dlpack", "tensor", "ffi", "ml"]
+# The first publish is the PM's (patent sweep first, PATENT-SWEEP.md). Until then nothing can publish it by accident.
+publish = false
+
+[dependencies]
+# One derive (the validator's error type). The newest 2.x on crates.io is 2.0.21 (2026-11-07).
+thiserror = "2"

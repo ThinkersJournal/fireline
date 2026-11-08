@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.11] - 2026-11-07
+
+- New crate `fireline-dlpack` 0.1.0, **unpublished by decision** (`publish = false`): FDX, the DLPack extension (C-ABI structs, codes, sidecar, V-numbered validators, the co-maintained C header), moved from Fuel's `fuel-ir/src/dlpack`. It implements FDX only, not the final quantisation sidecar. Patent section added to `docs/PATENT-SWEEP.md`. The root version here is provisional; the crate versions by its own interface.
+
 ## [0.0.10] - 2026-11-07
 
 - Publishing prep for the wave-1 crates: `publish = false` is removed from `fireline-announce`, `fireline-grammar` and `fireline-synth`, `cargo package` verifies all three together, and `docs/PUBLISHING.md` has the checked order and commands. Nothing is published; that waits on CireSnave (board 398) and the PM. The root version here is provisional.
