@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.10] - 2026-11-07
+
+- Publishing prep for the wave-1 crates: `publish = false` is removed from `fireline-announce`, `fireline-grammar` and `fireline-synth`, `cargo package` verifies all three together, and `docs/PUBLISHING.md` has the checked order and commands. Nothing is published; that waits on CireSnave (board 398) and the PM. The root version here is provisional.
+
 ## [0.0.9] - 2026-11-07
 
 - New crate `fireline-synth` 0.1.0 (not published): the kernel-seam JIT-on-request envelope, the `Synthesizer` trait and the `JitRequest`, `JitBudget`, `JitResponse`, `SynthArtifact` and `LinkEntry` types, moved from Fuel's `fuel-kernel-seam`. It depends on `fireline-grammar ~0.1` and `unpopped-vocab 0.43.2`. The root version here is provisional; the crate versions by its own interface.
