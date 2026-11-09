@@ -6,8 +6,10 @@ CireSnave 2026-11-07, verbatim: "Yes." (wave 1 now, each crate at 0.1.0). And: "
 
 ## State (2026-11-08)
 - main = c623a8f, root 0.0.11. **announce, grammar, synth 0.1.0 ARE on crates.io** (PM notice 2026-11-08; I read back: not yanked, serde present, nonexistent 404; `fireline-dlpack` absent by decision). Fuel was told names + versions (~0.1). CireSnave ruled 398 A: **re-check US 2023/0025245 A1 for a grant before `fireline-provider` is published and before Fuel's next release.**
-- IN FLIGHT: branch `lane/publish-metadata-0.1.1` (worktree here): `rust-version = "1.88"` on the three, `categories` on synth, crates 0.1.1, root 0.0.12 provisional (PM restamps at the gate). Local fmt/clippy/test/`cargo package` clean. Next: coderipper sweep on the commit, push, `gh pr create`, `[READY]`; PM then publishes 0.1.1.
+- PR #12 (0.1.1 metadata) MERGED 2026-11-08 11:51Z; PM publishes 0.1.1.
 - Blocked on CireSnave, do not start: `fireline-contract`, `fireline-provider` (callable owner, plan 10.6; also the patent re-check above); FDX spec home (board 395, blocks only the join test).
+- PR #13 (syn 3.0.10, root 0.0.13 prov.) open, awaiting gate. HELD (PM 2026-11-09, option a): local branch `lane/interface-config` commit 227bdd2 (`.coderipper.toml` with four `[[interface]]`; rebase onto main, restamp root, drop its Cargo.lock/CHANGELOG conflicts). Do NOT move root to 0.1.0 or add per-crate allows. When CodeRipper ships the 0.0.z-is-not-major fix: build it, re-sweep (build from `git archive origin/main` of C:/Projects/coderipper with CARGO_TARGET_DIR in scratchpad; installed 0.20.1 is too old), expect version-consistency gone, open the PR, `[READY]`.
+- Still owed: re-check US 2023/0025245 A1 for a grant before `fireline-provider` is published and before Fuel's next release (CireSnave ruled 398 A).
 - **Example names must be unique across the workspace** (cargo `output filename collision`; it made `build --all-targets` fail intermittently, build=101 once): all four crates ship `<crate>_hello_world`; check `cargo build --locked --all-targets` prints no `collision` line.
 - **Per crate PR (the method used for all four):** `git rebase origin/main` (resolve Cargo.toml/Cargo.lock with `resolve_cargo_conflict.py` + `cargo metadata`), bump `[workspace.package]` (PM's stamp, else next provisional) + CHANGELOG with `bump.py`, check shape and sign, commit, `verify2.sh` in the background, expect only the [High] version-consistency (name it) and fix any other finding the sweep lists (missing SPDX: add `// SPDX-License-Identifier: MIT OR Apache-2.0` as line 1), push, `gh pr create`, `[READY]`. Crates must NOT use `version.workspace` (0.1.0 each). Rebase synth onto the new grammar tip only if grammar merges first (`--onto <grammar tip> e7e4ba0`).
 
@@ -26,3 +28,5 @@ Grammar option A. Frontend/lift/convert stay in Unpopped. Caps `DLPACK_EXT`, `PR
 
 ## Housekeeping
 Untracked `supertool` in this worktree is not mine; never add it. Primary checkout `C:/Projects/fireline` is on main at 6b7bb3e (stale; `tools/sync-checkouts.sh` fast-forwards it; not mine to force).
+
+WAIT: CodeRipper release with the per-interface 0.0.z fix | check: git -C C:/Projects/coderipper fetch -q origin && git -C C:/Projects/coderipper log origin/main --oneline -5 | wake: 2026-11-10T00:00:00Z

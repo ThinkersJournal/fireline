@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.13] - 2026-11-09
+
+- Lockfile only: `syn` 3.0.9 to 3.0.10 (CodeRipper dependency-freshness). No crate change. The root version here is provisional.
+
 ## [0.0.12] - 2026-11-08
 
 - Publish-metadata fixes (PM): `rust-version = "1.88"` on `fireline-announce`, `fireline-grammar` and `fireline-synth`, and `categories` on `fireline-synth`; the three crates go 0.1.0 to 0.1.1 (metadata only, no code change). 0.1.0 of all three is on crates.io. The root version here is provisional; the PM restamps at the gate.
