@@ -1,0 +1,19 @@
+# CodeRipper configuration for FireLine. Read by the sweep (CI and `coderipper sweep --profile portfolio`).
+
+# CireSnave's ruling (board 295): each interface crate versions by its own interface and they meet at one number at major releases.
+# The root package and the tools keep following the project number (`[workspace.package] version`).
+[[interface]]
+package = "fireline-announce"
+reason = "versions by the kernel-seam handshake interface (SeamHello, capability bits)"
+
+[[interface]]
+package = "fireline-grammar"
+reason = "versions by the kernel-seam region grammar interface"
+
+[[interface]]
+package = "fireline-synth"
+reason = "versions by the JIT-on-request envelope interface"
+
+[[interface]]
+package = "fireline-dlpack"
+reason = "versions by the FDX (DLPack extension) interface"
