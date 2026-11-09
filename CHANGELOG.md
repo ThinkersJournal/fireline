@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.14] - 2026-11-09
+
+- `.coderipper.toml` declares the four interface crates (`fireline-announce`, `-grammar`, `-synth`, `-dlpack`) with `[[interface]]`, so CodeRipper's version-consistency check (per-interface mode, coderipper#278, with the 0.0.z fix in #288) no longer reports them against the project number. No crate change. The root version here is provisional.
+
 ## [0.0.13] - 2026-11-09
 
 - Lockfile only: `syn` 3.0.9 to 3.0.10 (CodeRipper dependency-freshness). No crate change. The root version here is provisional.
