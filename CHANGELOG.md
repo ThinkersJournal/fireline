@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.16] - 2026-11-11
+
+- CI only: the advisory `portfolio` job now calls coderipper `portfolio.yml` at 4bcf55e (coderipper#303), which installs CodeRipper 0.43.41; the old pin installed 0.10.x and predates `[[interface]]`. No crate change. The root version here is the PM's stamp.
+
 ## [0.0.15] - 2026-11-09
 
 - Docs only: `docs/EXTRACTION-PLAN.md` sections 9, 10 and 12 follow CireSnave's 2026-11-09 clarification of the seam (FireLine owns the seam definitions; the two sides may talk directly; a run-time hop only where it is the best design) and the board 395 rulings (providers in their own projects, Fuel's built-in CPU path stays, first proof CPU `gemm` then Vulkan then AOCL, KISS owns the standards). The FDX spec-home question is closed: FDX is phased out for a KISS standard, with a retirement row for `fireline-dlpack`. The root version here is provisional.
