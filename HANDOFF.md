@@ -29,4 +29,4 @@ So **FireLine owns seam DEFINITIONS**; the two sides may talk directly using the
 ## Housekeeping
 Untracked `supertool` in this worktree is not mine; never add it. Primary checkout `C:/Projects/fireline` is on main at 6b7bb3e (stale; `tools/sync-checkouts.sh` fast-forwards it; not mine to force).
 
-WAIT: CodeRipper 0.43.x published to crates.io and CODERIPPER_VERSION bumped | check: curl -s -A fireline-lane https://crates.io/api/v1/crates/coderipper | wake: 2026-11-10T08:00:00Z
+WAIT: CodeRipper 0.43.x published to crates.io and CODERIPPER_VERSION bumped | check: curl -s -A fireline-lane https://crates.io/api/v1/crates/coderipper | wake: 2026-11-11T16:50:00Z
