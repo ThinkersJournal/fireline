@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.20] — `fireline-contract` constant divisors are a build-time fault
+
+Tracks KISS#800 (CONTRACT-6.12-0007, -0008, origin/main@73c341b5). `division_by_zero` and `ceil_div_divisor` are now ratified codes and stay bind-time declines only when the divisor names a launch-scalar symbol. A divisor with no symbol that is zero (`/`) or not positive (`ceil_div`), such as `n / 0` or `ceil_div(8, 0)`, now fails `Expr::parse` with the new `ParseError::ConstantDivisor` (code `build_time`) instead of declining at bind time. `subscript_out_of_range` is still unnamed by the Draft and stays a bind-time decline here (kiss reports it at build time; the rank is only known from the environment). Verified with `cargo test -p fireline-contract --locked` (8 integration tests and the doctest pass).
+
+— lane: fireline
+
 ## [0.0.19] — fireline-contract 0.1.0 (first slice, Draft-tracking)
 
 New crate `fireline-contract` (crates/contract, 0.1.0, its own `[[interface]]` entry): parse a Dispatch expression (KISS-CONTRACT-6.6-0006) and bind it against a launch environment with the typed declines of 6.12-0001..-0006 and the division rules of 6.6-0009. Follows the KISS Draft at `origin/main` `2d7f20e` on CireSnave's 2026-11-12 ruling ("working toward the draft version is the best we have. Proceed."); expect rework when it moves. Decline codes the Draft does not name (`division_by_zero`, `ceil_div_divisor`, `subscript_out_of_range`) are this crate's choice and marked so. Not in this slice: wire frames, the mapped FDX rows V1/V4/V10/V11, V3/V5/V6/V8/V9/V12/V13/V18..V21. Verified: 8 clause tests plus the doctest and the hello world pass; clippy `-D warnings`, fmt, doc and `build --all-targets` (no `collision`) are clean. **Patent sweep for this crate is not done** (unread is never "clear"); not for publishing until it is.

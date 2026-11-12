@@ -167,16 +167,33 @@ fn division_semantics_are_pinned() {
     assert_eq!(bind("ceil_div(0 - param1, 4) + 2", &e), Ok(0));
     assert_eq!(bind("ceil_div(param1, 4)", &e), Ok(3));
     assert_eq!(bind("ceil_div(8, 4)", &e), Ok(2));
-    // a zero or negative ceil_div divisor, and a zero `/` divisor, decline
+    // CONTRACT-6.12-0007/-0008: a divisor that names a launch-scalar symbol declines at bind time ...
+    let mut z = env(10);
+    z.set_scalar("param0", 0).set_scalar("param2", -2);
+    assert_eq!(bind("5 / param0", &z), Err(BindDecline::DivisionByZero));
     assert_eq!(
-        bind("ceil_div(5, 0)", &e),
+        bind("ceil_div(5, param0)", &z),
         Err(BindDecline::CeilDivDivisor(0))
     );
     assert_eq!(
-        bind("ceil_div(5, 0 - 2)", &e),
+        bind("ceil_div(5, param2)", &z),
         Err(BindDecline::CeilDivDivisor(-2))
     );
-    assert_eq!(bind("5 / 0", &e), Err(BindDecline::DivisionByZero));
+    // ... a constant divisor (no symbol) is a build-time fault (KISS#800)
+    for bad in [
+        "5 / 0",
+        "n / 0",
+        "ceil_div(8, 0)",
+        "ceil_div(5, 0 - 2)",
+        "n / (3 - 3)",
+    ] {
+        let r = Expr::parse(bad);
+        assert!(
+            matches!(r, Err(ParseError::ConstantDivisor(_))),
+            "{bad}: {r:?}"
+        );
+        assert_eq!(r.unwrap_err().code(), "build_time");
+    }
     // ceil_div is the true ceiling, not the truncating (a + b - 1) / b
     assert_eq!(
         bind("ceil_div(0 - 1, 4) + 1", &e),
