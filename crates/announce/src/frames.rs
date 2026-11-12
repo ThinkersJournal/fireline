@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //! The **message frames** of KISS-Announce §6.3 and §6.4: the availability list `SAVL`, the contract-query request `CYRQ`, the contract
-//! response `CRSP` and the decline response `CDEC`. (The device-query frames `DVRQ`, `DVRS` and `DVDC` of §6.6 are not here yet.)
+//! response `CRSP` and the decline response `CDEC`. (The device-query frames `DVRQ`, `DVRS` and `DVDC` of §6.6 are in [`crate::device`].)
 //!
 //! **Draft-tracking.** KISS-Announce is a Draft and its wire is not frozen (the freeze gate is unmet); this module follows it, expect
 //! rework when it moves. Each rule cites its clause id. The exact bytes are diffed against KISS's
@@ -78,6 +78,30 @@ pub enum FrameError {
     CorrelationLen(u8),
     /// A `CRSP` payload length above [`MAX_CONTRACT_PAYLOAD_LEN`] (6.4-0014).
     PayloadTooLarge(u32),
+    /// `device_count` above 4096 (6.6-0004).
+    DeviceCountTooLarge(u32),
+    /// A `device_id` length of `0` or above 4096 (6.6-0006).
+    DeviceIdLen(u32),
+    /// A token of length `0`, with a byte that is not printable ASCII or is a space (6.6-0006).
+    BadToken,
+    /// A `target` token that is not `<namespace>:<capability>` (6.6-0006, KISS-CLASSIFY-6.8-0003).
+    BadTarget,
+    /// A dtype set count above 64 (6.6-0006).
+    DtypeSetTooLarge(usize),
+    /// An `accuracy_count` above 65536 (6.6-0006).
+    AccuracyCountTooLarge(u32),
+    /// A dtype set that is not strictly ascending bytewise (6.6-0007).
+    DtypeSetNotAscending,
+    /// A dtype token that is not an accepted, non-reserved spelling of the Classify dtype table (6.6-0007).
+    UnknownDtype(String),
+    /// `compute_dtypes` is not a subset of `store_dtypes` (6.6-0007).
+    ComputeNotSubsetOfStore,
+    /// A `math_fidelity` outside `{1, 2}` (6.6-0008).
+    MathFidelity(u8),
+    /// Accuracy records that are not strictly ascending by `(op, math_fidelity, dtype)` (6.6-0008).
+    AccuracyNotAscending,
+    /// An accuracy record for a dtype outside the record's `compute_dtypes` (6.6-0007).
+    AccuracyDtypeNotComputed(String),
 }
 
 impl FrameError {
@@ -123,6 +147,31 @@ impl fmt::Display for FrameError {
             Self::PayloadTooLarge(n) => write!(
                 f,
                 "announce: payload length {n} above {MAX_CONTRACT_PAYLOAD_LEN}"
+            ),
+            Self::DeviceCountTooLarge(n) => write!(f, "announce: device_count {n} above 4096"),
+            Self::DeviceIdLen(n) => write!(f, "announce: device_id length {n} outside 1..=4096"),
+            Self::BadToken => write!(
+                f,
+                "announce: a token is empty or not printable ASCII without a space"
+            ),
+            Self::BadTarget => write!(f, "announce: target is not <namespace>:<capability>"),
+            Self::DtypeSetTooLarge(n) => write!(f, "announce: dtype set count {n} above 64"),
+            Self::AccuracyCountTooLarge(n) => write!(f, "announce: accuracy_count {n} above 65536"),
+            Self::DtypeSetNotAscending => {
+                write!(f, "announce: a dtype set is not strictly ascending")
+            }
+            Self::UnknownDtype(t) => write!(f, "announce: `{t}` is not an accepted dtype spelling"),
+            Self::ComputeNotSubsetOfStore => write!(
+                f,
+                "announce: compute_dtypes is not a subset of store_dtypes"
+            ),
+            Self::MathFidelity(b) => write!(f, "announce: math_fidelity {b} is not 1 or 2"),
+            Self::AccuracyNotAscending => {
+                write!(f, "announce: accuracy records are not strictly ascending")
+            }
+            Self::AccuracyDtypeNotComputed(t) => write!(
+                f,
+                "announce: accuracy claimed for `{t}`, which is not in compute_dtypes"
             ),
         }
     }
@@ -217,14 +266,19 @@ fn put_identity(out: &mut Vec<u8>, id: &Identity) -> Result<(), FrameError> {
         }
         None => out.push(0),
     }
-    match id.correlation_id {
+    put_correlation(out, id.correlation_id);
+    Ok(())
+}
+
+/// The correlation field (6.4-0013): `00`, or `08` and the 8-byte id.
+pub(crate) fn put_correlation(out: &mut Vec<u8>, c: Option<[u8; 8]>) {
+    match c {
         Some(c) => {
             out.push(8);
             out.extend_from_slice(&c);
         }
         None => out.push(0),
     }
-    Ok(())
 }
 
 /// Encode an availability list `SAVL` (6.3-0011, -0012, -0005).
@@ -297,29 +351,29 @@ pub fn encode_cdec(r: &DeclineResponse) -> Result<Vec<u8>, FrameError> {
 
 // ---- Decoding ----------------------------------------------------------------------------------------------------------
 
-struct Reader<'a> {
-    b: &'a [u8],
-    at: usize,
+pub(crate) struct Reader<'a> {
+    pub(crate) b: &'a [u8],
+    pub(crate) at: usize,
 }
 
 impl<'a> Reader<'a> {
-    fn take(&mut self, n: usize) -> Result<&'a [u8], FrameError> {
+    pub(crate) fn take(&mut self, n: usize) -> Result<&'a [u8], FrameError> {
         let end = self.at.checked_add(n).ok_or(FrameError::Truncated)?;
         let s = self.b.get(self.at..end).ok_or(FrameError::Truncated)?;
         self.at = end;
         Ok(s)
     }
 
-    fn u8(&mut self) -> Result<u8, FrameError> {
+    pub(crate) fn u8(&mut self) -> Result<u8, FrameError> {
         Ok(self.take(1)?[0])
     }
 
-    fn u32(&mut self) -> Result<u32, FrameError> {
+    pub(crate) fn u32(&mut self) -> Result<u32, FrameError> {
         let s = self.take(4)?;
         Ok(u32::from_le_bytes([s[0], s[1], s[2], s[3]]))
     }
 
-    fn tag(&mut self, want: [u8; 4]) -> Result<(), FrameError> {
+    pub(crate) fn tag(&mut self, want: [u8; 4]) -> Result<(), FrameError> {
         let s = self.take(4)?;
         let got = [s[0], s[1], s[2], s[3]];
         if got == want {
@@ -346,6 +400,19 @@ impl<'a> Reader<'a> {
         Ok(self.take(n)?.to_vec())
     }
 
+    pub(crate) fn correlation(&mut self) -> Result<Option<[u8; 8]>, FrameError> {
+        match self.u8()? {
+            0 => Ok(None),
+            8 => {
+                let s = self.take(8)?;
+                let mut c = [0u8; 8];
+                c.copy_from_slice(s);
+                Ok(Some(c))
+            }
+            b => Err(FrameError::CorrelationLen(b)),
+        }
+    }
+
     fn identity(&mut self) -> Result<Identity, FrameError> {
         let structure_key = self.len_bytes(MAX_STRUCTURE_KEY_LEN, FrameError::StructureKeyLen)?;
         let op_identity = self.len_bytes(MAX_OP_IDENTITY_LEN, FrameError::OpIdentityLen)?;
@@ -354,16 +421,7 @@ impl<'a> Reader<'a> {
             1 => Some(self.revision()?),
             b => return Err(FrameError::RevisionPresent(b)),
         };
-        let correlation_id = match self.u8()? {
-            0 => None,
-            8 => {
-                let s = self.take(8)?;
-                let mut c = [0u8; 8];
-                c.copy_from_slice(s);
-                Some(c)
-            }
-            b => return Err(FrameError::CorrelationLen(b)),
-        };
+        let correlation_id = self.correlation()?;
         Ok(Identity {
             structure_key,
             op_identity,
