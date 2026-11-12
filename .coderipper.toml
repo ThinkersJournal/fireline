@@ -17,3 +17,7 @@ reason = "versions by the JIT-on-request envelope interface"
 [[interface]]
 package = "fireline-dlpack"
 reason = "versions by the FDX (DLPack extension) interface"
+
+[[interface]]
+package = "fireline-contract"
+reason = "versions by the KISS-Contract bind-time interface (Dispatch expressions, 6.12)"
