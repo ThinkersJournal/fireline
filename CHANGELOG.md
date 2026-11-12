@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.0.22] — `fireline-announce` message frames SAVL, CYRQ, CRSP, CDEC (Draft-tracking)
+## [0.0.21] — `fireline-dlpack` clippy 1.100 `needless_range_loop` fix
 
-New `fireline_announce::frames` module (additive; the envelope API is untouched): encoders and decoders for the availability list `SAVL` (KISS-ANNOUNCE-6.3-0011, -0012, -0005), the contract-query request `CYRQ` (6.4-0001), the contract response `CRSP` (6.4-0004) and the decline response `CDEC` (6.4-0007), with the identity block (6.4-0011, 6.3-0013), the correlation field (6.4-0013) and the `decline_code` constants (6.4-0009). Decoders take the extent from the message alone, ignore bytes after it, check every declared length and count against the bytes left before allocating, and return a typed `FrameError` (6.2-0014..-0017). KISS-Announce is a Draft and its wire is not frozen, so expect rework. The four frames are byte-diffed against KISS `conformance/corpus/announce_vectors.json` (origin/main 73c341b5) in `tests/frames.rs`; the device-query frames DVRQ, DVRS and DVDC (6.6) are not built yet. Verified with `cargo test -p fireline-announce --locked`, clippy `-D warnings` and `cargo fmt`.
+Rust 1.100's clippy rejects three index loops over `a.terms` in `crates/dlpack/src/validate.rs` (the affine-term checks of the extent validator and the V17 evaluation), which failed `cargo clippy -D warnings` on every PR's CI from 2026-11-12. The loops now iterate the slices (`a.terms[..tc]`, `a.terms[tc..FDX_AFFINE_MAX_TERMS]`, `a.terms[..term_count]`), which panic on exactly the inputs the indexing did and preserve the order of checks and errors. No behaviour change. Verified with `cargo clippy --workspace --all-targets --locked -- -D warnings` and `cargo test -p fireline-dlpack --locked` (96 unit tests pass) on rustc 1.100.0.
 
 — lane: fireline
 
