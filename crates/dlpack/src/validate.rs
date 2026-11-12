@@ -1107,16 +1107,15 @@ pub fn check_v16_affine(ext: &FDXExtent, axis: usize) -> R {
         });
     }
     // Active terms: real sym, no duplicates.
-    for i in 0..tc {
-        let t = &a.terms[i];
+    for (i, t) in a.terms[..tc].iter().enumerate() {
         if t.sym_id == FDX_SYM_NONE {
             return Err(FdxValidationError::AffineMalformed {
                 axis,
                 detail: "active affine term must have a real sym_id",
             });
         }
-        for j in (i + 1)..tc {
-            if a.terms[j].sym_id == t.sym_id {
+        for u in &a.terms[(i + 1)..tc] {
+            if u.sym_id == t.sym_id {
                 return Err(FdxValidationError::AffineMalformed {
                     axis,
                     detail: "duplicate sym_id across active affine terms",
@@ -1125,8 +1124,7 @@ pub fn check_v16_affine(ext: &FDXExtent, axis: usize) -> R {
         }
     }
     // Inactive slots zeroed.
-    for i in tc..FDX_AFFINE_MAX_TERMS {
-        let t = &a.terms[i];
+    for t in &a.terms[tc..FDX_AFFINE_MAX_TERMS] {
         if t.sym_id != FDX_SYM_NONE || t.coeff != 0 {
             return Err(FdxValidationError::AffineMalformed {
                 axis,
@@ -1161,8 +1159,7 @@ pub fn check_v17_affine_eval(
 ) -> Result<u64, FdxValidationError> {
     let a = &ext.affine;
     let mut value: i128 = a.c0 as i128;
-    for i in 0..(a.term_count as usize) {
-        let t = &a.terms[i];
+    for t in &a.terms[..(a.term_count as usize)] {
         let s = env_lookup(env, t.sym_id).ok_or(FdxValidationError::UnboundSymbol {
             axis,
             sym_id: t.sym_id,
