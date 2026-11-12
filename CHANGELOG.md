@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.21] — `fireline-dlpack` clippy 1.100 `needless_range_loop` fix
+
+Rust 1.100's clippy rejects three index loops over `a.terms` in `crates/dlpack/src/validate.rs` (the affine-term checks of the extent validator and the V17 evaluation), which failed `cargo clippy -D warnings` on every PR's CI from 2026-11-12. The loops now iterate the slices (`a.terms[..tc]`, `a.terms[tc..FDX_AFFINE_MAX_TERMS]`, `a.terms[..term_count]`), which panic on exactly the inputs the indexing did and preserve the order of checks and errors. No behaviour change. Verified with `cargo clippy --workspace --all-targets --locked -- -D warnings` and `cargo test -p fireline-dlpack --locked` (96 unit tests pass) on rustc 1.100.0.
+
+— lane: fireline
+
 ## [0.0.20] — `fireline-contract` constant divisors are a build-time fault
 
 Tracks KISS#800 (CONTRACT-6.12-0007, -0008, origin/main@73c341b5). `division_by_zero` and `ceil_div_divisor` are now ratified codes and stay bind-time declines only when the divisor names a launch-scalar symbol. A divisor with no symbol that is zero (`/`) or not positive (`ceil_div`), such as `n / 0` or `ceil_div(8, 0)`, now fails `Expr::parse` with the new `ParseError::ConstantDivisor` (code `build_time`) instead of declining at bind time. `subscript_out_of_range` is still unnamed by the Draft and stays a bind-time decline here (kiss reports it at build time; the rank is only known from the environment). Verified with `cargo test -p fireline-contract --locked` (8 integration tests and the doctest pass).
