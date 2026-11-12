@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.22] — `fireline-announce` message frames SAVL, CYRQ, CRSP, CDEC (Draft-tracking)
+
+New `fireline_announce::frames` module (additive; the envelope API is untouched): encoders and decoders for the availability list `SAVL` (KISS-ANNOUNCE-6.3-0011, -0012, -0005), the contract-query request `CYRQ` (6.4-0001), the contract response `CRSP` (6.4-0004) and the decline response `CDEC` (6.4-0007), with the identity block (6.4-0011, 6.3-0013), the correlation field (6.4-0013) and the `decline_code` constants (6.4-0009). Decoders take the extent from the message alone, ignore bytes after it, check every declared length and count against the bytes left before allocating, and return a typed `FrameError` (6.2-0014..-0017). KISS-Announce is a Draft and its wire is not frozen, so expect rework. The four frames are byte-diffed against KISS `conformance/corpus/announce_vectors.json` (origin/main 73c341b5) in `tests/frames.rs`; the device-query frames DVRQ, DVRS and DVDC (6.6) are not built yet. Verified with `cargo test -p fireline-announce --locked`, clippy `-D warnings` and `cargo fmt`.
+
+— lane: fireline
+
 ## [0.0.20] — `fireline-contract` constant divisors are a build-time fault
 
 Tracks KISS#800 (CONTRACT-6.12-0007, -0008, origin/main@73c341b5). `division_by_zero` and `ceil_div_divisor` are now ratified codes and stay bind-time declines only when the divisor names a launch-scalar symbol. A divisor with no symbol that is zero (`/`) or not positive (`ceil_div`), such as `n / 0` or `ceil_div(8, 0)`, now fails `Expr::parse` with the new `ParseError::ConstantDivisor` (code `build_time`) instead of declining at bind time. `subscript_out_of_range` is still unnamed by the Draft and stays a bind-time decline here (kiss reports it at build time; the rank is only known from the environment). Verified with `cargo test -p fireline-contract --locked` (8 integration tests and the doctest pass).
