@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.17] - 2026-11-12
+
+- Tooling only: adopt the PM's changelog-fragment kit (`tools/stamp-version.py`, `tools/check-fragment.py`, `.github/workflows/changelog-fragment.yml`, `changelog.d/README.md`). From here a PR carries one `changelog.d/<topic>.md` fragment and no version edit; the PM stamps the number at merge. Verified: a throwaway fragment and `stamp-version.py 99.99.99 --dry-run` listed `Cargo.toml`, `Cargo.lock` and `CHANGELOG.md` (the 0.1.x interface crates are not touched). No crate change. The root version here is provisional.
+
 ## [0.0.16] - 2026-11-11
 
 - CI only: the advisory `portfolio` job now calls coderipper `portfolio.yml` at 4bcf55e (coderipper#303), which installs CodeRipper 0.43.41; the old pin installed 0.10.x and predates `[[interface]]`. No crate change. The root version here is the PM's stamp.
