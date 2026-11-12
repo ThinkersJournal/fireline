@@ -28,6 +28,8 @@
 //! Merged from `fuel-kernel-seam-announce` (the envelope, role-aware negotiation, the axis masks) and `baracuda-seam` (the wire codec and
 //! the truncation error). See this crate's README.
 
+pub mod frames;
+
 /// `"SEAM"`: the envelope magic, never changes.
 ///
 /// The numeric constant is `0x4D41_4553` so the little-endian on-wire bytes at offset 0 read `53 45 41 4D` = ASCII `SEAM` (KISS-ANNOUNCE
