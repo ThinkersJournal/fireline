@@ -45,6 +45,9 @@ pub enum ParseError {
     Literal(String),
     /// Nesting deeper than [`MAX_DEPTH`].
     TooDeep,
+    /// A divisor that names no launch-scalar symbol and is zero (`/`) or not positive (`ceil_div`), such as `n / 0` or `ceil_div(8, 0)`:
+    /// it cannot depend on the environment, so it is a build-time fault, not a bind-time decline (CONTRACT-6.12-0007, -0008).
+    ConstantDivisor(i64),
 }
 
 impl ParseError {
@@ -66,6 +69,7 @@ impl fmt::Display for ParseError {
             Self::Subscript(s) => write!(f, "build_time: wrong subscript use of `{s}`"),
             Self::Literal(s) => write!(f, "build_time: literal `{s}` does not fit i64"),
             Self::TooDeep => write!(f, "build_time: nesting deeper than {MAX_DEPTH}"),
+            Self::ConstantDivisor(d) => write!(f, "build_time: constant divisor {d}"),
         }
     }
 }
@@ -81,9 +85,9 @@ pub enum BindDecline {
     ExtentOutOfRange(i64),
     /// `affine_overflow` (6.12-0005): `+`, `-` or `*` left the signed 64-bit range, or `i64::MIN / -1` (6.6-0009(d)).
     AffineOverflow,
-    /// `division_by_zero` (6.6-0009(c); code name not named by the Draft).
+    /// `division_by_zero` (CONTRACT-6.12-0007; 6.6-0009(c)): bind-time only when the divisor names a launch-scalar symbol.
     DivisionByZero,
-    /// `ceil_div_divisor` (6.6-0009(b): a zero or negative divisor of `ceil_div`; code name not named by the Draft).
+    /// `ceil_div_divisor` (CONTRACT-6.12-0008; 6.6-0009(b)): a zero or negative `ceil_div` divisor, bind-time only when it names a symbol.
     CeilDivDivisor(i64),
     /// `subscript_out_of_range` (6.6-0006: an out-of-bounds subscript is a typed decline; the Draft does not say whether it is a build-time
     /// or bind-time one, and the rank is known only from the environment, so it is raised here; code name not named by the Draft).
@@ -364,6 +368,7 @@ impl Expr {
         if p.peek().is_some() {
             return Err(p.err("trailing input"));
         }
+        check_constant_divisors(&root)?;
         Ok(Self { root })
     }
 
@@ -385,6 +390,51 @@ impl Expr {
             return Err(BindDecline::ExtentOutOfRange(v));
         }
         Ok(v)
+    }
+}
+
+/// The value of a subtree that names no symbol, or `None` if it names one or its arithmetic would decline (left to bind time).
+fn const_value(node: &Node) -> Option<i64> {
+    match node {
+        Node::Lit(v) => Some(*v),
+        Node::Scalar(_) | Node::Elem(..) => None,
+        Node::Bin(op, l, r) => {
+            let (a, b) = (const_value(l)?, const_value(r)?);
+            match op {
+                '+' => a.checked_add(b),
+                '-' => a.checked_sub(b),
+                '*' => a.checked_mul(b),
+                _ => a.checked_div(b),
+            }
+        }
+        Node::CeilDiv(l, r) => {
+            let (a, b) = (const_value(l)?, const_value(r)?);
+            (b > 0).then(|| a / b + i64::from(a % b > 0))
+        }
+    }
+}
+
+/// A divisor with no symbol is fixed at build time, so a zero (or, for `ceil_div`, non-positive) one is a build-time fault
+/// (CONTRACT-6.12-0007, -0008); only a divisor that names a symbol can decline at bind time.
+fn check_constant_divisors(node: &Node) -> Result<(), ParseError> {
+    match node {
+        Node::Lit(_) | Node::Scalar(_) | Node::Elem(..) => Ok(()),
+        Node::Bin(op, l, r) => {
+            check_constant_divisors(l)?;
+            check_constant_divisors(r)?;
+            match (op, const_value(r)) {
+                ('/', Some(0)) => Err(ParseError::ConstantDivisor(0)),
+                _ => Ok(()),
+            }
+        }
+        Node::CeilDiv(l, r) => {
+            check_constant_divisors(l)?;
+            check_constant_divisors(r)?;
+            match const_value(r) {
+                Some(d) if d <= 0 => Err(ParseError::ConstantDivisor(d)),
+                _ => Ok(()),
+            }
+        }
     }
 }
 
