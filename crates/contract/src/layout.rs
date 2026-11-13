@@ -13,7 +13,7 @@
 
 use core::fmt;
 
-use crate::{Context, Expr, ParseError};
+use crate::{BindDecline, Context, Environment, Expr, ParseError};
 
 /// The deepest nesting of a nested layout's tuples: 0 for an integer, `1 +` the deepest child for a tuple (6.5-0017).
 pub const MAX_NEST_DEPTH: usize = 16;
@@ -592,4 +592,155 @@ impl fmt::Display for Layout {
             }
         }
     }
+}
+
+// ---- bind-time slot overlap (6.5-0019, 6.12-0002) --------------------------------------------------------------------------
+
+fn ck(v: Option<i128>) -> Result<i128, BindDecline> {
+    v.ok_or(BindDecline::AffineOverflow)
+}
+
+fn leaves(t: &Tuple, out: &mut Vec<i128>) {
+    match t {
+        Tuple::Int(v) => out.push(i128::from(*v)),
+        Tuple::Tuple(v) => v.iter().for_each(|x| leaves(x, out)),
+    }
+}
+
+/// The element-offset hull `[lowest, highest + 1)` of `extents` under `strides` (a stride may be negative); `None` when any extent is 0
+/// (no element, so no bytes).
+fn element_hull(extents: &[i128], strides: &[i128]) -> Result<Option<(i128, i128)>, BindDecline> {
+    if extents.contains(&0) {
+        return Ok(None);
+    }
+    let (mut lo, mut hi) = (0i128, 0i128);
+    for (e, s) in extents.iter().zip(strides) {
+        let span = ck((e - 1).checked_mul(*s))?;
+        if span < 0 {
+            lo = ck(lo.checked_add(span))?;
+        } else {
+            hi = ck(hi.checked_add(span))?;
+        }
+    }
+    Ok(Some((lo, ck(hi.checked_add(1))?)))
+}
+
+/// Densely packed strides for `extents` in the given axis order (the first of `order` slowest).
+fn packed(extents: &[i128], order: &[usize]) -> Result<Vec<i128>, BindDecline> {
+    let mut st = vec![0i128; extents.len()];
+    let mut run = 1i128;
+    for &axis in order.iter().rev() {
+        st[axis] = run;
+        run = ck(run.checked_mul(extents[axis]))?;
+    }
+    Ok(st)
+}
+
+fn bound(text: &str, env: &Environment, signed: bool) -> Result<i128, BindDecline> {
+    let e = Expr::parse(text).map_err(|_| BindDecline::SlotExpression(text.to_owned()))?;
+    let v = if signed {
+        e.bind_signed(env)?
+    } else {
+        e.bind(env, None)?
+    };
+    Ok(i128::from(v))
+}
+
+/// A slot's byte hull `[start, end)` under `env`, or `None` for an empty slot (a zero extent has no bytes).
+fn slot_hull(
+    slot: &Slot,
+    env: &Environment,
+    bits: &dyn Fn(&str) -> Option<u32>,
+) -> Result<Option<(i128, i128)>, BindDecline> {
+    let offset = bound(&slot.offset, env, false)?;
+    let ext = slot
+        .shape
+        .iter()
+        .map(|e| bound(e, env, false))
+        .collect::<Result<Vec<_>, _>>()?;
+    let natural: Vec<usize> = (0..ext.len()).collect();
+    let (extents, strides, window) = match &*slot.layout {
+        Layout::DenseOrder(order) => (ext.clone(), packed(&ext, order)?, 1i128),
+        Layout::Strided(exprs) => (
+            ext.clone(),
+            exprs
+                .iter()
+                .map(|e| bound(e, env, true))
+                .collect::<Result<Vec<_>, _>>()?,
+            1,
+        ),
+        Layout::Nested {
+            swizzle,
+            shape,
+            stride,
+        } => {
+            let (mut e, mut st) = (Vec::new(), Vec::new());
+            leaves(shape, &mut e);
+            leaves(stride, &mut st);
+            // a swizzle rounds the end of the hull up to its window of `2^(B+M)` elements (6.5-0019)
+            let window = match swizzle {
+                Some(w) => 1i128
+                    .checked_shl(
+                        u32::try_from(w.bits + w.base).map_err(|_| BindDecline::AffineOverflow)?,
+                    )
+                    .ok_or(BindDecline::AffineOverflow)?,
+                None => 1,
+            };
+            (e, st, window)
+        }
+        // `dense`, and `same_as(i)` whose rank the slot does not state: packed row-major is the hull a reader can compute.
+        _ => (ext.clone(), packed(&ext, &natural)?, 1),
+    };
+    let Some((lo, hi)) = element_hull(&extents, &strides)? else {
+        return Ok(None);
+    };
+    let hi = ck(ck(hi.checked_add(window - 1))?.checked_div(window))?
+        .checked_mul(window)
+        .ok_or(BindDecline::AffineOverflow)?;
+    let width = i128::from(
+        bits(&slot.dtype).ok_or_else(|| BindDecline::SlotDtypeWidth(slot.dtype.clone()))?,
+    );
+    // a sub-byte dtype rounds outward: the start down, the end up
+    let start = ck(offset.checked_add(ck(lo.checked_mul(width))?.div_euclid(8)))?;
+    let end = ck(offset.checked_add(ck(ck(hi.checked_mul(width))?.checked_add(7))?.div_euclid(8)))?;
+    Ok(Some((start, end)))
+}
+
+/// The bind-time check of a bundle's slots (CONTRACT-6.5-0019, 6.12-0002): decline `slot_overlap` when two slots' **byte hulls** intersect
+/// under `env`. A slot's hull is `[offset + its lowest element, offset + its highest element + 1)` in bytes: a sub-byte dtype rounds
+/// outward, a swizzle rounds the end up to its window, and a zero extent is an empty slot with no bytes (it overlaps nothing). Two slots
+/// overlap when their hulls intersect, so interleaved slots are refused: the check is deliberately conservative and declines some valid
+/// layouts (a later minor may relax it to element-level intersection). Hulls are compared pairwise in declaration order and the first
+/// overlapping pair names the decline.
+///
+/// `bits` gives a dtype's storage width in bits (the Classify table is not copied here; `fireline_classify` has only the MX three). Slot
+/// extents and offsets bind as extents (non-negative); strided strides bind signed. `same_as(i)` and `dense` have no stated rank or strides,
+/// so they are read as packed row-major (the hull a reader can compute).
+///
+/// # Errors
+/// [`BindDecline::SlotOverlap`] naming the first overlapping pair; [`BindDecline`] for any failing bind step ([`BindDecline::UnboundSymbol`],
+/// [`BindDecline::AffineOverflow`], ...) or a dtype width the table lacks ([`BindDecline::SlotDtypeWidth`]).
+pub fn check_slot_overlap(
+    slots: &[Slot],
+    env: &Environment,
+    bits: &dyn Fn(&str) -> Option<u32>,
+) -> Result<(), BindDecline> {
+    let hulls = slots
+        .iter()
+        .map(|s| slot_hull(s, env, bits))
+        .collect::<Result<Vec<_>, _>>()?;
+    for (i, a) in hulls.iter().enumerate() {
+        for (j, b) in hulls.iter().enumerate().skip(i + 1) {
+            if let (Some((a0, a1)), Some((b0, b1))) = (a, b)
+                && a0 < b1
+                && b0 < a1
+            {
+                return Err(BindDecline::SlotOverlap(
+                    slots[i].name.clone(),
+                    slots[j].name.clone(),
+                ));
+            }
+        }
+    }
+    Ok(())
 }
