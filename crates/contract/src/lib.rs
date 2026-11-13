@@ -27,7 +27,7 @@
 pub mod document;
 pub mod interface;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::ops::RangeInclusive;
 
@@ -226,10 +226,52 @@ pub struct Expr {
     root: Node,
 }
 
+/// What a contract tells the parser about the expression it is parsing: its declared **rank** and its own **launch-scalar vocabulary**
+/// (6.5-0004a: the symbols its Interface `positional_signature` declares). Both are optional; an empty [`Context`] is [`Expr::parse`].
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Context {
+    rank: Option<usize>,
+    vocabulary: Option<BTreeSet<String>>,
+}
+
+impl Context {
+    /// A context that knows nothing: the standard's vocabulary and no declared rank.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Declare the rank: a subscript `sym[k]` with `k >= rank` is then a build-time fault ([`ParseError::SubscriptOutOfBounds`]).
+    #[must_use]
+    pub fn with_rank(mut self, rank: usize) -> Self {
+        self.rank = Some(rank);
+        self
+    }
+
+    /// Declare the contract's launch-scalar vocabulary: a symbol of the standard's classes that is **not** in the set is outside this
+    /// contract's vocabulary and is a build-time [`ParseError::UnknownSymbol`] (6.5-0004a, 6.6-0006: "MUST NOT reference a symbol absent
+    /// from the vocabulary"), for example `strides0` in a fully packed cell.
+    #[must_use]
+    pub fn with_vocabulary(mut self, vocabulary: BTreeSet<String>) -> Self {
+        self.vocabulary = Some(vocabulary);
+        self
+    }
+
+    /// The context of an Interface: its declared rank and the vocabulary its `positional_signature` declares.
+    #[must_use]
+    pub fn of_interface(rank: usize, signature: &interface::Signature) -> Self {
+        Self::new()
+            .with_rank(rank)
+            .with_vocabulary(signature.vocabulary())
+    }
+}
+
 struct Parser<'a> {
     s: &'a [u8],
     at: usize,
     depth: usize,
+    /// The contract's launch-scalar vocabulary, when the caller knows it: a symbol outside it is a build-time fault.
+    vocabulary: Option<&'a BTreeSet<String>>,
     /// The contract-declared rank, when the caller knows it: a subscript at or past it is a build-time fault.
     rank: Option<usize>,
 }
@@ -351,6 +393,11 @@ impl Parser<'_> {
                 ParseError::UnknownSymbol(name.clone())
             }
         })?;
+        if let Some(v) = self.vocabulary
+            && !v.contains(&name)
+        {
+            return Err(ParseError::UnknownSymbol(name));
+        }
         let subscripted = self.eat(b'[');
         match (kind, subscripted) {
             (Kind::Scalar, false) => Ok(Node::Scalar(name)),
@@ -386,7 +433,17 @@ impl Expr {
     /// # Errors
     /// [`ParseError`] when the text is not accepted by the §6.6-0006 grammar over the launch-scalar vocabulary.
     pub fn parse(text: &str) -> Result<Self, ParseError> {
-        Self::parse_inner(text, None)
+        Self::parse_inner(text, &Context::new())
+    }
+
+    /// Parse an expression for a contract that declares its [`Context`] (its rank and its own launch-scalar vocabulary). A fault here is a
+    /// **build-time** fault (6.12-0002): a symbol outside the contract's vocabulary is [`ParseError::UnknownSymbol`] even when it is one of
+    /// the standard's names, and an out-of-bounds subscript is [`ParseError::SubscriptOutOfBounds`].
+    ///
+    /// # Errors
+    /// [`ParseError`].
+    pub fn parse_in(text: &str, context: &Context) -> Result<Self, ParseError> {
+        Self::parse_inner(text, context)
     }
 
     /// Parse an expression for a contract that **declares its rank**: a subscript `sym[k]` with `k >= rank` is a build-time fault
@@ -397,10 +454,10 @@ impl Expr {
     /// # Errors
     /// [`ParseError`], including [`ParseError::SubscriptOutOfBounds`].
     pub fn parse_with_rank(text: &str, rank: usize) -> Result<Self, ParseError> {
-        Self::parse_inner(text, Some(rank))
+        Self::parse_inner(text, &Context::new().with_rank(rank))
     }
 
-    fn parse_inner(text: &str, rank: Option<usize>) -> Result<Self, ParseError> {
+    fn parse_inner(text: &str, context: &Context) -> Result<Self, ParseError> {
         if !text.is_ascii() {
             return Err(ParseError::Syntax(
                 "expressions are ASCII (6.6-0006)".into(),
@@ -410,7 +467,8 @@ impl Expr {
             s: text.as_bytes(),
             at: 0,
             depth: 0,
-            rank,
+            vocabulary: context.vocabulary.as_ref(),
+            rank: context.rank,
         };
         let root = p.expr()?;
         if p.peek().is_some() {
