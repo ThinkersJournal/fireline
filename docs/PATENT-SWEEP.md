@@ -203,3 +203,57 @@ None from this pass. **This sweep does not clear `fireline-contract` for publish
 - The idea list comes from the source; **I did not read KISS-Contract in full**, so a mechanism described only there may be unswept.
 - Three searches, two patents read, four surfaced and unread. Statuses, expiry dates and fee states are Google's; no USPTO record was checked.
 - `fireline-contract`'s wire frames (SAVL, CYRQ, CRSP, CDEC) are not built yet and are not covered.
+
+## Addendum: fireline-classify 0.1.0 (FIRST PASS, NOT COMPLETE) @ origin/main 0a180a4
+
+Date: 2026-11-13. Run by: the FireLine lane, Claude Sonnet 5.5, on the PM's task (publish of `fireline-classify` 0.1.0 waits for this addendum). Same method, reading standard and limits as the sections above: claims read in full by me from Google Patents text fetched with `patent-claims.py`; statuses are Google's display. **NOT legal advice; NOT a freedom-to-operate opinion.**
+Scope: only `fireline-classify` (`crates/classify`): the three MX element dtypes `f4e2m1`, `f6e2m3`, `f6e3m2` of KISS-CLASSIFY-6.1-0014..-0016: a value rule (decode a 4- or 6-bit code to its exact value), a byte packing (two 4-bit elements per byte, low nibble first; four 6-bit elements per three bytes, least-significant bit first; trailing bits zero) and a rule that an MX element is never an accumulator dtype (a typed decline). The crate **multiplies nothing, accumulates nothing, quantises nothing and runs on no device**: it defines the formats and checks a token and a buffer.
+
+### Provenance (which spec, whose licence, what is copied)
+
+- **Value rule and constants:** the OCP Microscaling Formats (MX) Specification Version 1.0 (September 2023), sections 5.3 to 5.3.3 (E2M1 with exponent bias 1; E2M3 bias 1; E3M2 bias 3; no infinity, no NaN; the maximum, minimum-normal and subnormal values), as cited by KISS-CLASSIFY-6.1-0014 and -0015, which record them as "verified-against-OCP (2026-10-26)". The specification is the work of the OCP MX Alliance (AMD, Arm, Intel, Meta, Microsoft, NVIDIA, Qualcomm; credit given here and in the crate README). **What is taken is the format definition (field widths, bias, the value formula and the limits it states): numbers and a formula, not text or code.** The crate quotes no passage and copies no source file; the tests restate the limits the KISS clauses quote.
+- **Packing:** NOT from OCP. The 4-bit nibble order is inherited from KISS-CLASSIFY-6.1-0008 (`i4`/`u4`) and the 6-bit "four per three bytes, least-significant bit first" layout is, in KISS-CLASSIFY-6.1-0015's own words, "the Unpopped lane's storage convention adopted as the pin" (the OCP document fixes no packing); KISS says it has not been checked against any CUTLASS, Mojo, Triton or hardware layout. This crate follows the KISS text and states the same limit.
+- **Licence of the OCP specification: NOT resolved by me.** The v1.0 specification's licence section refers to the OWFa 1.0 specification licences of its contributors (the v1.1 text names the "Open Web Foundation Modified Final Specification Agreement" and a "Modified Contributor License Agreement"), while OCP's announcement describes the release as open and licence-free. I found no source that reconciles the two and did not read the executed agreements. For this crate the question is small (no text or code is copied; a format definition is used), but **the licence terms, and any patent licence or non-assert the contributors grant in them, are not checked here and are owed to a person who reads the agreements.**
+- **A newer revision exists and was not read:** OCP now publishes a v1.1 ("MicroXcaling", dated October 2026 on its site). This addendum and KISS cite v1.0; I did not compare v1.1, so a change to these three formats there is unchecked.
+- No third-party code.
+
+### Ideas swept (written from the source and the KISS clauses, not from a full read of KISS-Classify or the OCP specification)
+
+1. A **4-bit floating-point element dtype**: sign 1, exponent 2, mantissa 1, bias 1, no infinity and no NaN, exact values 0, 0.5, 1, 1.5, 2, 3, 4, 6 and their negatives, with `-0` a code of its own (`f4e2m1`).
+2. **6-bit floating-point element dtypes**: sign 1, exponent 2 or 3, mantissa 3 or 2, biases 1 and 3, no infinity and no NaN, largest finite values 7.5 and 28 (`f6e2m3`, `f6e3m2`).
+3. A **byte packing** for those elements: two 4-bit codes per byte with the even logical index in the low nibble; four 6-bit codes per three bytes, least-significant bit first, `ceil(6n/8)` bytes, unused trailing bits required to be zero, with a reader that declines a buffer whose padding is set.
+4. A rule that these narrow element dtypes **are storage and operand dtypes only and never an accumulator**, answered with a typed decline distinct from the unknown-token and reserved-token declines.
+5. Decoding such a code to its value by **field extraction and the closed formula** `(-1)^s * 2^(e-bias) * (1 + m/2^M)` (subnormal for `e = 0`), exact in a 64-bit float.
+
+### Queries (source, query, date 2026-11-13)
+
+Web search restricted to `patents.google.com`, US-only, standard mode.
+
+| # | Ideas | Query |
+|---|---|---|
+| Q13 | 1, 2 | `patent 4-bit floating point element format sign exponent mantissa E2M1 microscaling block shared scale quantization neural network` |
+| Q14 | 3 | `patent packing 6-bit floating point values into bytes four elements three bytes memory layout low precision tensor storage` |
+| Q15 | 4 | `patent low-precision floating point format operand restricted accumulate in higher precision format accumulator data type different from operand 4-bit 6-bit 8-bit matrix multiply` |
+
+Plus one non-patent search (OCP MX specification licence) for the provenance above. **Not searched:** idea 5 as such (decoding by formula), and no claim-language or CPC-class query was run. Q13 to Q15 are single-pass, and most hits were papers or USPTO PDFs whose claims were not shown.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 14 | US 2024/0160406 A1 | Low-precision floating-point datapath in a computer processor | Nvidia Corp | **Pending** (application) | 1, 4, 5, 6, 13, 20, 22, 25 (independent) | The nearest hit for ideas 1 and 2: **"VS-Quant FP4" floating-point operands** (claims 6, 20) and low-precision floating-point operands with a low-precision scale factor. | Every independent claim needs **a computer processor with multiplier units** that multiply two VS-Quant (FP4 or LOG4) operands into an **integer** result, adders that reduce the integer results, and logic that multiplies by **a low-precision floating-point scale factor** (or a method that adds exponents, multiplies mantissas, XORs signs and accumulates integer partial products). The crate defines a code's value and its byte packing; it multiplies, adds and scales nothing and is not a processor. | **clear** for this crate. Pending: re-check for a grant. |
+| 15 | US 12,632,219 B2 | Quantization and low precision AI processor | Matx Inc | Active (Google) | 1, 16, 18 (independent) | A block quantisation format whose values hold **4-bit or lower fraction bits with shared scale bits** (the shape of an MX block, ideas 1 and 2). | The claims need **an AI-accelerating processor whose systolic array has at least 90% of its multipliers limited to 4-bit or lower input precision** and **a quantizer** that converts values from a first precision format into the block format. The crate has no systolic array, no multipliers and no quantizer, and it does not define the block (the per-block `f8e8m0` scale is not in it). | **clear** |
+| 16 | US 2025/0291873 A1 | Universal Scale Metadata Layout for Matrix Multiply and Add (MMA) | Nvidia Corp (Google spells it "NVDIA") | **Pending** (application) | 1, 17, 18 (independent) | Scale metadata for narrow operands ("low precision floating-point" meaning 8 or fewer bits, such as 4/6/8) next to matrix operands. Already row 8 of this record (read for `fireline-dlpack`, verdict clear); re-read here against ideas 1 to 3. | The claims need **an MMA circuit** and **scale metadata block data structures** whose width `q` is set from a vector length, copied from global to device memory. Nothing about an element's bit layout, value rule or packing is claimed, and the crate has no circuit and no scale metadata. | **clear** for this crate. Pending: re-check for a grant. |
+| 17 | US 8,280,936 B2 | Packed restricted floating point representation and logic for conversion to single precision float | Intel Corp | Expired, fee related; estimate 2030-03-20 (Google) | 1, 7 (independent) | A narrow floating-point storage format (**8 bits: 1 sign, 3 exponent, 4 fraction**) held in memory and expanded to a wider float. | The claims are **digital logic that populates the exponent bits of an expanded data structure by inverting and gating exponent bits** (an inverter, an OR gate and an AND gate). The formats here are 4 and 6 bits with different field widths, nothing is expanded in logic, and the status is expired. | **clear** |
+
+**Surfaced and NOT read** (no verdict, never "clear"): US 8,874,794 B2 (block floating point compression with exponent difference and mantissa coding), US 7,216,138 B2 (floating point operations and format conversion), US 10,242,423 B2 (compute optimisations for low precision machine learning operations), US 10,338,919 B2 (generalised acceleration of matrix multiply accumulate), US 11,442,696 B1 (floating point multiply-add and accumulate unit with exception processing), US 2023/0359694 A1 (variable-precision matrix multiplication with low-precision digit matrix multiplier). The NVIDIA, Microsoft, AMD, Intel and Qualcomm families on narrow-precision and block-scaled formats are large; four patents is not a survey of them.
+
+### Needs review (to the PM)
+
+**No hit read on a claim, so no `[ASK]`.** This is a first pass: four patents read and six surfaced and unread, from three single-pass queries on the three most obvious phrasings. **It does not clear `fireline-classify` for publishing on its own.** Two items are owed to a person: (1) the OCP MX specification's licence terms and any patent licence or non-assert in them (see Provenance), and (2) a claim-language and CPC-class pass over the narrow-float-format and packing families before a release.
+
+### Limitations specific to this addendum
+
+- The idea list comes from the source and the KISS clauses; **I did not read the OCP MX specification or KISS-Classify in full**, so a mechanism described only there may be unswept.
+- Three patent searches and four patents read. Statuses, expiry dates and fee states are Google's; no USPTO record, prosecution history or foreign family was checked.
+- The OCP specification's licence is unresolved (above), and the v1.1 revision is unread.
