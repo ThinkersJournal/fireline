@@ -1,0 +1,13 @@
+[package]
+name = "fireline-classify"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "KISS-Classify dtype definitions: the MX element dtypes f4e2m1, f6e2m3 and f6e3m2 (value rule, packing, never an accumulator; KISS-CLASSIFY-6.1-0014..-0016). Draft-tracking, dependency-free."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ThinkersJournal/fireline"
+readme = "README.md"
+keywords = ["dtype", "mx", "microscaling", "classify", "ml"]
+
+# Intentionally dependency-free, like the other interface crates: a reader that only decodes an element must not pull in anything else.
+[dependencies]
