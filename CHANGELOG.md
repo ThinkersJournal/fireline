@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.24] — patent sweep, first pass, for `fireline-contract`
+
+`docs/PATENT-SWEEP.md` gains an addendum for `fireline-contract` (six ideas, three queries, two patents read: Fujitsu US 8,595,701 B2 and Intel US 12,242,973 B2, both read as clear). It is a first pass and does not clear the crate for publishing. Documentation only; no code change.
+
+— lane: fireline
+
 ## [0.0.23] — `fireline-announce` message frames SAVL, CYRQ, CRSP, CDEC (Draft-tracking)
 
 New `fireline_announce::frames` module (additive; the envelope API is untouched): encoders and decoders for the availability list `SAVL` (KISS-ANNOUNCE-6.3-0011, -0012, -0005), the contract-query request `CYRQ` (6.4-0001), the contract response `CRSP` (6.4-0004) and the decline response `CDEC` (6.4-0007), with the identity block (6.4-0011, 6.3-0013), the correlation field (6.4-0013) and the `decline_code` constants (6.4-0009). Decoders take the extent from the message alone, ignore bytes after it, check every declared length and count against the bytes left before allocating, and return a typed `FrameError` (6.2-0014..-0017). KISS-Announce is a Draft and its wire is not frozen, so expect rework. The four frames are byte-diffed against KISS `conformance/corpus/announce_vectors.json` (origin/main 73c341b5) in `tests/frames.rs`; the device-query frames DVRQ, DVRS and DVDC (6.6) are not built yet. Verified with `cargo test -p fireline-announce --locked`, clippy `-D warnings` and `cargo fmt`.
