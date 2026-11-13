@@ -120,6 +120,13 @@ pub enum BindDecline {
         index: usize,
         len: usize,
     },
+    /// `slot_overlap` (CONTRACT-6.5-0019, 6.12-0002): two bundle slots' byte hulls intersect, bound against this launch's environment. Carries
+    /// both slot names, the first overlapping pair in declaration order.
+    SlotOverlap(String, String),
+    /// A bundle slot whose dtype width the caller's table does not know (the Classify table is not copied here; see [`layout::check_slot_overlap`]).
+    SlotDtypeWidth(String),
+    /// A bundle slot expression that does not parse (a hand-built slot: slots read by [`layout::parse_layout`] were already parsed).
+    SlotExpression(String),
 }
 
 impl BindDecline {
@@ -133,6 +140,9 @@ impl BindDecline {
             Self::DivisionByZero => "division_by_zero",
             Self::CeilDivDivisor(_) => "ceil_div_divisor",
             Self::SubscriptOutOfRange { .. } => "subscript_out_of_range",
+            Self::SlotOverlap(..) => "slot_overlap",
+            Self::SlotDtypeWidth(_) => "slot_dtype_width",
+            Self::SlotExpression(_) => "slot_expression",
         }
     }
 }
@@ -145,6 +155,9 @@ impl fmt::Display for BindDecline {
             Self::AffineOverflow => write!(f, "affine_overflow"),
             Self::DivisionByZero => write!(f, "division_by_zero"),
             Self::CeilDivDivisor(d) => write!(f, "ceil_div_divisor: {d}"),
+            Self::SlotOverlap(a, b) => write!(f, "slot_overlap: `{a}` and `{b}`"),
+            Self::SlotDtypeWidth(d) => write!(f, "slot_dtype_width: `{d}`"),
+            Self::SlotExpression(e) => write!(f, "slot_expression: `{e}`"),
             Self::SubscriptOutOfRange { symbol, index, len } => {
                 write!(
                     f,
@@ -497,6 +510,15 @@ impl Expr {
             return Err(BindDecline::ExtentOutOfRange(v));
         }
         Ok(v)
+    }
+
+    /// Bind the expression **without** the extent gate of 6.12-0004: the final value may be negative. For a quantity that is not an extent,
+    /// such as a stride (6.5-0005: `< 0` is reversed). Every other step (lookup, arithmetic, overflow, division) is the same as [`Expr::bind`].
+    ///
+    /// # Errors
+    /// [`BindDecline`] naming the first failing step.
+    pub fn bind_signed(&self, env: &Environment) -> Result<i64, BindDecline> {
+        bind_node(&self.root, env)
     }
 }
 
