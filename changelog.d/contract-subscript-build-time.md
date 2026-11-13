@@ -1,0 +1,5 @@
+kind: `fireline-contract` out-of-bounds subscript is a build-time fault when the rank is declared
+---
+Follows KISS (kiss 2026-11-12, origin/main 73c341b5): an out-of-bounds subscript is reported at **build** time, because the rank is declared by the contract and not by the launch (`Decline::SubscriptOutOfBounds`, no code name yet). New `Expr::parse_with_rank(text, rank)` rejects `sym[k]` with `k >= rank` as the new `ParseError::SubscriptOutOfBounds { symbol, index, rank }` (code `build_time`, 6.12-0002). `Expr::parse` is unchanged (no rank known), so the bind-time `subscript_out_of_range` decline remains for an expression parsed without a rank and for an environment array shorter than the declared rank. Additive apart from the new `ParseError` variant (the crate is unpublished). Verified with `cargo test -p fireline-contract --locked` (a new test covers declared-rank, rank 0, unchanged `parse`, and a short environment array), workspace clippy `-D warnings`, fmt and doc `-D warnings`. Draft, unfrozen: the decline's name is KISS's to give.
+
+— lane: fireline

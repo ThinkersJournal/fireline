@@ -222,3 +222,47 @@ fn grammar_precedence_and_subscripts() {
     );
     assert_eq!(r.unwrap_err().code(), "subscript_out_of_range");
 }
+
+// KISS: an out-of-bounds subscript is BUILD-time when the contract declares the rank (the rank is the contract's, not the launch's).
+#[test]
+fn a_declared_rank_makes_an_out_of_bounds_subscript_a_build_time_fault() {
+    for (text, symbol, index) in [
+        ("extents0[2]", "extents0", 2),
+        ("n + strides1[5]", "strides1", 5),
+        ("ceil_div(extents0[0], idx_extents0[3])", "idx_extents0", 3),
+    ] {
+        let err = Expr::parse_with_rank(text, 2).unwrap_err();
+        assert_eq!(
+            err,
+            ParseError::SubscriptOutOfBounds {
+                symbol: symbol.into(),
+                index,
+                rank: 2
+            },
+            "{text}"
+        );
+        assert_eq!(err.code(), "build_time");
+    }
+    // in range, the same text parses and binds
+    let e = Expr::parse_with_rank("extents0[1] * 2", 2).unwrap();
+    assert_eq!(e.bind(&env(1), None), Ok(8));
+    // rank 0 declares no axis at all: every subscript is out of bounds
+    assert!(matches!(
+        Expr::parse_with_rank("extents0[0]", 0),
+        Err(ParseError::SubscriptOutOfBounds { rank: 0, .. })
+    ));
+    // without a declared rank, `parse` is unchanged and the check stays at bind time
+    let e = Expr::parse("extents0[2]").unwrap();
+    assert!(matches!(
+        e.bind(&env(1), None),
+        Err(BindDecline::SubscriptOutOfRange { .. })
+    ));
+    // with a rank, a short environment array is still a bind-time decline (the environment broke the rank)
+    let e = Expr::parse_with_rank("extents0[1]", 2).unwrap();
+    let mut short = Environment::new();
+    short.set_array("extents0", &[7]);
+    assert!(matches!(
+        e.bind(&short, None),
+        Err(BindDecline::SubscriptOutOfRange { .. })
+    ));
+}
