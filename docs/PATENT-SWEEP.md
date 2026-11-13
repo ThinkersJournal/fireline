@@ -158,3 +158,48 @@ None new from this pass. **Fuel's own ideas 9 and 14 remain Fuel's open items.**
 
 - The idea list comes from struct names, the validator list and the code; **I did not read the FDX spec in full**, so a mechanism described only there may be unswept. Ideas 7 and 8 were not searched.
 - Three searches, four patents read, plus Fuel's rows inherited and unread. Statuses, expiry dates and fee states are Google's; no USPTO record was checked.
+
+## Addendum: fireline-contract 0.1.0 (FIRST PASS, NOT COMPLETE) @ origin/main 8d013e4 (plus fireline#22 constant-divisor change)
+
+Date: 2026-11-12. Run by: the FireLine lane, Claude Sonnet 5.5. Same method, reading standard and limits as the sections above: claims read from Google Patents text fetched with `patent-claims.py`; statuses are Google's display. **NOT legal advice; NOT a freedom-to-operate opinion.**
+Scope: only `fireline-contract` (`crates/contract`): a parser and bind-time evaluator for KISS-CONTRACT 6.6-0006 / 6.12 Dispatch expressions. It **runs no kernel, allocates nothing and touches no device**: it parses integer expressions and evaluates them against a caller-supplied environment.
+
+### Ideas swept (written from the source, not from a full read of KISS-Contract)
+
+1. **Launch extents as integer expressions over a closed vocabulary of named launch-scalar symbols** (`n`, `ws_bytes`, `off{i}`, `param{i}`, and subscripted rank-length arrays), parsed once at build time and **bound to a different value under each launch environment** (6.12-0001).
+2. **Pinned integer semantics**: `/` truncates toward zero, `ceil_div` is the true ceiling for a positive divisor (never the truncating `(a + b - 1) / b`), and `i64::MIN / -1` and every `+ - *` that leaves the signed 64-bit range decline instead of wrapping (6.6-0009).
+3. **Typed bind-time declines** (`unbound_symbol`, `extent_out_of_range`, `affine_overflow`, `division_by_zero`, `ceil_div_divisor`), with the first failing step in a fixed left-to-right order naming the decline, and a non-negative and range gate applied to the final value only (6.12-0003..-0006).
+4. **A split between build-time and bind-time faults**: a malformed expression or a symbol-free zero divisor is a build-time fault, a symbol-dependent one declines at bind time (6.12-0002, -0007, -0008).
+5. **An unassigned symbol never defaults to zero**: unbound and zero are distinct (6.12-0003).
+6. A **nesting limit** so a hostile expression cannot overflow the stack.
+
+### Queries (source, query, date 2026-11-12)
+
+Web search restricted to `patents.google.com`, US-only, standard mode.
+
+| # | Ideas | Query |
+|---|---|---|
+| Q10 | 1, 4, 5 | `patent symbolic launch dimension expression bound at kernel launch time affine expression of named scalar symbols ceiling division typed decline when symbol unbound` |
+| Q11 | 2, 3 | `patent evaluating integer shape expression at runtime tensor dimension symbolic shape binding overflow detection division by zero error before kernel launch` |
+| Q12 | 1, 2 | `patent compiler dynamic shape symbolic expression evaluated at launch grid size ceil_div workspace bytes computed from runtime parameters kernel contract validation` |
+
+**Not searched at all:** idea 6 (nesting limit). Q10 to Q12 are single-pass; none is a claim-language or CPC-class search, and the search engine returned few patent pages (most hits were papers or USPTO PDFs whose claims were not shown).
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 12 | US 8,595,701 B2 | Symbolic execution and test generation for GPU programs | Fujitsu | Expired, fee related; estimate 2031-12-06 (Google) | 1, 10, 19, 28 (independent) | Symbolic inputs and symbolic expressions for a GPU program, and a test case of values that satisfy a result. | The claims need **bytecode compiled from a program**, **symbolic execution of threads on a deterministic schedule simulating SIMD execution**, and **path conditions per execution path**. The crate evaluates a concrete integer expression against concrete values; it has no bytecode, no threads, no symbolic path exploration and no test generation. | **clear** |
+| 13 | US 12,242,973 B2 | Graph context-based operator checks to improve graph clustering and execution in AI accelerator framework integration | Intel | Active; estimate 2043-11-30 (Google) | 1 and 6 (independent; any further independent claim not read) | A check that a shape attribute has **no zero dimension values**, used before a node is marked supported. | The claims **parse a deep learning graph in topological order and mark nodes supported or unsupported by target hardware**, then cluster them. The crate checks a divisor inside an arithmetic expression and clusters and marks nothing. | **clear** |
+
+**Surfaced and NOT read** (no verdict, never "clear"): US 2021/0271587 A1 (detection of runtime errors by machine learning), CN 103399780 A (integer overflow detection by dynamic symbolic execution), and several NVIDIA kernel-launch patents that appeared only through boilerplate text in USPTO PDFs (not identified by number). The papers (BladeDISC++, Nimble, PyTea, ShapeFlow) are prior art for the idea, not patents.
+
+### Needs review (to the PM)
+
+None from this pass. **This sweep does not clear `fireline-contract` for publishing**: two patents were read, the three searches were thin, and ideas 1 to 3 (the closest to compiler and runtime shape handling) deserve a claim-language and CPC-class pass before a release.
+
+### Limitations specific to this addendum
+
+- The idea list comes from the source; **I did not read KISS-Contract in full**, so a mechanism described only there may be unswept.
+- Three searches, two patents read, four surfaced and unread. Statuses, expiry dates and fee states are Google's; no USPTO record was checked.
+- `fireline-contract`'s wire frames (SAVL, CYRQ, CRSP, CDEC) are not built yet and are not covered.
