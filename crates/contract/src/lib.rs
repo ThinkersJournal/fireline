@@ -25,6 +25,7 @@
 //! ```
 
 pub mod document;
+pub mod interface;
 
 use std::collections::BTreeMap;
 use std::fmt;
