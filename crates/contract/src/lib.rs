@@ -26,6 +26,7 @@
 
 pub mod document;
 pub mod interface;
+pub mod layout;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
