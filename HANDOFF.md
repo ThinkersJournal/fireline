@@ -24,4 +24,4 @@ So **FireLine owns seam DEFINITIONS**; the sides may talk directly. Board 395: p
 ## Housekeeping
 Untracked `supertool` in this worktree is not mine; never add it. Primary checkout `C:/Projects/fireline` is stale on main (`tools/sync-checkouts.sh`; not mine to force). Fuel's wave-2 scope (2026-11-11): contract then provider, first proof CPU `gemm`, then Vulkan, then AOCL.
 
-WAIT: CI on the device-frames PR then READY; PM merge of fireline#23 | check: gh pr view 23 --repo ThinkersJournal/fireline --json state,mergedAt | wake: 2026-11-13T00:35:00Z
+WAIT: PM merge of fireline#26 (READY sent 00:13Z, head 5b6e0ce) and fireline#23 | check: gh pr view 23 --repo ThinkersJournal/fireline --json state,mergedAt | wake: 2026-11-13T01:00:00Z
