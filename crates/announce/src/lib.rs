@@ -28,6 +28,7 @@
 //! Merged from `fuel-kernel-seam-announce` (the envelope, role-aware negotiation, the axis masks) and `baracuda-seam` (the wire codec and
 //! the truncation error). See this crate's README.
 
+pub mod device;
 pub mod frames;
 
 /// `"SEAM"`: the envelope magic, never changes.

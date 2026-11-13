@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.25] — `fireline-announce` device-query frames DVRQ, DVRS, DVDC (Draft-tracking)
+
+New `fireline_announce::device` module (additive): encoders and decoders for the device-query request `DVRQ` (KISS-ANNOUNCE-6.6-0003), the device response `DVRS` with its device and accuracy records (6.6-0004, -0006, -0007, -0008) and the device decline `DVDC` (6.6-0005), sharing `FrameError` and the correlation field with `frames`. `FrameError` (non-exhaustive) gains the device-record variants. Every bound of 6.6-0004 and -0006 is checked before allocating; dtype sets must be strictly ascending, `compute_dtypes` a subset of `store_dtypes`, accuracy records strictly ascending by `(op, math_fidelity, dtype)` with a fidelity of 1 or 2 and a dtype the device computes on. The Classify dtype table is not copied: each coder takes an `is_dtype` predicate, so "a spelling of the Classify table, not reserved" (6.6-0007) is the caller's to answer. The three frames are byte-diffed against KISS `conformance/corpus/announce_vectors.json` (origin/main 73c341b5) in `tests/device.rs`. Draft, unfrozen: expect rework. Not covered: 6.6-0009 and -0010 (a consumer's pairing rules), which are not frames. Verified with `cargo test -p fireline-announce --locked`, clippy `-D warnings`, fmt and doc `-D warnings`.
+
+— lane: fireline
+
+## [0.0.26] — `fireline-contract` document framing (KISS-CONTRACT 6.11, FDX V1)
+
+New `fireline_contract::document` module (additive): `parse_document` frame-checks a contract document and splits it into its seven sections, and `encode_document` frames a body, following KISS-CONTRACT-6.11-0002 (the pinned `KISC <kind> <version> len=<N> crc32=<HHHHHHHH>` header line, LF only), -0003 (inner length and CRC-32), -0003a (the 2^24 length cap, checked before any work keyed on `N`), -0003b (a CRC is not a signature) and -0004 (the seven heading lines in order), with the loud-failure rules of 6.1-0002, -0003 and -0004 and 6.1-0008 (the supported `contract_version` set is declared by the reader, never inferred from an order). Typed `DocumentError` with KISS's stable category tags (`wire_tag`). The golden document and all 13 single-fault decline vectors of KISS `conformance/corpus/contract_vectors.json` (origin/main 73c341b5) are byte-diffed in `tests/document.rs`: the golden document parses and re-frames to the same bytes, and each decline matches its category. This maps FDX V1 to its KISS clauses. Not covered: the field lines inside each section (6.11-0005 onwards), which are returned as raw bytes. Draft, unfrozen: expect rework. Verified with `cargo test -p fireline-contract --locked`, clippy `-D warnings`, fmt and doc `-D warnings`.
+
+— lane: fireline
+
+## [0.0.24] — patent sweep, first pass, for `fireline-contract`
+
+`docs/PATENT-SWEEP.md` gains an addendum for `fireline-contract` (six ideas, three queries, two patents read: Fujitsu US 8,595,701 B2 and Intel US 12,242,973 B2, both read as clear). It is a first pass and does not clear the crate for publishing. Documentation only; no code change.
+
+— lane: fireline
+
 ## [0.0.23] — `fireline-announce` message frames SAVL, CYRQ, CRSP, CDEC (Draft-tracking)
 
 New `fireline_announce::frames` module (additive; the envelope API is untouched): encoders and decoders for the availability list `SAVL` (KISS-ANNOUNCE-6.3-0011, -0012, -0005), the contract-query request `CYRQ` (6.4-0001), the contract response `CRSP` (6.4-0004) and the decline response `CDEC` (6.4-0007), with the identity block (6.4-0011, 6.3-0013), the correlation field (6.4-0013) and the `decline_code` constants (6.4-0009). Decoders take the extent from the message alone, ignore bytes after it, check every declared length and count against the bytes left before allocating, and return a typed `FrameError` (6.2-0014..-0017). KISS-Announce is a Draft and its wire is not frozen, so expect rework. The four frames are byte-diffed against KISS `conformance/corpus/announce_vectors.json` (origin/main 73c341b5) in `tests/frames.rs`; the device-query frames DVRQ, DVRS and DVDC (6.6) are not built yet. Verified with `cargo test -p fireline-announce --locked`, clippy `-D warnings` and `cargo fmt`.
