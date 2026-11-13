@@ -26,6 +26,7 @@
 
 pub mod document;
 pub mod fields;
+pub mod identity;
 pub mod interface;
 pub mod layout;
 pub mod values;
