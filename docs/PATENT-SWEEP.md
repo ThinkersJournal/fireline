@@ -267,3 +267,60 @@ Plus one non-patent search (OCP MX specification licence) for the provenance abo
 - The idea list comes from the source and the KISS clauses; **I did not read the OCP MX specification or KISS-Classify in full**, so a mechanism described only there may be unswept.
 - Three patent searches and four patents read. Statuses, expiry dates and fee states are Google's; no USPTO record, prosecution history or foreign family was checked.
 - The OCP specification's agreement was read as a blank template (the executed copies are held by OCP and were not seen), and its text and my reading of it are not legal advice. v1.1 was read for the three element formats and the licence section only, not in full; the PDFs were read as extracted text (`pdftotext -layout`), whose symbols were partly garbled, so the table values above were checked against the numbers the KISS clauses quote.
+
+## Addendum: fireline-contract second pass (FIRST PASS, NOT COMPLETE) @ origin/main 3355890 (plus fireline#34)
+
+Date: 2026-11-13. Run by: the FireLine lane, Claude Sonnet 5.5. Same method, reading standard and limits as the sections above: claims read in full by me from Google Patents text fetched with `patent-claims.py`; statuses are Google's display. **NOT legal advice; NOT a freedom-to-operate opinion.** This follows the first `fireline-contract` addendum (2026-11-12), whose ideas 1 to 6 covered only the bind-time expression evaluator; the crate has since gained document framing, the Interface signature, a parse context, the output-layout forms and a bind-time slot-overlap check, which are swept here.
+Scope: `fireline-contract` as of main 3355890 and fireline#34. It still **runs no kernel, allocates no device memory and performs no address translation**: it parses text, checks it, and evaluates integer arithmetic against a caller-supplied environment. The one new computation is the **byte-hull arithmetic** of the slot-overlap check (a range `[start, end)` per slot, intersected pairwise).
+
+### Provenance of the new parts
+
+- **Layout notation:** the nested layout `shape:stride` and the swizzle `swz(B,M,S)` echo CuTe's notation (NVIDIA CUTLASS, `Swizzle<B,M,S>`: bits, base, shift), which KISS-CONTRACT-6.5-0017 and -0018 cite; the `swz(...)` spelling is "the Unpopped lane's" per KISS. **This crate copies no CuTe code and no CuTe text and implements none of CuTe's layout algebra** (no composition, coalesce, complement or inverse): it parses the spelling, checks the clause's own rules, and computes a byte hull. CuTe's licence was not read and is not needed for what is used (a notation and a bit-count formula), but that is my reading, not a clearance.
+- **Document framing and signature order:** KISS-CONTRACT 6.11 and 6.5-0004a (a header line with a length and a CRC-32 (IEEE 802.3), seven section headings, a pinned launch-scalar class order). The CRC-32 is the standard algorithm implemented from its definition in `crates/contract/src/document.rs` (a bitwise loop), not copied from a library.
+- **Slot overlap:** KISS-CONTRACT-6.5-0019 and KISS's own implementation (`check_slot_overlap`, KISS#797, MIT OR Apache-2.0, same owner); this crate's code is written from the clause text and checked against KISS's `slot_overlap_vectors.json`.
+- No third-party code.
+
+### Ideas swept (written from the source and the KISS clauses, not from a full read of KISS-Contract)
+
+7. A **contract document framed as text** with a pinned header line carrying a body length and a CRC-32, a reader that rejects any mismatch before reading the body, a declared-length cap checked before any allocation, and the seven section headings in a fixed order (6.11-0002..-0004).
+8. An Interface **signature of typed argument descriptors whose launch-scalar classes must appear in a pinned order**, with an index-operand descriptor that must precede the extents it binds, and a **per-contract symbol vocabulary derived from that signature** that a Dispatch expression may not step outside (6.5-0004a, 6.11-0006, 6.6-0006).
+9. A **closed set of seven output-layout forms** (dense, permuted dense, same-as-an-input, strided with run-time stride expressions, nested `shape:stride` with an optional swizzle, a bundle, none), with canonical text and an unknown form refusing only that output's guarantee (6.5-0015..-0018).
+10. **One output buffer partitioned into named slots, each with a data type, a run-time shape, a layout and a run-time byte offset** (6.5-0019).
+11. A **bind-time check that no two slots' byte hulls intersect**, a hull being `[offset + lowest element, offset + highest element + 1)` with sub-byte dtypes rounded outward and a swizzle rounding the end up to its window, an empty slot overlapping nothing, and the check run against each launch's environment (6.5-0019, 6.12-0002).
+
+### Queries (source, query, date 2026-11-13)
+
+Web search restricted to `patents.google.com`, US-only, standard mode.
+
+| # | Ideas | Query |
+|---|---|---|
+| Q16 | 9 | `patent tensor layout nested shape and stride hierarchical layout algebra composition coalesce swizzle function for shared memory` |
+| Q17 | 9 | `patent swizzle XOR of address bits to avoid shared memory bank conflicts tensor layout bits base shift parameters` |
+| Q18 | 10, 11 | `patent single memory buffer partitioned into named slots each with data type shape layout and byte offset computed from runtime parameters check slots do not overlap before kernel launch` |
+| Q19 | 7, 8 | `patent kernel contract metadata document declares launch parameters order signature capabilities guarantees checksum length header validate before dispatching compiled kernel` |
+
+**Not searched at all:** the CRC-32 or length-prefixed framing as such (generic, old art), and the vocabulary-derivation part of idea 8 on its own. Q16 to Q19 are single-pass; none is a claim-language or CPC-class search, and most hits were papers, boot-integrity patents or memory-controller patents.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 18 | US 2023/0289398 A1 | Efficient Matrix Multiply and Add with a Group of Warps | Nvidia Corp | Active (Google; an application) | 1, 20 (independent) | Surfaced by Q16 for a shared-memory swizzle pattern in its description (idea 9). | The independent claims are **a processor with cores and a work distributor circuit that distributes warps** to execute an MMA instruction, and a method of the same. Nothing is claimed about a layout notation or a swizzle spelling; the crate is not a processor. | **clear** |
+| 19 | US 2019/0278593 A1 | Accelerating linear algebra kernels for any processor architecture | Nvidia Corp | Active (Google) | 1, 5, 13 (independent) | A configuration rule that may be "swizzling" (claim 4, dependent) for generated kernels (idea 9). | The independent claims need **a polyhedral representation of a directed acyclic graph of instructions and a schedule or code generated from it**. The crate generates no code and builds no graph. | **clear** |
+| 20 | US 11,080,051 B2 | Techniques for efficiently transferring data to a processor | Nvidia Corp | Active; estimate 2040-11-11 (Google) | 1, 7, 17, 23 (independent) | Describes storing data into shared memory in a swizzled pattern (idea 9, from the description). | The claims are **a fused load and store instruction that moves data from external memory into shared memory bypassing registers (and optionally the cache)**. The crate has no instruction and moves no data. | **clear** |
+| 21 | US 10,067,710 B2 | Detecting buffer overflows in general-purpose GPU applications | Advanced Micro Devices | Active (Google) | 1, 10, 18 (independent) | Checks around buffers and kernel launches (ideas 10, 11). | The claims **allocate extra adjacent memory regions beside each buffer, fill them with values, and switch between two detection processes that watch for a change to those values** (canaries). The crate allocates nothing and watches no memory; it compares two computed byte ranges before launch. | **clear** |
+| 22 | US 2024/0104013 A1 | Deterministic adjacent overflow detection for slotted memory pointers | Intel Corp | Abandoned (Google) | 1, 14, 21 (independent) | Memory "slots" and non-overlapping allocations (ideas 10, 11). | The claims are **an encoded pointer with slot index bits and an even/odd slot bit pair compared in processor circuitry** to raise a bounds-violation fault. The crate has no pointers and no circuitry; the status is abandoned. | **clear** |
+
+Also relevant and already read: row 10 of this record (US 12,141,082 B2, NVIDIA, tensor descriptors and an optional swizzle of loaded data; hardware address-translation and transfer circuits; verdict clear).
+
+**Surfaced and NOT read** (no verdict, never "clear"): US 2012/0092356 A1 (shared memory accesses), US 11,822,491 B2 (a Galois-sequence address swizzle for a fabric-attached memory), WO 2018/013158 A1 and US 2015/0089183 A1 and US 8,935,507 B2 (memory-controller address swizzling and multi-copy storage), US 7,581,141 B2 (kernel module compatibility validation by recording field names, types, sizes and offsets), US 10,242,196 B2 and US 8,433,927 and the verified-boot family (hash and signature checks before running a kernel). The memory-controller and boot-integrity families are large and mostly off this crate's subject; the shared-memory swizzle and GPU-library layout families are the ones a claim-language pass should read first.
+
+### Needs review (to the PM)
+
+**No hit read on a claim, so no `[ASK]`.** This second pass adds five patents read and about eight surfaced and unread, from four single-pass queries on the four most obvious phrasings. **It still does not clear `fireline-contract` for publishing on its own**: the layout and swizzle ideas (9) in particular live in a crowded GPU-layout literature that the search returned mostly as papers (Ave, Hexcute, ThunderKittens, TurboMind), not patents, and a claim-language and CPC-class pass over the shared-memory layout and swizzle families is still owed. The PM decides whether the crate may publish on first passes; the owed pass is recorded here, not done.
+
+### Limitations specific to this addendum
+
+- The idea list comes from the source and the KISS clauses; **I did not read KISS-Contract in full**, so a mechanism described only there may be unswept. I did not read CuTe's source or licence.
+- Four patent searches and five patents read. Statuses, expiry dates and fee states are Google's; no USPTO record, prosecution history or foreign family was checked.
+- US 2023/0289398 A1 and US 2019/0278593 A1 were read on their independent claims; their descriptions (where the swizzle text sits) were not read in full.
