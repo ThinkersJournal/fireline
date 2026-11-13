@@ -13,6 +13,6 @@ categories = ["development-tools", "algorithms"]
 [dependencies]
 # A FireLine crate by path AND a tilde version: the tilde lint reads this very line.
 fireline-grammar = { path = "../grammar", version = "~0.1" }
-# The vocabulary a request is described in. Newest published is 0.43.2 (crates.io, 2026-11-07); Unpopped's repo is at 0.44.x, unpublished.
+# The vocabulary a request is described in. Newest published is 0.45.12 (crates.io, read 2026-11-13).
 # One copy of this crate must be in a consumer's build or `OperandDesc` is two types (plan section 11); wave 2 retires it for `fireline-vocab`.
-unpopped-vocab = "0.43.2"
+unpopped-vocab = "0.45.12"

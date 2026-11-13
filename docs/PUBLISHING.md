@@ -26,7 +26,7 @@ cargo publish --locked -p fireline-synth    # needs fireline-grammar ~0.1 on the
 1. Read each version back from crates.io (`https://crates.io/api/v1/crates/<name>`), not just the exit code.
 2. Tag the source (CIRESNAVE-EXPECTATIONS 6.20): `tools/tag-release.sh C:/Projects/fireline 0.1.0 <full sha> fireline`. One tag `v0.1.0` on the one commit all three were published from. **Once the crates version independently (for example announce 0.2.0 beside grammar 0.1.x) a bare `v<version>` tag is ambiguous**; the tool would need a crate-prefixed tag (`fireline-announce-v0.2.0`). Raise that before the second release.
 3. Tell Fuel the names and versions (`fireline-announce`, `fireline-grammar`, `fireline-synth`, each `0.1.0`); Fuel requires them with `~0.1`. Fuel's migration hazards are in `docs/EXTRACTION-PLAN.md` section 11.
-4. Consumers must have **exactly one copy of `unpopped-vocab`** in a build (`fireline-synth` requires 0.43.2); see the synth README.
+4. Consumers must have **exactly one copy of `unpopped-vocab`** in a build (`fireline-synth` requires 0.45.12); see the synth README.
 
 ## Undoing
 
