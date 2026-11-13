@@ -25,6 +25,7 @@
 //! ```
 
 pub mod document;
+pub mod fields;
 pub mod interface;
 pub mod layout;
 
