@@ -1,5 +1,0 @@
-kind: patent sweep, second pass, for `fireline-contract`
----
-`docs/PATENT-SWEEP.md` gains a second `fireline-contract` addendum covering what the crate gained since the first (document framing, the Interface signature and its pinned launch-scalar order, the parse context, the seven output-layout forms with the CuTe-style nested layout and swizzle spelling, and the bind-time slot-overlap byte-hull check): five ideas, four queries, five patents read (NVIDIA US 2023/0289398 A1, US 2019/0278593 A1 and US 11,080,051 B2, AMD US 10,067,710 B2, Intel US 2024/0104013 A1), all read as clear (none reads on a claim). It records provenance (no CuTe code or text is copied and none of CuTe's layout algebra is implemented; the CRC-32 is written from its definition; the overlap check follows KISS's own MIT OR Apache-2.0 implementation and vectors) and what stays owed: a claim-language and CPC-class pass over the shared-memory layout and swizzle families, so `fireline-contract` is still not cleared for publishing by this alone. Documentation only; no code change.
-
-— lane: fireline
