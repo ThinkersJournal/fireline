@@ -16,6 +16,8 @@ least-significant bit first), and the rule that an MX element is a storage and o
 
 ## Provenance
 
+Credit: the format definitions follow the **OCP Microscaling Formats (MX) Specification, Version 1.0 (Sep 2023)**, Open Compute Project, by authors from Microsoft, AMD, Arm, Intel, Meta, NVIDIA and Qualcomm, whose use is governed by the Open Web Foundation Modified Final Specification Agreement (OWFa 1.0) as that specification states. Version 1.1 (Oct 9, 2026) has identical tables for these three element formats. Only the format numbers and the value formula are used: no text and no code is copied. This crate is **not** an MX-compliant implementation (it converts nothing and has no scale), so do not read the OWFa patent promise as covering it; see `docs/PATENT-SWEEP.md`.
+
 Written from the Draft text (KISS `spec/classify.md` at `origin/main` `73c341b5`). The format constants are the ones that text cites from the
 OCP Microscaling Formats Specification v1.0 (sections 5.3 to 5.3.3); the 6-bit packing is the Unpopped lane's storage convention as that text
 says, not an OCP requirement. The tests check the clause's own numbers and the token and width rows of KISS `conformance/corpus/dtype_manifest.json`
