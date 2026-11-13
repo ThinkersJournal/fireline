@@ -5,7 +5,7 @@ The kernel-seam **JIT-on-request envelope**: the `Synthesizer` trait a kernel *p
 Two steps, so a kernel the consumer's cost gate declines costs nothing: `synthesize` returns a **light** handle (or a decline), and only
 `take_kernel` hands over the retained artifact, once the consumer decides to adopt.
 
-- **Require it with a tilde** (`fireline-synth = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
+- **Require it with a tilde** (`fireline-synth = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - Depends on `fireline-grammar` (the region) and `unpopped-vocab` (operand and arch descriptions). **Exactly one copy of `unpopped-vocab`
   may be in a build**, or `OperandDesc` is two different types; wave 2 replaces it with a FireLine vocabulary crate.
 - What is **not** here: how a consumer adopts an artifact (import the contract, load, bind, register the fused op). That needs the consumer's
