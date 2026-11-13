@@ -16,4 +16,4 @@ default-members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar",
 # The one project version: the root package and every non-interface tool inherit it (`version.workspace = true`), so a bump is one edit and the tools
 # cannot drift from it (CodeRipper version-consistency). Interface crates (crates/*) do NOT inherit it: each versions by its own interface.
 [workspace.package]
-version = "0.0.25"
+version = "0.0.27"
