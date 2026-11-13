@@ -50,6 +50,16 @@ pub enum ParseError {
     /// A divisor that names no launch-scalar symbol and is zero (`/`) or not positive (`ceil_div`), such as `n / 0` or `ceil_div(8, 0)`:
     /// it cannot depend on the environment, so it is a build-time fault, not a bind-time decline (CONTRACT-6.12-0007, -0008).
     ConstantDivisor(i64),
+    /// A subscript `sym[k]` with `k >= rank`, where the contract declares the rank (see [`Expr::parse_with_rank`]). An out-of-bounds
+    /// subscript is a build-time fault: the rank is the contract's, not the launch's (KISS `Decline::SubscriptOutOfBounds`, no code name).
+    SubscriptOutOfBounds {
+        /// The array symbol.
+        symbol: String,
+        /// The literal subscript.
+        index: usize,
+        /// The declared rank.
+        rank: usize,
+    },
 }
 
 impl ParseError {
@@ -72,6 +82,14 @@ impl fmt::Display for ParseError {
             Self::Literal(s) => write!(f, "build_time: literal `{s}` does not fit i64"),
             Self::TooDeep => write!(f, "build_time: nesting deeper than {MAX_DEPTH}"),
             Self::ConstantDivisor(d) => write!(f, "build_time: constant divisor {d}"),
+            Self::SubscriptOutOfBounds {
+                symbol,
+                index,
+                rank,
+            } => write!(
+                f,
+                "build_time: `{symbol}[{index}]` is out of bounds for rank {rank}"
+            ),
         }
     }
 }
@@ -91,7 +109,9 @@ pub enum BindDecline {
     DivisionByZero,
     /// `ceil_div_divisor` (CONTRACT-6.12-0008; 6.6-0009(b)): a zero or negative `ceil_div` divisor, bind-time only when it names a symbol.
     CeilDivDivisor(i64),
-    /// `subscript_out_of_range` (6.6-0006: an out-of-bounds subscript is a typed decline; the Draft does not say whether it is a build-time
+    /// `subscript_out_of_range` (6.6-0006: an out-of-bounds subscript is a typed decline; KISS's reference reports it at **build** time when
+    /// the contract declares the rank, see [`Expr::parse_with_rank`], so this is the case of an expression parsed without a rank, or an
+    /// environment array shorter than the declared one. The Draft does not say whether it is a build-time
     /// or bind-time one, and the rank is known only from the environment, so it is raised here; code name not named by the Draft).
     SubscriptOutOfRange {
         symbol: String,
@@ -209,6 +229,8 @@ struct Parser<'a> {
     s: &'a [u8],
     at: usize,
     depth: usize,
+    /// The contract-declared rank, when the caller knows it: a subscript at or past it is a build-time fault.
+    rank: Option<usize>,
 }
 
 impl Parser<'_> {
@@ -343,6 +365,13 @@ impl Parser<'_> {
                     .parse::<usize>()
                     .map_err(|_| self.err("expected a non-negative integer subscript"))?;
                 self.expect(b']')?;
+                if let Some(rank) = self.rank.filter(|&r| k >= r) {
+                    return Err(ParseError::SubscriptOutOfBounds {
+                        symbol: name,
+                        index: k,
+                        rank,
+                    });
+                }
                 Ok(Node::Elem(name, k))
             }
             _ => Err(ParseError::Subscript(name)),
@@ -356,6 +385,21 @@ impl Expr {
     /// # Errors
     /// [`ParseError`] when the text is not accepted by the §6.6-0006 grammar over the launch-scalar vocabulary.
     pub fn parse(text: &str) -> Result<Self, ParseError> {
+        Self::parse_inner(text, None)
+    }
+
+    /// Parse an expression for a contract that **declares its rank**: a subscript `sym[k]` with `k >= rank` is a build-time fault
+    /// ([`ParseError::SubscriptOutOfBounds`]), not a bind-time decline, because the rank is the contract's and not the launch's. KISS's
+    /// reference reports it at build time (it has no code name for it yet). With a rank, [`BindDecline::SubscriptOutOfRange`] is left
+    /// only for an environment whose array is shorter than the declared rank.
+    ///
+    /// # Errors
+    /// [`ParseError`], including [`ParseError::SubscriptOutOfBounds`].
+    pub fn parse_with_rank(text: &str, rank: usize) -> Result<Self, ParseError> {
+        Self::parse_inner(text, Some(rank))
+    }
+
+    fn parse_inner(text: &str, rank: Option<usize>) -> Result<Self, ParseError> {
         if !text.is_ascii() {
             return Err(ParseError::Syntax(
                 "expressions are ASCII (6.6-0006)".into(),
@@ -365,6 +409,7 @@ impl Expr {
             s: text.as_bytes(),
             at: 0,
             depth: 0,
+            rank,
         };
         let root = p.expr()?;
         if p.peek().is_some() {
