@@ -1,3 +1,0 @@
-kind: diff against KISS `section_vectors` (6 accept docs, 50 declines)
----
-New test `tests/kiss_section_vectors.rs` with its data file `tests/data/kiss_section_vectors.tsv` (the `section_vectors` of `contract_vectors.json` on kiss origin/main 2c1e2cfa, KISS#818, 0.17.4): every accept document reads cleanly through `read_contract`, and all 49 declines are refused by the layer and variant kiss's tag names (all seven section schemas, the five-field Dispatch, V11's class-2-declared-scalar, `in_place` spellings, `output_layouts` and `human_annotation` order). kiss dropped its own extra `in-place-no-such-input` after our finding. No library change.
