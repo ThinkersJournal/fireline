@@ -9,12 +9,12 @@ One crate per interface (CireSnave board 295, 395). "Diffed" means checked again
 
 | Crate | In tree | On crates.io | What it is | Open |
 |---|---|---|---|---|
-| `fireline-announce` | 0.1.1 | 0.1.0 | the 56-byte `SeamHello` envelope, role-aware negotiation; the `SAVL`, `CYRQ`, `CRSP`, `CDEC`, `DVRQ`, `DVRS`, `DVDC` frames (6.3, 6.4, 6.6), diffed against `announce_vectors.json` | the frames and device module are in the tree and not published: a release is the PM's call |
-| `fireline-grammar` | 0.1.1 | 0.1.0 | the region grammar | none known |
+| `fireline-announce` | 0.2.0 | 0.1.0 | the 56-byte `SeamHello` envelope, role-aware negotiation; the `SAVL`, `CYRQ`, `CRSP`, `CDEC`, `DVRQ`, `DVRS`, `DVDC` frames (6.3, 6.4, 6.6), diffed against `announce_vectors.json` | the frames and device module are in the tree and not published: a release is the PM's call |
+| `fireline-grammar` | 0.2.0 | 0.1.0 | the region grammar | none known |
 | `fireline-synth` | 0.2.0 | 0.2.0 | the JIT-on-request envelope; requires `unpopped-vocab` 0.45.12 (one copy of the vocabulary) | Baracuda and Vulkane repin to `~0.2` (theirs) |
-| `fireline-classify` | 0.1.0 | 0.1.0 | the MX element dtypes (CLASSIFY-6.1-0014..-0016), FDX V4 | if KISS's quantisation group changes those clauses: stop and ask |
-| `fireline-contract` | 0.1.0 | not published | the Dispatch expression evaluator and bind-time checks (6.6, 6.12); document framing (6.11); field schemas; Identity, cross-section, typed-value and layout rules (6.3 to 6.9, 6.5); `read_contract`; slot overlap (6.5-0019); diffed against `contract_vectors.json` and `slot_overlap_vectors.json` | see below |
-| `fireline-dlpack` | 0.1.0 | not published | FDX, the DLPack extension; cannot retire yet (V3, V8, V9, V12, V13 wait on Fuel's window formula; V5, V6, V18 to V21 have no clause); fixes only | none |
+| `fireline-classify` | 0.2.0 | 0.1.0 | the MX element dtypes (CLASSIFY-6.1-0014..-0016), FDX V4 | if KISS's quantisation group changes those clauses: stop and ask |
+| `fireline-contract` | 0.2.0 | not published | the Dispatch expression evaluator and bind-time checks (6.6, 6.12); document framing (6.11); field schemas; Identity, cross-section, typed-value and layout rules (6.3 to 6.9, 6.5); `read_contract`; slot overlap (6.5-0019); diffed against `contract_vectors.json` and `slot_overlap_vectors.json` | see below |
+| `fireline-dlpack` | 0.2.0 | not published | FDX, the DLPack extension; cannot retire yet (V3, V8, V9, V12, V13 wait on Fuel's window formula; V5, V6, V18 to V21 have no clause); fixes only | none |
 | `fireline-provider` | not started | no | the provider callable and handshake definitions (KISS-Provision, board 395) | held on CireSnave 398 A (US 2023/0025245 A1) |
 
 **`fireline-contract` is not for publishing yet:** the patent sweep has two first passes and still owes a claim-language and CPC pass over the shared-memory layout and swizzle families (`docs/PATENT-SWEEP.md`).

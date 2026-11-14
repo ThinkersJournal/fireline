@@ -4,7 +4,7 @@
 orchestrator such as Fuel) and a kernel *provider* (a backend such as baracuda or Vulkane), plus the co-maintained C header
 (`include/fuel_dlpack_ext.h`). One definition, so neither side can drift.
 
-- **Require it with a tilde** (`fireline-dlpack = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
+- **Require it with a tilde** (`fireline-dlpack = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **It implements FDX only.** KISS's neutral ten-field quantisation sidecar (KISS-CLASSIFY-6.3-0012) is a later projection once KISS pins its
   wire form; this crate must not be read as that final interface.
 - What is **not** here: the conversion from a consumer's own dtype, shape and storage types (it names the consumer's types).

@@ -7,8 +7,8 @@
 //! `positional_signature` in its golden document and no vector for these clauses, so everything here is written from the clause text and
 //! the tests are this crate's own. Where the text is silent (below) the choice is this crate's and is marked.
 //!
-//! * The text pins the order of the launch-scalar classes 1 to 8 but not where operand pointers (`ptr`, class 0) sit among them:
-//!   pointers are accepted anywhere (this crate's choice).
+//! * [`Signature::parse`] accepts operand pointers (`ptr`, class 0) anywhere among the classes; [`Signature::check_complete`] is where 6.5-0002's
+//!   "operand pointers first" is enforced.
 //! * "Canonical operand order" (6.5-0004d) is taken to be ascending `{i}` in the symbol names (this crate's choice).
 
 use core::fmt;
@@ -87,6 +87,27 @@ pub enum SignatureError {
     StridesMissing(usize),
     /// A fully packed cell declares `strides{i}`: class 2 is present exactly when the cell is not fully packed (6.5-0004a).
     StridesNotAllowed,
+    /// The signature carries `got` operand pointers where the operand list has `want` (6.5-0002).
+    PointerCount {
+        /// The number of operands (inputs then outputs).
+        want: usize,
+        /// The number of `ptr` descriptors.
+        got: usize,
+    },
+    /// Descriptor `index` is an operand pointer after a launch scalar: the operand pointers come first (6.5-0002).
+    PointerAfterScalar(usize),
+    /// Descriptor `index` is an operand pointer with no declared dtype (`-`): it must be typed at its operand's dtype (6.5-0002, -0007).
+    UntypedPointer(usize),
+    /// Descriptor `index` is a per-operand scalar (`extents`, `strides`, `off`) of an operand index outside the operand list.
+    OperandIndexOutOfRange(usize),
+    /// `extents{operand}` (class 1, always present per operand) is missing (6.5-0004a).
+    ExtentsMissing(usize),
+    /// The iteration count `n` (class 3, always present) is missing or declared more than once (6.5-0004a).
+    CountMissing,
+    /// A sliced kernel declares `off{i}` for some operands but not `off{operand}` (6.5-0006).
+    OffsetsMissing(usize),
+    /// `ws_ptr` and `ws_bytes` are not both present or both absent (class 7 is present with class 6, 6.5-0004a).
+    WorkspaceMismatch,
 }
 
 impl fmt::Display for SignatureError {
@@ -132,6 +153,39 @@ impl fmt::Display for SignatureError {
             Self::StridesNotAllowed => write!(
                 f,
                 "positional_signature: strides declared for a fully packed cell"
+            ),
+            Self::PointerCount { want, got } => write!(
+                f,
+                "positional_signature: {got} operand pointers for {want} operands"
+            ),
+            Self::PointerAfterScalar(i) => write!(
+                f,
+                "positional_signature: descriptor {i} is an operand pointer after a launch scalar"
+            ),
+            Self::UntypedPointer(i) => write!(
+                f,
+                "positional_signature: descriptor {i} is an operand pointer with no dtype"
+            ),
+            Self::OperandIndexOutOfRange(i) => write!(
+                f,
+                "positional_signature: descriptor {i} names an operand outside the operand list"
+            ),
+            Self::ExtentsMissing(o) => {
+                write!(f, "positional_signature: extents{o} is missing")
+            }
+            Self::CountMissing => write!(
+                f,
+                "positional_signature: the iteration count n is missing or repeated"
+            ),
+            Self::OffsetsMissing(o) => {
+                write!(
+                    f,
+                    "positional_signature: off{o} is missing in a sliced kernel"
+                )
+            }
+            Self::WorkspaceMismatch => write!(
+                f,
+                "positional_signature: ws_ptr and ws_bytes are not present together"
             ),
         }
     }
@@ -266,6 +320,81 @@ impl Signature {
         (0..operands)
             .find(|o| !have.contains(o))
             .map_or(Ok(()), |o| Err(SignatureError::StridesMissing(o)))
+    }
+
+    /// Check that the signature is **complete** for a contract of `operands` operands (inputs then outputs, 6.5-0002): exactly `operands`
+    /// typed operand pointers, all before any launch scalar; `extents{i}` for every operand (class 1, always present); `n` exactly once
+    /// (class 3, always present); no per-operand scalar for an operand outside the list; `off{i}` for every operand if any (6.5-0006);
+    /// and `ws_ptr` with `ws_bytes` or neither (class 6 and 7). Strides are [`Signature::check_strides`]'s, which needs the cell's
+    /// packedness. Whether each pointer's dtype is the operand's own needs the op's operand list (KISS-Ops), which this check does not
+    /// have: it checks only that a dtype is declared. The `off{i}` all-operands rule is this crate's reading of "per-operand".
+    ///
+    /// # Errors
+    /// The first [`SignatureError`] found, in the order of the checks above.
+    pub fn check_complete(&self, operands: usize) -> Result<(), SignatureError> {
+        let mut pointers = 0usize;
+        let mut seen_scalar = false;
+        for (i, a) in self.args.iter().enumerate() {
+            if a.kind == ArgKind::Ptr {
+                if seen_scalar {
+                    return Err(SignatureError::PointerAfterScalar(i));
+                }
+                if a.dtype.is_none() {
+                    return Err(SignatureError::UntypedPointer(i));
+                }
+                pointers += 1;
+            } else {
+                seen_scalar = true;
+            }
+        }
+        if pointers != operands {
+            return Err(SignatureError::PointerCount {
+                want: operands,
+                got: pointers,
+            });
+        }
+        let with_class = |class: u8| -> BTreeSet<usize> {
+            self.args
+                .iter()
+                .filter(|a| a.kind == ArgKind::Ls && a.launch_class == class)
+                .filter_map(|a| classify_symbol(&a.name).and_then(|(_, i, _)| i))
+                .collect()
+        };
+        for (i, a) in self.args.iter().enumerate() {
+            if let Some((1 | 2 | 4, Some(op), _)) =
+                classify_symbol(&a.name).filter(|_| a.kind == ArgKind::Ls)
+                && op >= operands
+            {
+                return Err(SignatureError::OperandIndexOutOfRange(i));
+            }
+        }
+        let extents = with_class(1);
+        if let Some(o) = (0..operands).find(|o| !extents.contains(o)) {
+            return Err(SignatureError::ExtentsMissing(o));
+        }
+        let counts = self
+            .args
+            .iter()
+            .filter(|a| a.kind == ArgKind::Ls && a.name == "n")
+            .count();
+        if counts != 1 {
+            return Err(SignatureError::CountMissing);
+        }
+        let offsets = with_class(4);
+        if !offsets.is_empty()
+            && let Some(o) = (0..operands).find(|o| !offsets.contains(o))
+        {
+            return Err(SignatureError::OffsetsMissing(o));
+        }
+        let has = |name: &str| {
+            self.args
+                .iter()
+                .any(|a| a.kind == ArgKind::Ls && a.name == name)
+        };
+        if has("ws_ptr") != has("ws_bytes") {
+            return Err(SignatureError::WorkspaceMismatch);
+        }
+        Ok(())
     }
 
     /// This contract's **launch-scalar symbol vocabulary** (6.5-0004a): the symbols its own signature declares, not the whole class
