@@ -6,7 +6,7 @@
 //! handed back as raw bytes in [`Document::sections`]; they are not interpreted here.
 //!
 //! **Draft-tracking.** KISS-Contract is a Draft; expect rework when it moves. The exact bytes are diffed against KISS
-//! `conformance/corpus/contract_vectors.json` (origin/main 73c341b5) in `tests/document.rs`.
+//! `conformance/corpus/contract_vectors.json` (origin/main 11407f72) in `tests/document.rs`.
 //!
 //! **Extent.** [`parse_document`] takes the buffer that *is* the document (for example a `CRSP` payload of
 //! `fireline_announce`, KISS-CONTRACT-6.1-0005). Bytes past `header + N` make the body longer than `N` and are rejected
