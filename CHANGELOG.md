@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.2] — diff against KISS `section_vectors` (6 accept docs, 50 declines)
+
+New test `tests/kiss_section_vectors.rs` with its data file `tests/data/kiss_section_vectors.tsv` (the `section_vectors` of `contract_vectors.json` on kiss origin/main 2c1e2cfa, KISS#818, 0.17.4): every accept document reads cleanly through `read_contract`, and all 49 declines are refused by the layer and variant kiss's tag names (all seven section schemas, the five-field Dispatch, V11's class-2-declared-scalar, `in_place` spellings, `output_layouts` and `human_annotation` order). kiss dropped its own extra `in-place-no-such-input` after our finding. No library change.
+
 ## [0.2.1] — `Signature::check_complete`: the positional_signature binds without outside information (6.5-0002)
 
 `Signature::check_complete(operands)` checks a parsed `positional_signature` against the operand count: exactly `operands` typed `ptr` descriptors, all before any launch scalar; `extents{i}` for every operand; `n` exactly once; no per-operand scalar past the operand list; `off{i}` for every operand if any (6.5-0006); `ws_ptr` with `ws_bytes` or neither. New `SignatureError` variants carry each decline. Whether a pointer's dtype is its operand's own needs the op's operand list (KISS-Ops) and is not checked: only that a dtype is declared. No vector exists for this clause (the golden's signature is empty): the tests are this crate's own and the `off{i}` all-operands rule is this crate's reading. Verified with `cargo test`, `clippy -D warnings`, `cargo doc -D warnings`.
