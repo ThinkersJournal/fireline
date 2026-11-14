@@ -24,6 +24,7 @@
 //! # Ok::<(), fireline_contract::ParseError>(())
 //! ```
 
+pub mod consistency;
 pub mod document;
 pub mod fields;
 pub mod identity;
