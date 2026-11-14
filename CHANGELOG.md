@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.41] — ROADMAP: where each crate stands
+
+`ROADMAP.md`, which had one paragraph and no rows, gains a status table: each crate's in-tree and crates.io versions (read from `Cargo.toml` and the crates.io API on 2026-11-14), what it is, and what is open; the reason `fireline-contract` is not for publishing yet (a claim-language and CPC patent pass is owed); what waits on KISS (the `in_place` pin in KISS#813, the clauses that need KISS-Ops tables, the vector requests kiss accepted); and Fuel's wave-2 order. Documentation only; no code change.
+
+— lane: fireline
+
 ## [0.0.40] — `fireline-contract` `read_contract`: one call over every layer
 
 New `fireline_contract::read::read_contract(bytes, supported_versions)` (additive) runs every layer of the crate over a document's bytes and stops at the first fault, naming the layer in `ReadError` (`Document`, `Fields`, `Identity`, `Consistency`, `Values`, `Signature`): the framing (`document`), the field schemas (`fields`), the Identity rules (`identity`), the cross-section rules and vocabularies (`consistency`), the typed Interface scalars and the `launch_scalars` tail (`values`), the `positional_signature` (`interface`) and the Dispatch expressions in the contract's own vocabulary and rank. It returns `Checked` (the document, the `Contract` fields, the typed `InterfaceValues`, the parsed `Signature`, and the parse `Context`, usable straight away with `Expr::parse_in`). It adds no rule of its own. Not run (each needs input this call lacks): the strides rule (needs whether the cell is packed and the operand count), `output_layouts` (needs the output-operand count and the Classify dtype table), bind-time checks, and anything needing KISS-Ops tables. The golden document of KISS `contract_vectors.json` (origin/main 73c341b5) passes end to end; the layer-naming tests (2 more) are written from the module docs and are this crate's own. The crate README's stale "first slice only" bullet is replaced by what is actually here. Draft, unfrozen: expect rework. Verified with `cargo test -p fireline-contract --locked`, workspace clippy `-D warnings`, fmt and doc `-D warnings`.
