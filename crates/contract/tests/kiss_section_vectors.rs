@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! The KISS `section_vectors` of `contract_vectors.json` (kiss origin/main 2c1e2cfa, KISS#818, 0.17.4): 6 accept documents and 49
+//! The KISS `section_vectors` of `contract_vectors.json` (kiss origin/main 11407f72, 0.18.0): 6 accept documents and 49
 //! single-fault declines, each with the section it declines in and kiss's stable kebab-case tag. This file byte-diffs the reader against
 //! them: every accept document reads cleanly, and every decline is refused by the layer and variant the tag names.
 //!
