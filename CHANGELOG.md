@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.7] — patch
+
+`docs/PATENT-SWEEP.md` gains the sixth pass: the seven classify-list patents (US 10,242,423, US 10,338,919, US 2023/0359694 A1, US 12,705,167, US 8,874,794, US 7,216,138, US 11,442,696) read on their independent claims. All seven are clear on an all-elements reading (datapaths, circuits, a compression process); the nearest vocabulary is US 8,874,794 B2 (block exponents, but it claims exponent-difference token coding) and US 12,705,167 B2 ("blocked data formats", but it claims a processing-in-memory shift circuit). No `needs-review`. Docs only; this does not clear any crate for publishing.
+
 ## [0.2.6] — patch
 
 Publication risk note for `fireline-contract` (board 442, CireSnave 2026-11-14: "442: A."): a "Patent risk note" section in the crate README and a "Publication risk note" section in `docs/PATENT-SWEEP.md`, stating the limits of the five sweep passes (dependent claims, descriptions, USPTO/EPO records and continuations unread; off-subject, classify and Cambricon lists unread; no layout-algebra patent surfaced; no attorney review), naming the US 12,423,007 B1 tripwire, and listing the crates to publish (only `fireline-contract`, no ordering). Docs only; no code change.
