@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.42] — `fireline-contract` bind-time rank check of an `Environment`'s arrays (KISS-CONTRACT 6.5-0012)
+
+New `Environment::check_rank(rank)` (additive): every per-operand `extents{i}` and `strides{i}` array the environment assigns must have exactly the contract's declared `rank` entries (6.5-0012: "every per-operand `extents` / `strides` array length MUST equal `rank`"); a mismatch is the new `BindDecline::ArrayLength { symbol, rank, len }` (code `array_length`), the first in symbol order. A scalar such as `off{i}` is one value and is not sized from `rank`, and `idx_extents{i}` is sized by the index operand's own rank (6.5-0013), so neither is checked here. This is the bind-time half of the rank rule: with a declared rank, `Expr::parse_with_rank` and `parse_in` already refuse an out-of-bounds subscript at build time, and an environment that passes this check can no longer reach `BindDecline::SubscriptOutOfRange` through a rank-checked expression. No KISS vector covers it (the corpus has no second value of any field and no bind environment for this clause), so the new test is written from the clause text and is this crate's own. Draft, unfrozen: expect rework. Verified with `cargo test -p fireline-contract --locked`, workspace clippy `-D warnings`, fmt and doc `-D warnings`.
+
+— lane: fireline
+
 ## [0.0.41] — ROADMAP: where each crate stands
 
 `ROADMAP.md`, which had one paragraph and no rows, gains a status table: each crate's in-tree and crates.io versions (read from `Cargo.toml` and the crates.io API on 2026-11-14), what it is, and what is open; the reason `fireline-contract` is not for publishing yet (a claim-language and CPC patent pass is owed); what waits on KISS (the `in_place` pin in KISS#813, the clauses that need KISS-Ops tables, the vector requests kiss accepted); and Fuel's wave-2 order. Documentation only; no code change.

@@ -132,6 +132,15 @@ pub enum BindDecline {
     SlotDtypeWidth(String),
     /// A bundle slot expression that does not parse (a hand-built slot: slots read by [`layout::parse_layout`] were already parsed).
     SlotExpression(String),
+    /// `array_length` (CONTRACT-6.5-0012): a per-operand `extents{i}` or `strides{i}` array whose length is not the contract's declared rank.
+    ArrayLength {
+        /// The array symbol.
+        symbol: String,
+        /// The declared rank.
+        rank: usize,
+        /// The length the environment assigned.
+        len: usize,
+    },
 }
 
 impl BindDecline {
@@ -148,6 +157,7 @@ impl BindDecline {
             Self::SlotOverlap(..) => "slot_overlap",
             Self::SlotDtypeWidth(_) => "slot_dtype_width",
             Self::SlotExpression(_) => "slot_expression",
+            Self::ArrayLength { .. } => "array_length",
         }
     }
 }
@@ -163,6 +173,12 @@ impl fmt::Display for BindDecline {
             Self::SlotOverlap(a, b) => write!(f, "slot_overlap: `{a}` and `{b}`"),
             Self::SlotDtypeWidth(d) => write!(f, "slot_dtype_width: `{d}`"),
             Self::SlotExpression(e) => write!(f, "slot_expression: `{e}`"),
+            Self::ArrayLength { symbol, rank, len } => {
+                write!(
+                    f,
+                    "array_length: `{symbol}` has length {len}, the declared rank is {rank}"
+                )
+            }
             Self::SubscriptOutOfRange { symbol, index, len } => {
                 write!(
                     f,
@@ -202,6 +218,32 @@ impl Environment {
     pub fn set_array(&mut self, symbol: &str, values: &[i64]) -> &mut Self {
         self.arrays.insert(symbol.to_owned(), values.to_vec());
         self
+    }
+
+    /// Check that every per-operand `extents{i}` and `strides{i}` array this environment assigns has exactly the contract's declared `rank`
+    /// entries (CONTRACT-6.5-0012: "every per-operand `extents` / `strides` array length MUST equal `rank`"). A scalar such as `off{i}` is a
+    /// single value and is not sized from `rank`; `idx_extents{i}` is sized by the index operand's own rank (6.5-0013), not the contract's, so
+    /// it is not checked here. Arrays are checked in symbol order and the first mismatch names the decline.
+    ///
+    /// # Errors
+    /// [`BindDecline::ArrayLength`] naming the first array of the wrong length.
+    pub fn check_rank(&self, rank: usize) -> Result<(), BindDecline> {
+        let operand_indexed = |name: &str, prefix: &str| {
+            name.strip_prefix(prefix)
+                .is_some_and(|d| !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit()))
+        };
+        for (symbol, values) in &self.arrays {
+            let per_operand =
+                operand_indexed(symbol, "extents") || operand_indexed(symbol, "strides");
+            if per_operand && values.len() != rank {
+                return Err(BindDecline::ArrayLength {
+                    symbol: symbol.clone(),
+                    rank,
+                    len: values.len(),
+                });
+            }
+        }
+        Ok(())
     }
 }
 
