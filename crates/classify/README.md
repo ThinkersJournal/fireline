@@ -11,7 +11,7 @@ least-significant bit first), and the rule that an MX element is a storage and o
 - **FDX V4.** This is where V4 of the FDX validators lands (`docs/design-fdx-phase-out.md` in KISS maps V4 to CLASSIFY-6.1-0014..-0016);
   it lives here, not in `fireline-dlpack`, which goes away with the phase-out.
 - **Dependency-free.**
-- **Require it with a tilde** (`fireline-classify = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
+- **Require it with a tilde** (`fireline-classify = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **Hello world:** `cargo run -p fireline-classify --example classify_hello_world`, or the doctest on the crate root.
 
 ## Provenance

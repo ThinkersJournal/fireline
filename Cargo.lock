@@ -26,7 +26,7 @@ version = "0.1.0"
 
 [[package]]
 name = "fireline-announce"
-version = "0.1.1"
+version = "0.2.0"
 
 [[package]]
 name = "fireline-classify"
@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "fireline-grammar"
-version = "0.1.1"
+version = "0.2.0"
 
 [[package]]
 name = "fireline-synth"

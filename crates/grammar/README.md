@@ -4,7 +4,7 @@ The kernel-seam **region grammar**: `OpTag`, `OpAttrs` (with canonical bytes and
 shape-expression codec (`shape_expr`), shared by a kernel *consumer* (an orchestrator such as Fuel) and a kernel *provider* (a synthesizer
 such as baracuda). One definition, so neither side can drift. **Types only, no logic, dependency-free.**
 
-- **Require it with a tilde** (`fireline-grammar = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
+- **Require it with a tilde** (`fireline-grammar = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - What stays with the consumer: the `Op -> OpTag` projection and the structural matcher need its graph (in Fuel: `fuel_graph::jit`).
 - What is **not** here: baracuda's conversion of this grammar to Unpopped's `PatternNode` (`to_internal`, `hash_region`, `region_op_id`).
   It depends on `unpopped`, so it waits for wave 2, when Unpopped's IR types move to a FireLine crate it can depend on.

@@ -1,6 +1,6 @@
 [package]
 name = "fireline-announce"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.88"
 description = "The kernel-seam handshake between a kernel consumer and a kernel provider: the frozen 56-byte SeamHello envelope, capability bits, and role-aware profile negotiation. Dependency-free."

@@ -14,7 +14,7 @@ rules). A malformed expression is a build-time fault, never a bind-time decline 
   that runs all of it. Not here: anything that needs KISS-Ops tables (precision classes, per-op facts, the op DAG), the wire frames (those
   are in `fireline-announce`), and the FDX rows V3/V5/V6/V8/V9/V12/V13/V18..V21 (no clause, or Fuel's window formula is pending).
 - **Dependency-free.**
-- **Require it with a tilde** (`fireline-contract = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
+- **Require it with a tilde** (`fireline-contract = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **Hello world:** `cargo run -p fireline-contract --example contract_hello_world`, or the doctest on the crate root.
 
 ## Provenance
