@@ -218,3 +218,104 @@ fn a_strided_cell_carries_its_strides() {
         Ok(())
     );
 }
+
+// 6.5-0002: the signature is complete for the operand list (this crate's own cases; the corpus's golden signature is empty).
+#[test]
+fn a_complete_signature_binds_without_outside_information() {
+    let ok = |parts: &[&str], operands| {
+        Signature::parse(&sig(parts))
+            .unwrap()
+            .check_complete(operands)
+    };
+    let full = [PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N];
+    assert_eq!(ok(&full, 2), Ok(()));
+    assert_eq!(ok(&[N], 0), Ok(()), "zero operands still needs n");
+    assert_eq!(ok(&[], 0), Err(SignatureError::CountMissing));
+    // wrong pointer count
+    assert_eq!(
+        ok(&full, 3),
+        Err(SignatureError::PointerCount { want: 3, got: 2 })
+    );
+    assert_eq!(
+        ok(&[PTR_IN, EXTENTS0, EXTENTS1, N], 2),
+        Err(SignatureError::PointerCount { want: 2, got: 1 })
+    );
+    // pointers come first
+    assert_eq!(
+        ok(&[PTR_IN, EXTENTS0, EXTENTS1, PTR_OUT, N], 2),
+        Err(SignatureError::PointerAfterScalar(3))
+    );
+    // a pointer is typed at its operand's dtype: `-` is not a dtype
+    assert_eq!(
+        ok(
+            &[
+                PTR_IN,
+                "(ptr, 0, out, f32*, -, scalar)",
+                EXTENTS0,
+                EXTENTS1,
+                N
+            ],
+            2
+        ),
+        Err(SignatureError::UntypedPointer(1))
+    );
+    // extents{i} for every operand, n exactly once
+    assert_eq!(
+        ok(&[PTR_IN, PTR_OUT, EXTENTS0, N], 2),
+        Err(SignatureError::ExtentsMissing(1))
+    );
+    assert_eq!(
+        ok(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1], 2),
+        Err(SignatureError::CountMissing)
+    );
+    assert_eq!(
+        ok(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N, N], 2),
+        Err(SignatureError::CountMissing),
+        "n twice"
+    );
+}
+
+// 6.5-0006: a sliced kernel carries off{i} per operand; 6.5-0004a: ws_bytes is present with ws_ptr; an operand index past the list declines.
+#[test]
+fn offsets_workspace_and_operand_range() {
+    let check = |parts: &[&str]| Signature::parse(&sig(parts)).unwrap().check_complete(2);
+    assert_eq!(
+        check(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N, OFF0]),
+        Err(SignatureError::OffsetsMissing(1))
+    );
+    assert_eq!(
+        check(&[
+            PTR_IN,
+            PTR_OUT,
+            EXTENTS0,
+            EXTENTS1,
+            N,
+            OFF0,
+            "(ls, 4, off1, i64, -, scalar)"
+        ]),
+        Ok(())
+    );
+    assert_eq!(
+        check(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N, WS_PTR]),
+        Err(SignatureError::WorkspaceMismatch)
+    );
+    assert_eq!(
+        check(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N, WS_BYTES]),
+        Err(SignatureError::WorkspaceMismatch)
+    );
+    assert_eq!(
+        check(&[PTR_IN, PTR_OUT, EXTENTS0, EXTENTS1, N, WS_PTR, WS_BYTES]),
+        Ok(())
+    );
+    assert_eq!(
+        check(&[
+            PTR_IN,
+            PTR_OUT,
+            EXTENTS0,
+            EXTENTS1,
+            "(ls, 1, extents2, i64, -, rank)",
+            N
+        ]),
+        Err(SignatureError::OperandIndexOutOfRange(4))
+    );
+}
