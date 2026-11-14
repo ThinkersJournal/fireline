@@ -6,8 +6,13 @@ rules). A malformed expression is a build-time fault, never a bind-time decline 
 
 - **Draft-tracking.** KISS-Contract 6.12 is a Draft (freeze gate unmet; CireSnave 2026-11-12: "working toward the draft version is the best
   we have"). Expect rework when it moves. Every rule cites its clause id; decline codes the Draft does not name are marked in the docs.
-- **First slice only.** Covers 6.12-0001..-0006 and 6.6-0006/-0009. Not yet here: the wire frames (`SAVL`, `CYRQ`, `CRSP`, `CDEC`), the
-  mapped FDX rows V1/V4/V10/V11, and anything for V3/V5/V6/V8/V9/V12/V13/V18..V21 (no clause or the Fuel window formula is pending).
+- **What is here** (each module cites its clauses and says what is diffed against a KISS vector and what is written from the clause text):
+  bind-time Dispatch expressions (`Expr`, `Context`: 6.6, 6.12); the document framing (`document`: 6.11-0002..-0004); section field lines and
+  schemas (`fields`: 6.11-0005, 6.3..6.9-0001); the Identity rules (`identity`: 6.3); typed Interface scalars (`values`: 6.5); the
+  `positional_signature` and the strides rule (`interface`: 6.11-0006, 6.5-0004a, 6.5-0005); output layouts and the bind-time slot overlap
+  (`layout`: 6.5-0014..-0019); cross-section rules and closed vocabularies (`consistency`: 6.7 to 6.9); and `read::read_contract`, one call
+  that runs all of it. Not here: anything that needs KISS-Ops tables (precision classes, per-op facts, the op DAG), the wire frames (those
+  are in `fireline-announce`), and the FDX rows V3/V5/V6/V8/V9/V12/V13/V18..V21 (no clause, or Fuel's window formula is pending).
 - **Dependency-free.**
 - **Require it with a tilde** (`fireline-contract = "~0.1"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **Hello world:** `cargo run -p fireline-contract --example contract_hello_world`, or the doctest on the crate root.
