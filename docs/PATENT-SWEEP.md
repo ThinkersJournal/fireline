@@ -460,3 +460,24 @@ Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,7
 - **This pass does not clear `fireline-contract` for publishing.** The PM puts the publication verdict to CireSnave (board 442).
 
 — lane: fireline
+
+## Publication risk note: fireline-contract (board 442, CireSnave 2026-11-14: "442: A.")
+
+CireSnave ruled to publish `fireline-contract` **with this note**. This is a statement of what the sweep did and did not do, not a clearance.
+
+**Crates to publish, in order.** One: `fireline-contract`. It has no dependencies and no other FireLine crate depends on it, so there is no ordering constraint. The version is the PM's to allocate at gate time. Not part of this ruling and not to be published with it: `fireline-dlpack` and `fireline-announce` 0.1.1.
+
+**What the five passes did.** Independent claims of the patents they surfaced were read from Google Patents text and read against an all-elements test. No `needs-review` result arose in any pass, so no `[ASK]` was raised.
+
+**What they did not do (the limits).**
+
+- **Dependent claims** were not read, except where a number's claims appeared as a single block.
+- **Descriptions** were not read.
+- **USPTO and EPO records** were not read; statuses and expiry dates are Google's display. **Continuations** were not read, so a continuation with broader or different claims is invisible to this sweep.
+- **Unread numbers.** About twelve off-subject memory-protection, initialization and shift titles (read by title only; a title is not a reading), the classify list (US 8,874,794; 7,216,138; 10,242,423; 10,338,919; 11,442,696; 2023/0359694 A1; 12,705,167), the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A. The lane continues reading these; any `needs-review` is reported as a `[FINDING]`.
+- **No layout-algebra patent surfaced.** The search tool cannot filter by CPC or claim text, so that is a limit of the search, not evidence that none exists.
+- **No attorney has reviewed any of it and none is planned.** This is not legal advice and not a freedom-to-operate opinion.
+
+**Tripwire: US 12,423,007 B1** (Nvidia, "Techniques for tensor memory allocation", row 38). Its claims require reusing memory for a second tensor based on compile-time identification of intervals in which each tensor is used. `fireline-contract`'s slot overlap check does the opposite: it refuses two output slots whose byte hulls intersect and plans nothing. **If any later feature lets slots share bytes by lifetime, re-read this claim before it ships** (and consider yanking the affected version).
+
+**What `fireline-contract` is.** It parses text, checks integer arithmetic and computes a byte hull. It allocates nothing, moves no data and runs no kernel, which is the difference every "clear" verdict rests on.
