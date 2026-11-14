@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.0] — **BREAKING**: interface crates unified at 0.2.0
+
+Every interface crate now carries the one project number (CireSnave's one-number-per-project rule; the portfolio sweep's version-consistency finding at a 0.x project number with x >= 1, which the 0.1.0 allocation for #44 crossed and turned main's CI red). `fireline-announce` and `fireline-grammar` move from their unpublished tree version 0.1.1 to 0.2.0 (`fireline-synth` was already published at 0.2.0); the workspace and `fireline-classify`, `fireline-contract`, `fireline-dlpack` move from 0.1.0; `fireline-synth` requires `fireline-grammar` as `~0.2`; the README require-lines read `~0.2`. No source change; carried by the lane at the PM's ruling (a PR that bumps a version cannot also carry a fragment). Verified with `cargo build --locked --all-targets` (no `collision`) and `cargo test --locked`.
+
+— lane: fireline
+
 ## [0.1.0] — **BREAKING** (unpublished `fireline-contract`): `in_place` typed, golden re-diffed to KISS 0.17.1
 
 KISS#813 pinned Contract 6.5-0009: `in_place` is exactly `none` or `input:<k>` (`k` a 0-based input index, canonical decimal). `values::InterfaceValues.in_place` was text and is now `InPlace::{None, Input(u32)}`; `interface_values` declines anything else, `false` included, with the new `ValueError::InPlace`. `InterfaceValues` lost its lifetime. The golden document of `contract_vectors.json` (now `in_place = none`, `len=1280 crc32=79f503e4`, 1325 bytes) is re-pasted in the six test files and passes. The `none`, `input:0/7/10` and decline cases (`false`, `input:`, `input:-1`, `input:01`, `input:x`, `Input:0`, `None`, overflow) are this crate's own: the corpus has one value. Verified with `cargo test`, `clippy -D warnings` and `cargo doc -D warnings`.
