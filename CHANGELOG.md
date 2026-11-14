@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.10] — patch
+
+Re-vendored the Appendix C golden document from KISS `conformance/corpus/contract_vectors.json` at `11407f72` (KISS 0.18.0, sk8 per-operand dtype key: now `len=1304 crc32=2854c69d`, 1349 bytes, was 1325). The 13 decline vectors are byte-identical to the corpus. `cargo test -p fireline-contract --locked` passes. No code change.
+
 ## [0.2.9] — patch
 
 `docs/PATENT-SWEEP.md` gains the eighth pass: the twelve off-subject memory-protection, initialization and shift numbers the third pass listed (US 7,275,143, WO 2017/120517 A1, US 9,779,786, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266, US 6,393,512, US 9,442,846) read on their independent claims. All clear (memory controllers, OS and hypervisor memory management, an ISA shift instruction, DRAM wiring, a bank-conflict circuit); no `needs-review`. Every number the sweep named is now read; the crate README risk note says so (eight passes) and keeps the limits: independent claims only, search tool limits, no attorney. Docs only.
