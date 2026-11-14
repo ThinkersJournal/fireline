@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] — **BREAKING**: `fireline-synth` requires `unpopped-vocab` `~0.46`; interface crates unified at 0.3.0
+
+`fireline-synth` moves its `unpopped-vocab` requirement from `^0.45.12` to `~0.46` (PM [TASK] 2026-11-14: Baracuda found 0.2.0 excludes unpopped 0.46, so a consumer of both gets two copies of the vocabulary). A changed vocabulary requirement is breaking for synth consumers, so by the pre-1.0 rule the project number is 0.3.0 and `fireline-announce`, `fireline-grammar`, `fireline-synth`, `fireline-classify`, `fireline-contract` and `fireline-dlpack` all carry it. README require-lines are `~0.3`; `fireline-synth` requires `fireline-grammar` as `~0.3`. No source change. Lane-carried version PR, no fragment (as #47).
+
 ## [0.2.10] — patch
 
 Re-vendored the Appendix C golden document from KISS `conformance/corpus/contract_vectors.json` at `11407f72` (KISS 0.18.0, sk8 per-operand dtype key: now `len=1304 crc32=2854c69d`, 1349 bytes, was 1325). The 13 decline vectors are byte-identical to the corpus. `cargo test -p fireline-contract --locked` passes. Also re-vendored `tests/data/kiss_section_vectors.tsv` (6 accept + 49 decline `section_vectors`; new keys and lengths). No code change.
