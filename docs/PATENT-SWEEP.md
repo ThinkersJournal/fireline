@@ -451,7 +451,7 @@ Fourteen numbers read (rows 44 to 55; the memory-shapes and strength-reduction r
 
 ### Still unread
 
-Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). Also unread: the classify list (US 8,874,794, US 7,216,138, US 10,242,423, US 10,338,919, US 11,442,696, US 2023/0359694 A1, US 12,705,167), the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A.
+Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). Also unread: the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A.
 
 ### Limitations specific to this addendum
 
@@ -481,3 +481,32 @@ CireSnave ruled to publish `fireline-contract` **with this note**. This is a sta
 **Tripwire: US 12,423,007 B1** (Nvidia, "Techniques for tensor memory allocation", row 38). Its claims require reusing memory for a second tensor based on compile-time identification of intervals in which each tensor is used. `fireline-contract`'s slot overlap check does the opposite: it refuses two output slots whose byte hulls intersect and plans nothing. **If any later feature lets slots share bytes by lifetime, re-read this claim before it ships** (and consider yanking the affected version).
 
 **What `fireline-contract` is.** It parses text, checks integer arithmetic and computes a byte hull. It allocates nothing, moves no data and runs no kernel, which is the difference every "clear" verdict rests on.
+
+## Addendum: fireline-contract and fireline-classify, sixth pass, the classify list (CLAIM READ, NOT COMPLETE)
+
+Date: 2026-11-14. Run by: the FireLine lane, Claude Sonnet 5.5, on the PM's instruction to keep reading the unread patents. Same method and limits as the earlier passes: independent claims read from Google Patents text fetched with `patent-claims.py` (the first two spellings of three numbers 404ed; the `B2`, `B2` and `B1` kind codes served); statuses are Google's display, not the official record. **NOT legal advice; NOT a freedom-to-operate opinion.** `fireline-classify` holds static tables of element-type facts (the MX element dtypes, KISS-CLASSIFY 6.1-0014..-0016); it computes nothing on a datapath, compresses nothing and executes no instruction.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Independent claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 56 | US 10,242,423 B2 | Compute optimizations for low precision machine learning operations | Intel | Active | 1, 7, 12 | Mixed 16-bit multiply, 32-bit accumulate (low-precision element types). | An accelerator or GPU with SIMT multiprocessors and a memory stack executing a single instruction. We execute nothing. Not met. | **clear** |
+| 57 | US 10,338,919 B2 | Generalized acceleration of matrix multiply accumulate operations | Nvidia | Active; estimate 2037-12-22 | 1, 9, 16 | A matrix multiply-accumulate. | A processor datapath generating partial products of a dot product; claims 9 and 16 are the method and storage-medium forms of the same datapath steps. We have no datapath. Not met. | **clear** |
+| 58 | US 2023/0359694 A1 | Variable-precision matrix multiplication using a low-precision digit matrix multiplier | Xcelerium | Pending (an application: claims may change) | 1, 2, 3, 4 | Low-precision integer digits. | Hardware (load-store unit, register file, permute unit, dot-product units, systolic array) or a matrix-decomposition method; none are ours. Not met on the claims as published. | **clear** (re-read if it is granted) |
+| 59 | US 12,705,167 B2 | Offloading quantization of directional blocked data formats to near-memory units | AMD | Active | 1, 12, 16 | "directional blocked data format", the closest vocabulary to the MX block formats. | Claims a processing-in-memory unit with ALUs and a counter-based conditional shift circuit that quantizes data; claim 12 is a shift circuit. We quantize nothing and have no circuit. Not met. | **clear** |
+| 60 | US 8,874,794 B2 | Block floating point compression with exponent difference and mantissa coding | Altera | Active; estimate 2029-12-25 | 1, 9, 12 | Block exponent plus per-sample mantissa, the idea behind a shared-exponent block format. Claims 1 and 9 are software (a memory storing instructions), so hardware alone does not distinguish them. | Every independent claim requires coding the differences between the block exponents of consecutive groups into exponent tokens from a predetermined set and substituting one token for several groups. MX has one shared scale per block and no such coding, and we only describe the element types. Limb not met. | **clear** |
+| 61 | US 7,216,138 B2 | Floating point operations and format conversion operations | Intel | Expired - Fee Related | 1, 9, 13, 17 | Integer to floating-point conversion on packed data. | A decoder or processor with architectural registers executing a packed conversion instruction; expired. Not met. | **clear** |
+| 62 | US 11,442,696 B1 | Floating point multiply-add, accumulate unit with exception processing | SambaNova | Active; estimate 2041-10-05 | 1, 7, 13, 23 | Floating-point encodings with illegal operations. | A multiplier and accumulator circuit with exception handling. We have no circuit. Not met. | **clear** |
+
+Seven numbers read (rows 56 to 62). **No `needs-review`**, so no `[ASK]` and no `[FINDING]`. Every verdict is "clear" on an all-elements reading of claims that recite a processor datapath, a circuit, a compression process or a matrix-decomposition method. Nearest in vocabulary: US 8,874,794 B2 (block exponents) and US 12,705,167 B2 ("blocked data formats"); neither claims a format description.
+
+### Still unread
+
+The Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1, CN 103399780 A, and the third pass's off-subject memory-protection, initialization and shift numbers listed in the fifth pass. The `fireline-contract` crate README's risk note says the classify list is unread; that sentence is stale as of this pass and is corrected at the next publish (the README ships in the crate, so changing it is a version change the PM allocates).
+
+### Limitations specific to this addendum
+
+- Independent claims only, read as a filtered view of each page; dependent claims, descriptions, prosecution histories, USPTO and EPO records and continuations were not read. Statuses and expiry dates are Google's.
+- **This pass does not clear any crate for publishing**; `fireline-contract` 0.2.6 was published on the board 442 ruling, and `fireline-classify` 0.1.0 was published earlier.
+
+— lane: fireline
