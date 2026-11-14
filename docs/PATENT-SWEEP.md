@@ -451,7 +451,7 @@ Fourteen numbers read (rows 44 to 55; the memory-shapes and strength-reduction r
 
 ### Still unread
 
-Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). Also unread: the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A.
+Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). (The classify list was read in the sixth pass; the Cambricon family, US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A in the seventh; US 2023/0289292 A1 was already read, row 23.)
 
 ### Limitations specific to this addendum
 
@@ -474,7 +474,7 @@ CireSnave ruled to publish `fireline-contract` **with this note**. This is a sta
 - **Dependent claims** were not read, except where a number's claims appeared as a single block.
 - **Descriptions** were not read.
 - **USPTO and EPO records** were not read; statuses and expiry dates are Google's display. **Continuations** were not read, so a continuation with broader or different claims is invisible to this sweep.
-- **Unread numbers.** About twelve off-subject memory-protection, initialization and shift titles (read by title only; a title is not a reading), the classify list (US 8,874,794; 7,216,138; 10,242,423; 10,338,919; 11,442,696; 2023/0359694 A1; 12,705,167), the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A. The lane continues reading these; any `needs-review` is reported as a `[FINDING]`.
+- **Unread numbers.** About twelve off-subject memory-protection, initialization and shift titles (read by title only; a title is not a reading), the classify list, the Cambricon family, US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A (**all since read: the classify list in the sixth pass, the rest in the seventh; this sentence is the state at the time of the ruling**). The lane continues reading the off-subject titles; any `needs-review` is reported as a `[FINDING]`.
 - **No layout-algebra patent surfaced.** The search tool cannot filter by CPC or claim text, so that is a limit of the search, not evidence that none exists.
 - **No attorney has reviewed any of it and none is planned.** This is not legal advice and not a freedom-to-operate opinion.
 
@@ -502,11 +502,39 @@ Seven numbers read (rows 56 to 62). **No `needs-review`**, so no `[ASK]` and no 
 
 ### Still unread
 
-The Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1, CN 103399780 A, and the third pass's off-subject memory-protection, initialization and shift numbers listed in the fifth pass. The `fireline-contract` crate README's risk note says the classify list is unread; that sentence is stale as of this pass and is corrected at the next publish (the README ships in the crate, so changing it is a version change the PM allocates).
+The Cambricon family, US 8,860,743, US 2021/0271587 A1 and CN 103399780 A (read in the seventh pass), and the third pass's off-subject memory-protection, initialization and shift numbers listed in the fifth pass. The `fireline-contract` crate README's risk note said the classify list was unread; the seventh pass corrects it in the repository, and the published 0.2.6 README carries the stale sentence until the next publish.
 
 ### Limitations specific to this addendum
 
 - Independent claims only, read as a filtered view of each page; dependent claims, descriptions, prosecution histories, USPTO and EPO records and continuations were not read. Statuses and expiry dates are Google's.
 - **This pass does not clear any crate for publishing**; `fireline-contract` 0.2.6 was published on the board 442 ruling, and `fireline-classify` 0.1.0 was published earlier.
+
+— lane: fireline
+
+## Addendum: fireline-contract, seventh pass, the Cambricon family and the last named stragglers (CLAIM READ, NOT COMPLETE)
+
+Date: 2026-11-14. Run by: the FireLine lane, Claude Sonnet 5.5, on the PM's instruction to keep reading. Same method and limits as the earlier passes: independent claims read from Google Patents text fetched with `patent-claims.py` (kind codes `B2`, `B2`, `B2`, `B2`, `A1`, `A` served); statuses are Google's display. **NOT legal advice; NOT a freedom-to-operate opinion.** `fireline-contract` parses text, checks integer arithmetic and computes a byte hull; it decodes no instruction, synchronises nothing between processors and runs no kernel. US 2023/0289292 A1 needs no new row: it was read in row 23.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Independent claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 63 | US 11,886,880 B2 | Data processing apparatus and related products with descriptor management | Cambricon | Active; estimate 2040-04-01 | 1, 10 | A descriptor "that indicates a shape of a tensor data" (the closest vocabulary to a layout expression). | Claim 1 (a method) and claim 10 (a control circuit) both begin by determining that a decoded processing instruction is a descriptor management instruction, then place the descriptor and the data in storage areas and execute that instruction. We decode no instruction and manage no storage. Not met. | **clear** |
+| 64 | US 11,385,895 B2 | Data processing apparatus and related products | Cambricon | Active; estimate 2040-04-01 | 1 | The same descriptor vocabulary. | A control circuit and an execution circuit; a decoded instruction's operand carries a descriptor identifier that the tensor control module resolves, and the execution circuit runs the instruction. Not met. | **clear** |
+| 65 | US 12,346,697 B2 | Data processing apparatus and related products | Cambricon | Active; estimate 2040-04-01 | 1, 6, 8, 12 | A descriptor of a tensor's shape. | Synchronisation of tensor data between a first and a second processor by a generated and sent synchronisation instruction. We synchronise nothing and send no instruction. Not met. | **clear** |
+| 66 | US 8,860,743 B2 | Sparse texture systems and methods | Nvidia | Active; estimate 2032-08-04 | 1, 10, 14 | Tiles mapped between memory spaces. | A texture residency translation map and a minimum-LOD probe for a texture lookup. We have neither. Not met. | **clear** |
+| 67 | US 2021/0271587 A1 | Detection of runtime errors using machine learning | Microsoft | Active (an application: claims may change) | 1, 8, 15 | An arithmetic overflow named in claim 15. | A random-forest classifier over features extracted from a source program. Our overflow handling is checked integer arithmetic. Not met. | **clear** |
+| 68 | CN 103399780 A | Integer overflow detection based on virtual machine technology and dynamic symbolic execution | No. 54 Institute (PLA) | Expired - Fee Related | 1 (of 3; Google's English is a machine translation) | Integer overflow detection. | Binary translation into an intermediate representation and LLVM symbolic execution of a target binary. Not met; expired. | **clear** |
+
+Six numbers read (rows 63 to 68). **No `needs-review`**, so no `[ASK]` and no `[FINDING]`. The Cambricon family is the closest in vocabulary to the layout work (a descriptor of a tensor's shape), but every independent claim is an instruction-decoding processor or a processor-to-processor synchronisation.
+
+### Still unread
+
+Only the third pass's off-subject memory-protection, initialization and shift numbers (US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846), read by title only.
+
+### Limitations specific to this addendum
+
+- Independent claims only, as a filtered view; dependent claims, descriptions, prosecution histories, USPTO and EPO records and continuations were not read. CN 103399780 A was read from a machine translation of three claims.
+- **This pass does not clear any crate for publishing.**
 
 — lane: fireline

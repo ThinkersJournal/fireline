@@ -19,7 +19,7 @@ rules). A malformed expression is a build-time fault, never a bind-time decline 
 
 ## Patent risk note
 
-Published with a limited patent sweep (five passes, `docs/PATENT-SWEEP.md` in the repository), not a clearance. Independent claims of the patents found were read and none needed review. **Not done:** dependent claims, descriptions, USPTO/EPO records and continuations were not read; about twelve off-subject memory-protection titles and the classify and Cambricon lists are unread; no layout-algebra patent surfaced, which does not show that none exists; **no attorney has reviewed it, and this is not legal advice.** Tripwire: US 12,423,007 B1 claims lifetime-based reuse of tensor memory, which the slot overlap check is the opposite of; if slots ever share bytes, re-read that claim first.
+Published with a limited patent sweep (seven passes, `docs/PATENT-SWEEP.md` in the repository), not a clearance. Independent claims of the patents found were read and none needed review. **Not done:** dependent claims, descriptions, USPTO/EPO records and continuations were not read; about twelve off-subject memory-protection, initialization and shift titles are unread (read by title only); no layout-algebra patent surfaced, which does not show that none exists; **no attorney has reviewed it, and this is not legal advice.** Tripwire: US 12,423,007 B1 claims lifetime-based reuse of tensor memory, which the slot overlap check is the opposite of; if slots ever share bytes, re-read that claim first.
 
 ## Provenance
 
