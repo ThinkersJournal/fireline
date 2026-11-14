@@ -17,6 +17,10 @@ rules). A malformed expression is a build-time fault, never a bind-time decline 
 - **Require it with a tilde** (`fireline-contract = "~0.2"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **Hello world:** `cargo run -p fireline-contract --example contract_hello_world`, or the doctest on the crate root.
 
+## Patent risk note
+
+Published with a limited patent sweep (five passes, `docs/PATENT-SWEEP.md` in the repository), not a clearance. Independent claims of the patents found were read and none needed review. **Not done:** dependent claims, descriptions, USPTO/EPO records and continuations were not read; about twelve off-subject memory-protection titles and the classify and Cambricon lists are unread; no layout-algebra patent surfaced, which does not show that none exists; **no attorney has reviewed it, and this is not legal advice.** Tripwire: US 12,423,007 B1 claims lifetime-based reuse of tensor memory, which the slot overlap check is the opposite of; if slots ever share bytes, re-read that claim first.
+
 ## Provenance
 
 Written from the Draft text (KISS `spec/contract.md` at `origin/main` `2d7f20e`). The test cases mirror the shapes in KISS
