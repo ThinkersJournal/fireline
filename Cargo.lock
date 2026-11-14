@@ -30,15 +30,15 @@ version = "0.2.0"
 
 [[package]]
 name = "fireline-classify"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "fireline-contract"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "fireline-dlpack"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "thiserror",
 ]

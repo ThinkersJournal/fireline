@@ -1,3 +1,0 @@
-kind: **BREAKING**: interface crates unified at 0.2.0
----
-Every interface crate now carries the one project number (CireSnave's one-number-per-project rule; the portfolio sweep's version-consistency finding at a 0.x project number with x >= 1). `fireline-announce` and `fireline-grammar` move from their unpublished tree version 0.1.1 to 0.2.0 by hand (`fireline-synth` was already published at 0.2.0); `fireline-synth` now requires `fireline-grammar` as `~0.2`; the README require-lines read `~0.2`. The PM's stamp of 0.2.0 moves the workspace crates (classify, dlpack, contract). No source change. Verified with `cargo build --locked --all-targets`, `cargo test --locked`, `tools/tilde-lint`.
