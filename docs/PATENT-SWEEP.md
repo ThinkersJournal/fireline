@@ -425,3 +425,38 @@ Date: 2026-11-14. Run by: the FireLine lane, Claude Sonnet 5.5. Same method and 
 - The claim tool served B1 for two numbers the third pass wrote as B2; US 7,275,143 (the third pass's 404) was not retried here.
 - Many numbers in the third pass's "surfaced and NOT read" list remain unread (the memory-shapes, DMA-descriptor, strength-reduction, sparse-matrix and memory-protection families); none is near the slot check by title, but a title is not a reading.
 - **This pass does not clear `fireline-contract` for publishing.** It closes the four slot-allocation families and three older numbers; the PM puts the publication verdict to CireSnave.
+
+## Addendum: fireline-contract fifth pass, the remaining memory-layout, DMA, compiler and sparse families (CLAIM READ, NOT COMPLETE)
+
+Date: 2026-11-14. Run by: the FireLine lane, Claude Sonnet 5.5, on the PM's instruction to keep reading the unread families. Same method and limits as the passes above: independent claims read from Google Patents text fetched with `patent-claims.py`; statuses are Google's display, not the official record. **NOT legal advice; NOT a freedom-to-operate opinion.** `fireline-contract` parses text, checks integer arithmetic and computes a byte hull; it allocates nothing, moves no data and runs no kernel.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Independent claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 44 | US 11,494,296 B2 (and US 10,942,843 B2, US 12,117,929 B2: same family) | Memory shapes | Micron / Lodestar | Active; estimate 2038-12-16 (12,117,929: 2037-07-26) | 1, 18, 19, 20 of 11,494,296; claim 1 of the others | A "user definition of a memory shape" with rows, columns and a major dimension (ideas 9, 10). | Every claim allocates physically contiguous cells of a memory array and stores data elements in adjacent rows. We allocate and store nothing. Not met. | **clear** |
+| 45 | US 11,983,128 B1 (the third pass wrote no suffix; Google serves B1) | Multidimensional and multiblock tensorized DMA descriptors | Amazon | Active; estimate 2042-12-16 | 1, 5, 12 | Strides and repetition numbers per dimension (idea 9). | A DMA engine retrieving descriptors from a queue and generating addresses. We are not a DMA engine. Not met. | **clear** |
+| 46 | US 10,430,339 B2 | Memory management method and apparatus | Samsung | Active; estimate 2035-07-29 | 1, 11 | A stride rule over 2D data. | Allocates neighbouring data to different memory banks by an odd-multiple stride. We allocate no banks. Not met. | **clear** |
+| 47 | US 12,056,494 B2 | Techniques for parallel execution | Nvidia | Active | 1, 8, 16, 22, 30 | None beyond "compiler". | GPU code speculatively executed on CPU branch conditions. Not met. | **clear** |
+| 48 | US 12,033,053 B1 | Deep tensor columns in neural networks | Neural Magic | Active; estimate 2042-10-21 | 1, 6, 10, 15 | None beyond "tensor". | Executing sub-tensor columns within cache layers. Not met. | **clear** |
+| 49 | US 7,886,205 B2 | Verification using overlapping address ranges | Unisys | Active; estimate 2029-08-04 | 19, 20 (claim 1 not separately read) | Address ranges that overlap (idea 11). | Generates ranges, performs accesses that write identifying numbers and checks the values read back. We perform no access. Not met. | **clear** |
+| 50 | US 12,596,907 B2 | Neural network operation apparatus and method | Samsung | Active; estimate 2045-01-01 | 1, 6, 11 | "modulo operation between a virtual tensor address ... and a stride" (the vocabulary closest to our expressions). | Validates data and obtains a real memory address in order to perform a neural network operation on a memory. We perform none. Not met. | **clear** |
+| 51 | US 2021/0064987 A1 | Processor and system to convert tensor operations in machine learning | Nvidia | Pending (an application: claims may change) | 1, 7, 14, 21, 27 | None beyond "tensor". | Convolution by tensor contraction on ALUs. Not met. | **clear** |
+| 52 | US 9,256,411 B2, US 9,250,879 B2, US 9,164,743 B2 | Strength reduction compiler optimizations | IBM | Expired - Fee Related | 1, 2 / 1 / 1 | "strides" in the title of one. | Optimizing-compiler passes over a control flow graph and dominator tree. Not met. | **clear** |
+| 53 | US 10,296,556 B2, US 9,760,538 B2 | Efficient sparse matrix processing | Palo Alto Research Center | Active; estimate 2035-07-19 | 1, 11 / 1, 7 | None beyond "matrix". | Servers with GPU multiprocessors assigning matrix portions. Not met. | **clear** |
+| 54 | US 11,321,092 B1 | Tensor-based memory access | Habana Labs | Active; estimate 2039-02-13 | 1, 15 | A stored definition of a multi-dimensional array. | A processor with a scalar engine and an ISA whose instructions address an element by array ID. Not met. | **clear** |
+| 55 | US 12,694,294 B2 | Concatenating input and output tensors for RNNs | IBM | Active; estimate 2044-01-15 | 1, 10, 15, 20, 24 | Layout format of tensors. | Generates a concatenated tensor for an accelerator and executes a neural network instruction. Not met. | **clear** |
+
+Fourteen numbers read (rows 44 to 55; the memory-shapes and strength-reduction rows each hold three). **No `needs-review`**, so no `[ASK]`. Every verdict is "clear" on an all-elements reading of claims that recite a memory array, a DMA engine, a processor executing an operation or a compiler pass.
+
+### Still unread
+
+Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). Also unread: the classify list (US 8,874,794, US 7,216,138, US 10,242,423, US 10,338,919, US 11,442,696, US 2023/0359694 A1, US 12,705,167), the Cambricon family, US 8,860,743, US 2023/0289292 A1, US 2021/0271587 A1 and CN 103399780 A.
+
+### Limitations specific to this addendum
+
+- Independent claims only; where a number's claims were shown as one block, dependents were not separately read. No description, prosecution history, USPTO or EPO record or continuation was read. Statuses and expiry dates are Google's.
+- US 7,886,205 B2: only claims 19 and 20 appeared in my filtered view.
+- **This pass does not clear `fireline-contract` for publishing.** The PM puts the publication verdict to CireSnave (board 442).
+
+— lane: fireline
