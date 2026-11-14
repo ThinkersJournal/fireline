@@ -1,6 +1,6 @@
 [package]
 name = "fireline-grammar"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2024"
 rust-version = "1.88"
 description = "The kernel-seam region grammar: OpTag, OpAttrs (with canonical bytes), RegionKey, PatternNode and the shape-expression codec, shared by a kernel consumer and a kernel provider. Types only, no logic, dependency-free."
