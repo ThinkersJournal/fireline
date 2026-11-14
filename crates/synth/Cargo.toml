@@ -1,6 +1,6 @@
 [package]
 name = "fireline-synth"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 rust-version = "1.88"
 description = "The kernel-seam JIT-on-request envelope: the Synthesizer trait a kernel provider implements, and the JitRequest, JitBudget, JitResponse, SynthArtifact and LinkEntry types a consumer calls it with."

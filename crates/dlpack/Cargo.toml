@@ -1,6 +1,6 @@
 [package]
 name = "fireline-dlpack"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "FDX, the DLPack extension: the C-ABI structs, codes, sidecar and validators for tensor interchange between a kernel consumer and a kernel provider, plus the co-maintained C header. FDX only; not the final quantisation sidecar."
 license = "MIT OR Apache-2.0"

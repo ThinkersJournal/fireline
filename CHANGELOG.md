@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1] — `Signature::check_complete`: the positional_signature binds without outside information (6.5-0002)
+
+`Signature::check_complete(operands)` checks a parsed `positional_signature` against the operand count: exactly `operands` typed `ptr` descriptors, all before any launch scalar; `extents{i}` for every operand; `n` exactly once; no per-operand scalar past the operand list; `off{i}` for every operand if any (6.5-0006); `ws_ptr` with `ws_bytes` or neither. New `SignatureError` variants carry each decline. Whether a pointer's dtype is its operand's own needs the op's operand list (KISS-Ops) and is not checked: only that a dtype is declared. No vector exists for this clause (the golden's signature is empty): the tests are this crate's own and the `off{i}` all-operands rule is this crate's reading. Verified with `cargo test`, `clippy -D warnings`, `cargo doc -D warnings`.
+
 ## [0.2.0] — **BREAKING**: interface crates unified at 0.2.0
 
 Every interface crate now carries the one project number (CireSnave's one-number-per-project rule; the portfolio sweep's version-consistency finding at a 0.x project number with x >= 1, which the 0.1.0 allocation for #44 crossed and turned main's CI red). `fireline-announce` and `fireline-grammar` move from their unpublished tree version 0.1.1 to 0.2.0 (`fireline-synth` was already published at 0.2.0); the workspace and `fireline-classify`, `fireline-contract`, `fireline-dlpack` move from 0.1.0; `fireline-synth` requires `fireline-grammar` as `~0.2`; the README require-lines read `~0.2`. No source change; carried by the lane at the PM's ruling (a PR that bumps a version cannot also carry a fragment). Verified with `cargo build --locked --all-targets` (no `collision`) and `cargo test --locked`.
