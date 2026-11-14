@@ -8,10 +8,8 @@
 //! * `launch_scalars` (6.5-0011): entry for entry equal to the launch-scalar tail of the `positional_signature`;
 //! * each Dispatch geometry field (6.11-0008): an expression the Dispatch grammar accepts over the contract's own vocabulary.
 //!
-//! **`in_place` is NOT interpreted.** 6.5-0009 says it states the input operand the output aliases, or that it aliases none, but the Draft
-//! pins no spelling: the golden document of KISS `contract_vectors.json` writes `in_place = false` while the spec's own example text says
-//! `in_place = none`, and no spelling is given for "aliases input `i`". It is returned as text ([`InterfaceValues::in_place`]) until KISS
-//! pins one (reported to kiss).
+//! * `in_place` (6.5-0009): exactly `none` or `input:<k>`, `k` the 0-based input operand index in canonical decimal (no sign, no leading zeros);
+//!   anything else, `false` included, is a typed decline ([`InPlace`]).
 //!
 //! **Draft-tracking;** expect rework when the Draft moves. The golden document passes; it carries one value per field, so the fault cases in
 //! `tests/values.rs` are written from the clause text.
@@ -36,17 +34,26 @@ pub enum CountUnit {
     Vectors(u32),
 }
 
+/// The `in_place` value (6.5-0009).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InPlace {
+    /// `none`: the output aliases no input.
+    None,
+    /// `input:<k>`: the output aliases the 0-based input operand `k`.
+    Input(u32),
+}
+
 /// The typed Interface scalars.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct InterfaceValues<'a> {
+pub struct InterfaceValues {
     /// The declared operand logical rank (6.5-0012).
     pub rank: usize,
     /// The unit `n` counts in (6.5-0008).
     pub count_unit: CountUnit,
     /// The base-pointer alignment the ABI requires, in bytes (6.5-0010).
     pub alignment_bytes: u64,
-    /// The `in_place` value as written; the Draft pins no spelling (see the module docs).
-    pub in_place: &'a str,
+    /// Which input the output aliases, if any (6.5-0009).
+    pub in_place: InPlace,
 }
 
 /// A fault in an Interface scalar or a Dispatch field. Each is a typed decline; never a repair.
@@ -57,6 +64,8 @@ pub enum ValueError {
     Rank(String),
     /// `count_unit` is neither `elements` nor `vectors_x<w>` with a canonical positive `w` (6.5-0008).
     CountUnit(String),
+    /// `in_place` is neither `none` nor `input:<k>` with a canonical decimal `k` (6.5-0009).
+    InPlace(String),
     /// `alignment_bytes` is not a canonical positive decimal integer (6.5-0010).
     Alignment(String),
     /// A signature or launch-scalar list that does not parse (6.5-0011, 6.11-0006).
@@ -88,11 +97,11 @@ fn decimal(s: &str) -> Option<u64> {
     if ok { s.parse().ok() } else { None }
 }
 
-/// Read the typed Interface scalars of `contract` (6.5-0012, -0008, -0010).
+/// Read the typed Interface scalars of `contract` (6.5-0012, -0008, -0009, -0010).
 ///
 /// # Errors
-/// A [`ValueError`] naming the first fault, in the order of the Interface schema: `rank`, `count_unit`, `alignment_bytes`.
-pub fn interface_values<'a>(contract: &Contract<'a>) -> Result<InterfaceValues<'a>, ValueError> {
+/// A [`ValueError`] naming the first fault, in the order of the Interface schema: `rank`, `count_unit`, `in_place`, `alignment_bytes`.
+pub fn interface_values(contract: &Contract<'_>) -> Result<InterfaceValues, ValueError> {
     let get = |key: &str| contract.get(INTERFACE, key).unwrap_or_default();
     let rank_text = get("rank");
     let rank = decimal(rank_text)
@@ -110,6 +119,17 @@ pub fn interface_values<'a>(contract: &Contract<'a>) -> Result<InterfaceValues<'
             .map(CountUnit::Vectors)
             .ok_or_else(|| ValueError::CountUnit(unit_text.to_owned()))?
     };
+    let place_text = get("in_place");
+    let in_place = if place_text == "none" {
+        InPlace::None
+    } else {
+        place_text
+            .strip_prefix("input:")
+            .and_then(decimal)
+            .and_then(|k| u32::try_from(k).ok())
+            .map(InPlace::Input)
+            .ok_or_else(|| ValueError::InPlace(place_text.to_owned()))?
+    };
     let align_text = get("alignment_bytes");
     let alignment_bytes = decimal(align_text)
         .filter(|&v| v >= 1)
@@ -118,7 +138,7 @@ pub fn interface_values<'a>(contract: &Contract<'a>) -> Result<InterfaceValues<'
         rank,
         count_unit,
         alignment_bytes,
-        in_place: get("in_place"),
+        in_place,
     })
 }
 
