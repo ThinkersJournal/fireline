@@ -266,3 +266,59 @@ fn a_declared_rank_makes_an_out_of_bounds_subscript_a_build_time_fault() {
         Err(BindDecline::SubscriptOutOfRange { .. })
     ));
 }
+
+// CONTRACT-6.5-0012: every per-operand extents/strides array has exactly `rank` entries; scalars and idx_extents are not sized from `rank`.
+#[test]
+fn per_operand_arrays_must_have_the_declared_rank() {
+    let mut ok = Environment::new();
+    ok.set_array("extents0", &[3, 4])
+        .set_array("strides0", &[4, 1])
+        .set_array("extents1", &[3, 4])
+        .set_scalar("off0", 0)
+        .set_scalar("n", 12);
+    assert_eq!(ok.check_rank(2), Ok(()));
+    // an array that is too long or too short is a typed decline naming it (the first in symbol order)
+    for len in [0usize, 1, 3] {
+        let mut bad = ok.clone();
+        bad.set_array("strides0", &vec![1; len]);
+        let err = bad.check_rank(2).unwrap_err();
+        assert_eq!(
+            err,
+            BindDecline::ArrayLength {
+                symbol: "strides0".into(),
+                rank: 2,
+                len
+            }
+        );
+        assert_eq!(err.code(), "array_length");
+    }
+    // symbol order decides which is named when two are wrong
+    let mut two = ok.clone();
+    two.set_array("extents1", &[1])
+        .set_array("extents0", &[1, 2, 3]);
+    assert_eq!(
+        two.check_rank(2),
+        Err(BindDecline::ArrayLength {
+            symbol: "extents0".into(),
+            rank: 2,
+            len: 3
+        })
+    );
+    // rank 0: every per-operand array is empty
+    let mut zero = Environment::new();
+    zero.set_array("extents0", &[]).set_array("strides0", &[]);
+    assert_eq!(zero.check_rank(0), Ok(()));
+    assert!(ok.check_rank(0).is_err());
+    // idx_extents{i} is sized by the index operand's rank (6.5-0013), and off{i} is a single scalar: neither is checked against `rank`
+    let mut other = ok.clone();
+    other.set_array("idx_extents0", &[5]).set_scalar("off1", 7);
+    assert_eq!(other.check_rank(2), Ok(()));
+    // names that merely start like the symbols are not per-operand arrays
+    let mut odd = ok.clone();
+    odd.set_array("extents", &[1])
+        .set_array("extentsx", &[1])
+        .set_array("strides_0", &[1]);
+    assert_eq!(odd.check_rank(2), Ok(()));
+    // an empty environment assigns nothing: nothing to check
+    assert_eq!(Environment::new().check_rank(3), Ok(()));
+}
