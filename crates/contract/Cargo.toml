@@ -1,6 +1,6 @@
 [package]
 name = "fireline-contract"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 rust-version = "1.88"
 description = "KISS-Contract bind-time obligations: parse a Dispatch expression (KISS-CONTRACT-6.6-0006) and bind it against a launch environment with typed declines (6.12-0001..-0006, 6.6-0009). Draft-tracking, dependency-free."

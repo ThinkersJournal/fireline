@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.3] — patent sweep, `fireline-contract` third pass (layout and swizzle families)
+
+`docs/PATENT-SWEEP.md` gains the claim-language pass owed for ideas 9 to 11 (the seven output-layout forms with nested `shape:stride` and a swizzle, named output slots, the slot byte-hull overlap check): nine claim-phrased queries (Q20 to Q28; the search tool cannot filter by CPC or claim text, and four queries returned only papers) and fourteen patents read on their independent claims, including those the second pass had surfaced and not read. Every one reads on a processor, memory controller, DMA or DRAM circuit or an executed memory access, which the crate is not, so none is `needs-review`; two (US 2012/0092356 A1 and WO 2020/263588 A1) are flagged for a lawyer on claim vocabulary. **This does not clear `fireline-contract` for publishing**: dependent claims and descriptions were not read, the slot-allocation patent families (US 12,430,110, US 12,423,007, US 11,720,993, US 12,541,813) are still unread, and no layout-algebra patent surfaced, which is not evidence that none exists. The PM decides. No code change.
+
 ## [0.2.2] — diff against KISS `section_vectors` (6 accept docs, 50 declines)
 
 New test `tests/kiss_section_vectors.rs` with its data file `tests/data/kiss_section_vectors.tsv` (the `section_vectors` of `contract_vectors.json` on kiss origin/main 2c1e2cfa, KISS#818, 0.17.4): every accept document reads cleanly through `read_contract`, and all 49 declines are refused by the layer and variant kiss's tag names (all seven section schemas, the five-field Dispatch, V11's class-2-declared-scalar, `in_place` spellings, `output_layouts` and `human_annotation` order). kiss dropped its own extra `in-place-no-such-input` after our finding. No library change.
