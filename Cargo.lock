@@ -22,34 +22,34 @@ checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 
 [[package]]
 name = "fireline"
-version = "0.2.6"
+version = "0.2.7"
 
 [[package]]
 name = "fireline-announce"
-version = "0.2.6"
+version = "0.2.7"
 
 [[package]]
 name = "fireline-classify"
-version = "0.2.6"
+version = "0.2.7"
 
 [[package]]
 name = "fireline-contract"
-version = "0.2.6"
+version = "0.2.7"
 
 [[package]]
 name = "fireline-dlpack"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "fireline-grammar"
-version = "0.2.6"
+version = "0.2.7"
 
 [[package]]
 name = "fireline-synth"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "fireline-grammar",
  "unpopped-vocab",
@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "fireline-tilde-lint"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "toml",
 ]

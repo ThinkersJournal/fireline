@@ -1,6 +1,6 @@
 [package]
 name = "fireline-classify"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2024"
 rust-version = "1.88"
 description = "KISS-Classify dtype definitions: the MX element dtypes f4e2m1, f6e2m3 and f6e3m2 (value rule, packing, never an accumulator; KISS-CLASSIFY-6.1-0014..-0016). Draft-tracking, dependency-free."
