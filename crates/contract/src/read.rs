@@ -71,7 +71,7 @@ pub struct Checked<'a> {
     /// The seven sections as ordered `key`/`value` pairs.
     pub contract: Contract<'a>,
     /// The typed Interface scalars.
-    pub values: InterfaceValues<'a>,
+    pub values: InterfaceValues,
     /// The parsed `positional_signature`.
     pub signature: Signature,
     /// The contract's parse context: its declared rank and its own launch-scalar vocabulary. Use it with [`crate::Expr::parse_in`].
