@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.9] — patch
+
+`docs/PATENT-SWEEP.md` gains the eighth pass: the twelve off-subject memory-protection, initialization and shift numbers the third pass listed (US 7,275,143, WO 2017/120517 A1, US 9,779,786, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266, US 6,393,512, US 9,442,846) read on their independent claims. All clear (memory controllers, OS and hypervisor memory management, an ISA shift instruction, DRAM wiring, a bank-conflict circuit); no `needs-review`. Every number the sweep named is now read; the crate README risk note says so (eight passes) and keeps the limits: independent claims only, search tool limits, no attorney. Docs only.
+
 ## [0.2.8] — patch
 
 `docs/PATENT-SWEEP.md` gains the seventh pass: the Cambricon descriptor family (US 11,886,880, US 11,385,895, US 12,346,697), US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A, read on their independent claims. All six are clear (instruction-decoding processors, processor synchronisation, texture lookups, a classifier, binary translation); no `needs-review`. The earlier "unread" lists are updated to match, and the crate README risk note no longer calls the classify and Cambricon lists unread (seven passes; only the off-subject titles remain). Docs only.
