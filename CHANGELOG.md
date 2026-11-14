@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.8] — patch
+
+`docs/PATENT-SWEEP.md` gains the seventh pass: the Cambricon descriptor family (US 11,886,880, US 11,385,895, US 12,346,697), US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A, read on their independent claims. All six are clear (instruction-decoding processors, processor synchronisation, texture lookups, a classifier, binary translation); no `needs-review`. The earlier "unread" lists are updated to match, and the crate README risk note no longer calls the classify and Cambricon lists unread (seven passes; only the off-subject titles remain). Docs only.
+
 ## [0.2.7] — patch
 
 `docs/PATENT-SWEEP.md` gains the sixth pass: the seven classify-list patents (US 10,242,423, US 10,338,919, US 2023/0359694 A1, US 12,705,167, US 8,874,794, US 7,216,138, US 11,442,696) read on their independent claims. All seven are clear on an all-elements reading (datapaths, circuits, a compression process); the nearest vocabulary is US 8,874,794 B2 (block exponents, but it claims exponent-difference token coding) and US 12,705,167 B2 ("blocked data formats", but it claims a processing-in-memory shift circuit). No `needs-review`. Docs only; this does not clear any crate for publishing.
