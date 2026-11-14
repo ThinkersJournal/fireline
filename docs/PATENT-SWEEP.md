@@ -451,7 +451,7 @@ Fourteen numbers read (rows 44 to 55; the memory-shapes and strength-reduction r
 
 ### Still unread
 
-Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). (The classify list was read in the sixth pass; the Cambricon family, US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A in the seventh; US 2023/0289292 A1 was already read, row 23.)
+Still unread from the third pass's list: US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846 (memory partition, protection, initialization and shift families, off subject by title; a title is not a reading). (The off-subject numbers were read in the eighth pass; the classify list was read in the sixth pass; the Cambricon family, US 8,860,743 B2, US 2021/0271587 A1 and CN 103399780 A in the seventh; US 2023/0289292 A1 was already read, row 23.)
 
 ### Limitations specific to this addendum
 
@@ -530,11 +530,45 @@ Six numbers read (rows 63 to 68). **No `needs-review`**, so no `[ASK]` and no `[
 
 ### Still unread
 
-Only the third pass's off-subject memory-protection, initialization and shift numbers (US 7,275,143, WO 2017/120517 A1, US 9,779,786 B1, US 8,862,828, US 7,500,074, US 7,068,545, US 6,877,158, US 10,725,908, US 7,353,367, US 6,839,266 B1, US 6,393,512, US 9,442,846), read by title only.
+Nothing named by the sweep is unread as of the eighth pass: the twelve off-subject numbers that were read by title only were read on their independent claims there. (This section is the state after the seventh pass.)
 
 ### Limitations specific to this addendum
 
 - Independent claims only, as a filtered view; dependent claims, descriptions, prosecution histories, USPTO and EPO records and continuations were not read. CN 103399780 A was read from a machine translation of three claims.
 - **This pass does not clear any crate for publishing.**
+
+— lane: fireline
+
+## Addendum: fireline-contract, eighth pass, the off-subject memory titles (CLAIM READ, COMPLETE FOR THE NAMED LIST)
+
+Date: 2026-11-14. Run by: the FireLine lane, Claude Sonnet 5.5, on the PM's instruction to read the last unread titles. Same method and limits as the earlier passes: independent claims read from Google Patents text fetched with `patent-claims.py`; statuses are Google's display. **NOT legal advice; NOT a freedom-to-operate opinion.** `fireline-contract` parses text, checks integer arithmetic and computes a byte hull; it has no memory controller, operating system, instruction set or wiring.
+
+### Hits
+
+| # | Patent | Title | Assignee | Status (Google) | Independent claims read | Overlap | Our difference | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 69 | US 7,275,143 B1 | Avoiding page conflicts by characterizing addresses in parallel with address translation | Nvidia | Expired - Lifetime | 1, 11 | Row-column-bank address translation. | A memory controller with an address translator and tag characterizer; expired. We translate no addresses. Not met. | **clear** |
+| 70 | WO 2017/120517 A1 | Hardware accelerated machine learning | 1026 Labs | Ceased | 1 | Banks of memory. | RAM banks, a shift reader, operational units, a multicast network and an instruction decoder. Not met; ceased. | **clear** |
+| 71 | US 9,779,786 B1 | Tensor operations and acceleration | Xilinx | Active | 1, 11 | Input and output tensors. | Global memory circuitry with row and column data paths and an array of processing elements. Not met. | **clear** |
+| 72 | US 8,862,828 B2 | Sub-numa clustering | Intel | Active; estimate 2032-10-16 | 1, 9, 17, 25 | Partitioning a memory space into address regions. | Grouping processor cores and cache slices into clusters, each tied to an address region. We have no cores or caches. Not met. | **clear** |
+| 73 | US 7,500,074 B2 | Identifying relocatable kernel mappings | Sun | Active; estimate 2027-02-28 | 1, 7, 13 | Partitioned address space. | Operating-system memory management: relocatable and non-relocatable kernel regions and page allocation. Not met. | **clear** |
+| 74 | US 7,068,545 B1 | Data processing apparatus having memory protection unit | ARM | Expired - Lifetime | 1, 23, 24 | Memory regions with address ranges. | A memory protection unit associating attributes with regions; expired. Not met. | **clear** |
+| 75 | US 6,877,158 B1 | Logical partitioning via hypervisor mediated address translation | IBM | Expired - Lifetime | 1, 7, 13, 19 | Address ranges. | Logical partitions, operating systems and hypervisor address translation; expired. Not met. | **clear** |
+| 76 | US 10,725,908 B2 | Fast initialization of complex in-memory data structures | Microsoft | Active; estimate 2039-01-17 | 1, 10, 18 | None beyond memory. | Restoring configuration data by mapping a backing page file into address space. Not met. | **clear** |
+| 77 | US 7,353,367 B2 | Catenated group shift instruction | MicroUnity | Expired - Fee Related | 1, 14, 27, 32, 37, 42, 47, 52 | A shift. | A programmable microprocessor (or instructions for one) executing a group shift instruction on partitioned register fields; expired. We execute no instruction. Not met. | **clear** |
+| 78 | US 6,839,266 B1 | Memory module with offset data lines and bit line swizzle configuration | Rambus | Expired - Fee Related | 1, 5, 9 | "Swizzle" in the title only. | A memory module with N devices and N bit lines wired to M devices each: a physical wiring layout. Not met; expired. | **clear** |
+| 79 | US 6,393,512 B1 | Circuit and method for detecting bank conflicts in accessing adjacent banks | ATI | Expired - Lifetime | 1, 4, 8 | Conflict detection on addresses. | XOR-gate bank conflict detector (claim 4 recites a method of the same determination on memory banks being accessed); expired. We access no bank. Not met. | **clear** |
+| 80 | US 9,442,846 B2 | High speed memory systems and methods for designing hierarchical memory systems | Cisco | Active; estimate 2031-03-07 | 1, 12 | None beyond memory. | A digital memory circuit with memory controllers resolving bank access conflicts. Not met. | **clear** |
+
+Twelve numbers read (rows 69 to 80). **No `needs-review`**, so no `[ASK]` and no `[FINDING]`. These are the off-subject titles the third pass listed; reading them confirms they are what their titles said (memory controllers, operating-system and hypervisor memory management, an ISA shift instruction, a DRAM module wiring, a bank-conflict circuit).
+
+### Still unread
+
+Nothing the sweep named. **"Complete for the named list" is not "complete":** the search tool cannot filter by CPC or claim text, so a patent the searches never surfaced is not covered.
+
+### Limitations specific to this addendum
+
+- Independent claims only, read as a filtered view and only to the point needed to see the limb that is not met; dependent claims, descriptions, prosecution histories, USPTO and EPO records and continuations were not read. Statuses and expiry dates are Google's.
+- **This pass does not clear any crate for publishing**, and no attorney has reviewed any of it.
 
 — lane: fireline
