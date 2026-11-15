@@ -1,3 +1,0 @@
-kind: `fireline-contract::op_facts` reads `declares_reduce_axis`, so `rdc` is decided for inner-carrier ops
----
-Re-vendors KISS's op-facts sidecar (kiss cc73ec4, 0.18.4, KISS#827) and reads its `declares_reduce_axis` fact instead of a non-null `reduce_axes`. The scan ops (`cumsum`, `cumprod`, `cummax`), `argmax`/`argmin` and the pools now meet class `rdc` through their inner carrier (KISS-OPS 6.19-0036), and `matmul` does too (it declares a reduce axis as well as being a contraction; `ctr` and `rdc` are separate classes decided separately). Removes the 0.4.2 known gap. Additive: no document is newly declined (the op_dag reader, 6.4-0002, is not built). Verified: vendored file byte-identical to KISS cc73ec4, 128 ops, tests, clippy `-D warnings`.

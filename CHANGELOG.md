@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.3] — `fireline-contract::op_facts` reads `declares_reduce_axis`, so `rdc` is decided for inner-carrier ops
+
+Re-vendors KISS's op-facts sidecar (kiss cc73ec4, 0.18.4, KISS#827) and reads its `declares_reduce_axis` fact instead of a non-null `reduce_axes`. The scan ops (`cumsum`, `cumprod`, `cummax`), `argmax`/`argmin` and the pools now meet class `rdc` through their inner carrier (KISS-OPS 6.19-0036), and `matmul` does too (it declares a reduce axis as well as being a contraction; `ctr` and `rdc` are separate classes decided separately). Removes the 0.4.2 known gap. Additive: no document is newly declined (the op_dag reader, 6.4-0002, is not built). Verified: vendored file byte-identical to KISS cc73ec4, 128 ops, tests, clippy `-D warnings`.
+
 ## [0.4.2] — `fireline-contract::op_facts` reads KISS's op-facts sidecar and decides 6.3-0006
 
 `FactTable::from_json` loads KISS's generated `conformance/corpus/op_facts.json` (schema `kiss-op-facts-v1`, KISS#825, 0.18.3) with a small built-in JSON reader, so the crate stays dependency-free; it replaces the provisional `FactTable::parse_tsv` (never published). `check_cell_class_supported` (KISS-CONTRACT 6.3-0006: `ctr` needs a contraction, `ndx` the index-operand role, `rdc` a declared reduce axis; any op of a fusion's DAG suffices) now runs over the real facts, vendored as `tests/data/kiss_op_facts.json` with its provenance. New `FactsError` (`Json(offset)`, `Schema(reason)`). Additive: no document is newly declined, because the Semantics `op_dag` reader (6.4-0002) that would feed it is not built. Known gap: a non-carrier scan op (`cumsum`, `cumprod`, `cummax`) resolves its axis from its inner carrier (6.19-0036), which the sidecar does not carry, so `rdc` declines for them. Verified: 128 ops load, the vendored file is byte-identical to KISS 96c8ca8, tests, clippy `-D warnings`.
