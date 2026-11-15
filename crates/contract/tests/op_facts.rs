@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! KISS-CONTRACT 6.3-0006 over KISS's real op-facts sidecar, vendored at `tests/data/kiss_op_facts.json` (kiss origin/main 96c8ca8, 0.18.3,
-//! KISS#825, `conformance/corpus/op_facts.json`, schema `kiss-op-facts-v1`). Draft-tracking: re-paste when kiss moves.
+//! KISS-CONTRACT 6.3-0006 over KISS's real op-facts sidecar, vendored at `tests/data/kiss_op_facts.json` (kiss origin/main cc73ec4, 0.18.4,
+//! KISS#825/#827, `conformance/corpus/op_facts.json`, schema `kiss-op-facts-v1`). Draft-tracking: re-paste when kiss moves.
 
 use fireline_contract::op_facts::*;
 
@@ -41,7 +41,8 @@ fn each_structural_class_needs_its_own_fact() {
     assert_eq!(ok("ctr", "gather"), unsupported("ctr", "contraction"));
     assert_eq!(ok("ctr", "add"), unsupported("ctr", "contraction"));
     assert_eq!(ok("ndx", "matmul"), unsupported("ndx", "index-role"));
-    assert_eq!(ok("rdc", "matmul"), unsupported("rdc", "reduce-axis"));
+    assert_eq!(ok("rdc", "matmul"), Ok(())); // matmul declares a reduce axis (inner carrier: reduce)
+    assert_eq!(ok("rdc", "gather"), unsupported("rdc", "reduce-axis"));
 }
 
 // The element-wise classes and `oth` are decided by operand shape alone: they impose nothing on the op, so even an unknown op passes.
@@ -68,7 +69,7 @@ fn a_fusion_needs_one_op_with_the_fact() {
         Ok(())
     );
     assert_eq!(
-        check_cell_class_supported(&key("rdc"), &["add", "matmul"], &t),
+        check_cell_class_supported(&key("rdc"), &["add", "gather"], &t),
         unsupported("rdc", "reduce-axis")
     );
 }
@@ -96,7 +97,7 @@ fn the_sidecar_loads_whole() {
     assert_eq!(t.len(), 128);
     assert_eq!(t.facts("matmul").map(|f| f.contraction), Some(true));
     assert_eq!(t.facts("embedding").map(|f| f.index_role), Some(true));
-    // reduce_axes (reduce, reduce_mean, ...) and norm_axes (softmax, ...) both count as a declared reduce axis.
+    // carriers (reduce, softmax, ...) and inner-carrier ops alike declare a reduce axis.
     for op in [
         "reduce",
         "reduce_mean",
@@ -109,11 +110,21 @@ fn the_sidecar_loads_whole() {
     assert_eq!(t.facts("add"), Some(OpFacts::default()));
 }
 
-// Known gap: a non-carrier scan op resolves its axis from its inner carrier (6.19-0036), which the sidecar does not carry, so rdc declines.
+// Non-carrier scan ops, argmax/argmin and the pools declare a reduce axis through an inner carrier (6.19-0036); the sidecar says so.
 #[test]
-fn a_non_carrier_scan_op_is_not_seen_as_reducing() {
+fn inner_carrier_ops_declare_a_reduce_axis() {
+    let t = table();
+    for op in [
+        "cumsum", "cumprod", "cummax", "argmax", "argmin", "avg_pool", "max_pool",
+    ] {
+        assert_eq!(
+            check_cell_class_supported(&key("rdc"), &[op], &t),
+            Ok(()),
+            "{op}"
+        );
+    }
     assert_eq!(
-        check_cell_class_supported(&key("rdc"), &["cumsum"], &table()),
+        check_cell_class_supported(&key("rdc"), &["add"], &t),
         unsupported("rdc", "reduce-axis")
     );
 }
@@ -137,13 +148,13 @@ fn the_loader_refuses_other_documents() {
     assert!(matches!(j(&op("{}")), Err(FactsError::Schema(_))));
     assert!(matches!(
         j(&op(
-            "{\"is_contraction\":1,\"index_operand_role\":false,\"reduce_axes\":null}"
+            "{\"is_contraction\":1,\"index_operand_role\":false,\"declares_reduce_axis\":false}"
         )),
         Err(FactsError::Schema(_))
     ));
     assert!(
         j(&op(
-            "{\"is_contraction\":true,\"index_operand_role\":false,\"reduce_axes\":\"reduce_axes\"}"
+            "{\"is_contraction\":true,\"index_operand_role\":false,\"declares_reduce_axis\":true}"
         ))
         .is_ok()
     );
