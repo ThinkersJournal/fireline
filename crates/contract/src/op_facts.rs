@@ -4,10 +4,10 @@
 //! come from an [`OpFactSource`] the caller supplies, so one source of meaning (KISS-Ops) stays the only copy.
 //!
 //! **Source.** KISS's generated sidecar `conformance/corpus/op_facts.json` (schema `kiss-op-facts-v1`, from `tools/kiss_op_facts.py` over
-//! `spec/ops.md`, KISS#825, 0.18.3); [`FactTable::from_json`] reads it (a small built-in JSON reader: this crate stays dependency-free). The
-//! facts read are `is_contraction`, `index_operand_role`, and a non-null `reduce_axes` (a carrier's `reduce_axes` or `norm_axes` field).
-//! **Gap, not papered over:** 6.3-0006 also lets a *non-carrier* op (`cumsum`, `cumprod`, `cummax`) declare a reduce axis by resolving it from
-//! its inner carrier (6.19-0036); the sidecar does not carry that, so for those ops `rdc` is declined until KISS says so there.
+//! `spec/ops.md`, KISS#825/#827, 0.18.4); [`FactTable::from_json`] reads it (a small built-in JSON reader: this crate stays dependency-free). The
+//! facts read are `is_contraction`, `index_operand_role` and `declares_reduce_axis` (a carrier's `reduce_axes`/`norm_axes`, or, for a non-carrier,
+//! the axis resolved from its inner carrier, 6.19-0036). Note `matmul` declares a reduce axis, so `rdc` is met by it; the rule is "declares", not
+//! "is only".
 
 //! The rule (6.3-0006), in exactly this sense and no other: class `ctr` needs a contraction op, `ndx` an op that declares the index-operand
 //! role, `rdc` an op that declares a reduce axis; `ew1`, `ew2`, `ew3` and `oth` impose nothing (they are decided by operand shape alone). For a
@@ -154,15 +154,7 @@ impl FactTable {
                 Some(json::Value::Bool(b)) => Ok(*b),
                 _ => Err(FactsError::Schema(format!("{name}: {k} is not a boolean"))),
             };
-            let reduce_axis = match v.get("reduce_axes") {
-                Some(json::Value::Null) => false,
-                Some(json::Value::Str(_)) => true,
-                _ => {
-                    return Err(FactsError::Schema(format!(
-                        "{name}: reduce_axes is neither null nor a string"
-                    )));
-                }
-            };
+            let reduce_axis = flag("declares_reduce_axis")?;
             map.insert(
                 name.clone(),
                 OpFacts {
