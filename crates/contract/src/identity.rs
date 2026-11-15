@@ -9,7 +9,7 @@
 //!   `|`-separated component of every `structure_key` of the KISS corpus, `sk3` to `sk9`).
 //!
 //! **Not here:** the consistency of the cell class with the op the `op_identity` names (6.3-0006), which needs KISS-Ops' structural facts
-//! per op (a contraction, an index operand, a reduce axis) and so belongs with a KISS-Ops table; and the two `op_identity` forms (6.3-0003,
+//! per op (a contraction, an index operand, a reduce axis): see [`crate::op_facts`], a skeleton over a caller-supplied fact source; and the two `op_identity` forms (6.3-0003,
 //! -0004, KISS-Grammar tags). **Draft-tracking;** expect rework when the Draft moves. No corpus vector has a second value of any Identity
 //! field, so the fault cases in `tests/identity.rs` are written from the clause text.
 
