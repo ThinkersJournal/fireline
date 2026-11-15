@@ -14,8 +14,9 @@
 //! fusion the requirement is met if **any** op of the Semantics DAG has the fact, so the caller passes every op of the DAG (a plain op: just
 //! the root). The relation is one-directional: a matmul keyed `oth` is not seen here.
 //!
-//! **Not here:** reading the Semantics `op_dag` into its op names (6.4-0002, not built), the `op_identity` forms (6.3-0003, -0004), and the
-//! `declared-op-tag` exemption, which is the caller's: it does not call this for a fused region whose Semantics carries no node. **Draft-tracking.**
+//! **Not here:** the `op_identity` forms (6.3-0003, -0004) and resolving non-primitive nodes (6.4-0005). Reading the Semantics `op_dag` into op names is
+//! [`crate::op_dag`], and [`crate::op_dag::check_contract_cell_class`] runs this rule over a contract, exempting a `declared-op-tag` contract whose
+//! Semantics carries no node. **Draft-tracking.**
 
 use core::fmt;
 use std::collections::BTreeMap;
