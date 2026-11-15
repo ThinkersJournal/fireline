@@ -1,0 +1,3 @@
+kind: patch
+---
+`check_consistency` now checks the Capabilities `precision_class` (KISS-CONTRACT 6.7-0005): one of the five KISS-OPS-6.8-0007 tokens (`PRECISION_CLASSES`), and equal to the label KISS-OPS-6.8-0008 derives from `per_backend_ulp_tiers` (parsed as `target{key=value,...}` entries; loosest tier governs; `[]` is `unbounded`) and `bit_stability`. New `ConsistencyError` variants `PrecisionClass`, `Tiers` and, per KISS-CONTRACT 6.8-0002 (KISS-OPS-6.17-0012, board 443), `ReducedMantissaNeedsTier`. It declines documents it used to accept when their class contradicts their tiers. New tests `precision_class_is_derived_from_the_tiers`, `a_reduced_mantissa_cell_declares_a_tier`; the golden and the 6 accept vectors still pass.

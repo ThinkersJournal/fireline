@@ -11,8 +11,12 @@
 //! * the opaque-blob text encoding `<n>:<hex>` (6.11-0001) of `revision_hash` and `negotiation_metadata` (6.9-0008);
 //! * the `audited_status` derivation (6.8-0008, -0009, -0010).
 //!
-//! **Not here (needs KISS-Ops tables this crate does not carry):** the precision-class set and its agreement with the ULP tiers (6.7-0005),
-//! the contents of `per_backend_ulp_tiers`, and the cost expressions (6.7-0006, 6.8-0007).
+//! * the Capabilities `precision_class` (6.7-0005): one of the five KISS-OPS-6.8-0007 tokens and equal to the label KISS-OPS-6.8-0008 derives from the
+//!   `per_backend_ulp_tiers` (read as `target{key=value,...}` entries) and `bit_stability`, plus the 6.8-0002 rule that a `reduced-mantissa-permitted`
+//!   cell declares a tier (KISS-OPS-6.17-0012).
+//!
+//! **Not here (needs KISS-Ops tables this crate does not carry):** the cost expressions (6.7-0006, 6.8-0007), and the tier *values*
+//! beyond which of `max_ulp`, `max_relative`, `max_absolute` an entry carries (6.8-0002 constrains no value against a ceiling).
 //!
 //! **Two readings stated.** (1) 6.7-0003 says `index_width` is one of `{idx32, idx64}` but KISS's golden document writes `ix32` (the
 //! `structure_key` code); this module accepts `ix32` and `ix64` and reported the spelling to kiss. (2) 6.8-0009 and -0010 tie `audited_status`
@@ -44,6 +48,15 @@ pub const COST_PROVENANCE: [&str; 2] = ["declared", "measured"];
 /// The `index_width` codes (6.7-0003; see the module docs on the spelling).
 pub const INDEX_WIDTHS: [&str; 2] = ["ix32", "ix64"];
 
+/// The `precision_class` tokens of KISS-OPS-6.8-0007, tightest first.
+pub const PRECISION_CLASSES: [&str; 5] = [
+    "strict",
+    "correctly-rounded",
+    "bounded-ulp",
+    "bounded-tolerance",
+    "unbounded",
+];
+
 /// A cross-section or vocabulary fault. Each is a typed decline; never a repair.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -69,6 +82,17 @@ pub enum ConsistencyError {
         /// The field.
         field: &'static str,
     },
+    /// The Capabilities `precision_class` is not the label KISS-OPS-6.8-0008 derives from the tiers and `bit_stability` (6.7-0005).
+    PrecisionClass {
+        /// What the derivation yields.
+        derived: &'static str,
+        /// What the document says.
+        found: String,
+    },
+    /// `per_backend_ulp_tiers` is not `[` then `target{key=value,...}` entries then `]` (6.8-0002).
+    Tiers,
+    /// A `reduced-mantissa-permitted` cell declares no tier (6.8-0002, KISS-OPS-6.17-0012).
+    ReducedMantissaNeedsTier,
     /// `audited_status` is not the value the derivation rule yields for the Guarantees' own fields (6.8-0008..-0010).
     AuditedStatus {
         /// What the rule yields (`audited` or `unaudited`).
@@ -112,6 +136,79 @@ fn math_fidelity_ok(s: &str) -> bool {
                     && !n.starts_with('0')
                     && n.parse::<u8>().is_ok_and(|n| (1..=52).contains(&n))
             })
+}
+
+/// How loose an accuracy tier is, tightest first (KISS-OPS-6.8-0008's "tier kind").
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum TierKind {
+    T0,
+    Tulp,
+    Tother,
+    None,
+}
+
+/// The tier kind of one entry body (the text between `{` and `}`): `T0` if it carries `max_ulp = 0`, `Tulp` if `max_ulp > 0`, `Tother` if only
+/// `max_relative` and/or `max_absolute`, else `None` (KISS-OPS-6.8-0008). Other keys are ignored.
+fn entry_kind(body: &str) -> Option<TierKind> {
+    let (mut ulp, mut other) = (None, false);
+    for kv in body.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+        let (k, v) = kv.split_once('=')?;
+        match k.trim() {
+            "max_ulp" => ulp = Some(v.trim().bytes().all(|b| b == b'0') && !v.trim().is_empty()),
+            "max_relative" | "max_absolute" => other = true,
+            _ => {}
+        }
+    }
+    Some(match ulp {
+        Some(true) => TierKind::T0,
+        Some(false) => TierKind::Tulp,
+        None if other => TierKind::Tother,
+        None => TierKind::None,
+    })
+}
+
+/// The governing (loosest) tier kind of a `per_backend_ulp_tiers` value, `None` kind for an empty list (6.8-0008); `Err` when it is not
+/// `[target{...}, ...]`.
+fn governing_kind(tiers: &str) -> Result<TierKind, ConsistencyError> {
+    let inner = tiers
+        .strip_prefix('[')
+        .and_then(|s| s.strip_suffix(']'))
+        .ok_or(ConsistencyError::Tiers)?
+        .trim();
+    let mut kind = TierKind::T0;
+    let mut any = false;
+    let mut rest = inner;
+    while !rest.is_empty() {
+        let open = rest.find('{').ok_or(ConsistencyError::Tiers)?;
+        let close = rest[open..].find('}').ok_or(ConsistencyError::Tiers)? + open;
+        if rest[..open].trim().is_empty() {
+            return Err(ConsistencyError::Tiers);
+        }
+        let k = entry_kind(&rest[open + 1..close]).ok_or(ConsistencyError::Tiers)?;
+        kind = kind.max(k);
+        any = true;
+        rest = rest[close + 1..].trim_start();
+        if let Some(r) = rest.strip_prefix(',') {
+            rest = r.trim_start();
+            if rest.is_empty() {
+                return Err(ConsistencyError::Tiers);
+            }
+        } else if !rest.is_empty() {
+            return Err(ConsistencyError::Tiers);
+        }
+    }
+    Ok(if any { kind } else { TierKind::None })
+}
+
+/// KISS-OPS-6.8-0008's table.
+fn derived_precision_class(kind: TierKind, stability: &str) -> &'static str {
+    match (kind, stability) {
+        (TierKind::T0, "portable") => "strict",
+        (TierKind::T0, _) => "correctly-rounded",
+        (TierKind::Tulp, _) => "bounded-ulp",
+        (TierKind::Tother, _) => "bounded-tolerance",
+        (TierKind::None, _) => "unbounded",
+    }
 }
 
 fn in_vocab(field: &'static str, value: &str, set: &[&str]) -> Result<(), ConsistencyError> {
@@ -185,6 +282,23 @@ pub fn check_consistency(c: &Contract<'_>) -> Result<(), ConsistencyError> {
         return Err(ConsistencyError::AuditedStatus {
             derived,
             found: status.to_owned(),
+        });
+    }
+    // Precision class (6.7-0005): a token of the closed set, equal to the label derived from the tiers and `bit_stability`.
+    let class = get(c, CAPABILITIES, "precision_class");
+    in_vocab("capabilities.precision_class", class, &PRECISION_CLASSES)?;
+    let tiers = get(c, GUARANTEES, "per_backend_ulp_tiers");
+    let kind = governing_kind(tiers)?;
+    if get(c, GUARANTEES, "math_fidelity").starts_with("reduced-mantissa-permitted")
+        && tiers.trim() == "[]"
+    {
+        return Err(ConsistencyError::ReducedMantissaNeedsTier);
+    }
+    let derived_class = derived_precision_class(kind, stability);
+    if class != derived_class {
+        return Err(ConsistencyError::PrecisionClass {
+            derived: derived_class,
+            found: class.to_owned(),
         });
     }
     // Provenance.
