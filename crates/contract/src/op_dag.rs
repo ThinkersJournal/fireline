@@ -3,13 +3,18 @@
 //! canonical order (every child strictly earlier than its parent, the root last), each one of
 //! `Op{<op_name>; <op_attrs>; <child_edges>}`, `Bind(<index>)` or `Source{<tag>; <source_attrs>}`.
 //!
-//! What it checks is the wire form: the array and node shapes, a bare op name, `key=value` attribute lists, `child_edges` as `[i, ...]` of
-//! **strictly earlier** indices, and the closed `Source` tag set with each tag's attribute keys. What it does **not** do: decide whether an
-//! op name is a KISS-Ops op (that is the op-facts source's `UnknownOp`, [`crate::op_facts`]), check a `const`'s bit width against its dtype,
-//! or resolve a non-primitive node to the primitive floor (6.4-0005, 6.4-0010). **Draft-tracking.**
+//! [`parse_op_dag`] reads the wire form: the array and node shapes, `key=value` attribute lists, `child_edges` as `[i, ...]` of **strictly
+//! earlier** indices, the closed `Source` tag set with each tag's attribute keys and an upper-case-hex `const`. [`check_op_dag`] then asks the
+//! two sources the caller supplies (no table is kept here): every `Op` name is a KISS-Ops op ([`OpFactSource`]), a `const`'s `dtype` is a dtype
+//! token and its `bits` are zero-padded to that width ([`DtypeSource`]), the DAG is non-empty and has one root, the last node. [`check_semantics`]
+//! is the whole Semantics assertion over a contract: `semantics_kind`, the DAG, the root against `op_identity` (6.4-0002) and 6.3-0006.
+//! The rulings are KISS#829's: a `machine-checkable-IR` DAG has at least one node; a `declared-op-tag` one may be empty and is then not rejected
+//! on 6.3-0006; the root is compared to `op_identity` by bare op name. Not done: resolving non-primitive nodes to the primitive floor (6.4-0005,
+//! 6.4-0010). The vectors are KISS's `op_dag_vectors` (`tests/op_dag_vectors.rs`). **Draft-tracking.**
 
 use core::fmt;
 
+use crate::dtypes::DtypeSource;
 use crate::fields::Contract;
 use crate::op_facts::{CellClassError, OpFactSource, check_cell_class_supported};
 
@@ -105,8 +110,49 @@ pub enum OpDagError {
         /// The node's position.
         index: usize,
     },
-    /// The contract's Semantics has no readable `op_dag` field, or `op_identity` and the DAG root disagree (6.4-0002).
+    /// An `Op` node's name is not a KISS-Ops op name (including a name with attributes or a Grammar tag spelled inside it).
+    UnknownOp {
+        /// The node's position.
+        index: usize,
+    },
+    /// A node other than the last that no later node uses: a second root, so the root is not last.
+    MultipleRoots {
+        /// The unused node's position.
+        index: usize,
+    },
+    /// A `machine-checkable-IR` Semantics with no node: an empty array has no root (6.4-0007).
+    Empty,
+    /// `semantics_kind` is neither `machine-checkable-IR` nor `declared-op-tag`, or the contract has no Semantics fields.
+    BadSemanticsKind,
+    /// The DAG root is not an `Op` named by `op_identity` (6.4-0002).
     RootMismatch,
+}
+
+impl OpDagError {
+    /// The stable kebab-case category tag KISS's vectors use.
+    #[must_use]
+    pub fn wire_tag(&self) -> &'static str {
+        match self {
+            Self::NotAnArray | Self::BadNode { .. } => "op-dag-malformed",
+            Self::ChildNotEarlier { .. } => "op-dag-child-not-earlier",
+            Self::BadSource { .. } => "op-dag-bad-source",
+            Self::UnknownOp { .. } => "op-dag-unknown-op",
+            Self::MultipleRoots { .. } => "op-dag-multiple-roots",
+            Self::Empty => "op-dag-empty",
+            Self::BadSemanticsKind => "bad-semantics-kind",
+            Self::RootMismatch => "op-identity-root-mismatch",
+        }
+    }
+
+    /// Where the reader declines: `record` for the cross-field assertion (root against identity), else `semantics`.
+    #[must_use]
+    pub fn section(&self) -> &'static str {
+        if matches!(self, Self::RootMismatch) {
+            "record"
+        } else {
+            "semantics"
+        }
+    }
 }
 
 impl fmt::Display for OpDagError {
@@ -202,7 +248,6 @@ fn node(index: usize, text: &str) -> Result<Node<'_>, OpDagError> {
         let [name, a, edges] = parts[..] else {
             return Err(bad);
         };
-        let bare = !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_');
         let op_attrs = attrs(a).ok_or_else(|| bad.clone())?;
         let list = edges
             .strip_prefix('[')
@@ -218,13 +263,11 @@ fn node(index: usize, text: &str) -> Result<Node<'_>, OpDagError> {
                 child_edges.push(c);
             }
         }
-        return bare
-            .then_some(Node::Op {
-                op_name: name,
-                op_attrs,
-                child_edges,
-            })
-            .ok_or(bad);
+        return Ok(Node::Op {
+            op_name: name,
+            op_attrs,
+            child_edges,
+        });
     }
     if let Some(body) = text
         .strip_prefix("Source{")
@@ -268,46 +311,126 @@ pub fn identity_op_name(op_identity: &str) -> &str {
     op_identity.split(['{', '[']).next().unwrap_or_default()
 }
 
-/// Read the Semantics `op_dag` of `contract` and check that its root is the op `op_identity` names (6.4-0002). An empty array has no root to
-/// compare, so it passes (the `declared-op-tag` case).
+/// The structure of a parsed `op_dag` against the two sources: non-empty; every `Op` name a KISS-Ops op; every `const`'s `dtype` a dtype token
+/// with `bits` zero-padded to `2 * ceil(width_bits / 8)` digits; every node but the last some later node's child (the root is last). Children
+/// strictly earlier is already [`parse_op_dag`]'s.
 ///
 /// # Errors
-/// [`OpDagError`]: a parse fault, or [`OpDagError::RootMismatch`].
-pub fn read_op_dag<'a>(contract: &Contract<'a>) -> Result<OpDag<'a>, OpDagError> {
-    let dag = parse_op_dag(contract.get(1, "op_dag").ok_or(OpDagError::RootMismatch)?)?;
-    if let Some(root) = dag.root_op() {
-        let identity = contract.get(0, "op_identity").unwrap_or_default();
-        if identity_op_name(identity) != root {
-            return Err(OpDagError::RootMismatch);
+/// [`OpDagError`] naming the first fault in node order.
+pub fn check_op_dag(
+    dag: &OpDag<'_>,
+    ops: &dyn OpFactSource,
+    dtypes: &dyn DtypeSource,
+) -> Result<(), OpDagError> {
+    if dag.nodes.is_empty() {
+        return Err(OpDagError::Empty);
+    }
+    let mut used = vec![false; dag.nodes.len()];
+    for (index, node) in dag.nodes.iter().enumerate() {
+        match node {
+            Node::Op {
+                op_name,
+                child_edges,
+                ..
+            } => {
+                if ops.facts(op_name).is_none() {
+                    return Err(OpDagError::UnknownOp { index });
+                }
+                for &c in child_edges {
+                    used[c] = true;
+                }
+            }
+            Node::Source {
+                tag: "const",
+                source_attrs,
+            } => {
+                let width = dtypes.storage_bits(source_attrs[0].1);
+                let hex = source_attrs[1].1.strip_prefix("0x").unwrap_or_default();
+                let digits = width.map(|w| 2 * w.div_ceil(8));
+                if digits != u64::try_from(hex.len()).ok() {
+                    return Err(OpDagError::BadSource { index });
+                }
+            }
+            _ => {}
         }
     }
-    Ok(dag)
+    let last = dag.nodes.len() - 1;
+    match used[..last].iter().position(|u| !u) {
+        Some(index) => Err(OpDagError::MultipleRoots { index }),
+        None => Ok(()),
+    }
 }
 
-/// Why [`check_contract_cell_class`] declined.
+/// Why [`check_semantics`] declined.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
-pub enum ContractCellClassError {
-    /// The Semantics `op_dag` could not be read, or its root is not the identity's op.
+pub enum SemanticsError {
+    /// The Semantics `op_dag` (or `semantics_kind`, or its root against `op_identity`) is faulty.
     OpDag(OpDagError),
     /// The cell class is not supported by the DAG's ops (6.3-0006).
     CellClass(CellClassError),
 }
 
-/// 6.3-0006 over a contract: the cell class of its `accept_predicate` against every `Op` node of its Semantics `op_dag`. A contract whose DAG
-/// carries no node (`declared-op-tag`) is not rejected on this assertion.
+impl SemanticsError {
+    /// The stable kebab-case category tag KISS's vectors use.
+    #[must_use]
+    pub fn wire_tag(&self) -> &'static str {
+        match self {
+            Self::OpDag(e) => e.wire_tag(),
+            Self::CellClass(_) => "cell-class-unsupported-by-op",
+        }
+    }
+
+    /// Where the reader declines: `semantics` or `record`.
+    #[must_use]
+    pub fn section(&self) -> &'static str {
+        match self {
+            Self::OpDag(e) => e.section(),
+            Self::CellClass(_) => "record",
+        }
+    }
+}
+
+impl fmt::Display for SemanticsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "semantics: {self:?}")
+    }
+}
+
+impl std::error::Error for SemanticsError {}
+
+/// The whole Semantics assertion over a contract (6.4-0001, -0002, -0007, 6.3-0006): `semantics_kind` is one of the two values; the `op_dag` reads
+/// and checks ([`parse_op_dag`], [`check_op_dag`]); its root is an `Op` named by `op_identity`; and the cell class of the `accept_predicate` is
+/// met by some `Op` node. A `declared-op-tag` contract with an empty `op_dag` is returned as is (not rejected on 6.3-0006).
 ///
 /// # Errors
-/// [`ContractCellClassError`].
-pub fn check_contract_cell_class(
-    contract: &Contract<'_>,
-    source: &dyn OpFactSource,
-) -> Result<(), ContractCellClassError> {
-    let dag = read_op_dag(contract).map_err(ContractCellClassError::OpDag)?;
-    let ops = dag.ops();
-    if ops.is_empty() {
-        return Ok(());
+/// [`SemanticsError`], the first fault in that order.
+pub fn check_semantics<'a>(
+    contract: &Contract<'a>,
+    ops: &dyn OpFactSource,
+    dtypes: &dyn DtypeSource,
+) -> Result<OpDag<'a>, SemanticsError> {
+    let bad = |e| SemanticsError::OpDag(e);
+    let declared = match contract.get(1, "semantics_kind") {
+        Some("machine-checkable-IR") => false,
+        Some("declared-op-tag") => true,
+        _ => return Err(bad(OpDagError::BadSemanticsKind)),
+    };
+    let dag = parse_op_dag(
+        contract
+            .get(1, "op_dag")
+            .ok_or(bad(OpDagError::BadSemanticsKind))?,
+    )
+    .map_err(bad)?;
+    if declared && dag.nodes.is_empty() {
+        return Ok(dag);
+    }
+    check_op_dag(&dag, ops, dtypes).map_err(bad)?;
+    let identity = contract.get(0, "op_identity").unwrap_or_default();
+    if dag.root_op() != Some(identity_op_name(identity)) {
+        return Err(bad(OpDagError::RootMismatch));
     }
     let accept = contract.get(0, "accept_predicate").unwrap_or_default();
-    check_cell_class_supported(accept, &ops, source).map_err(ContractCellClassError::CellClass)
+    check_cell_class_supported(accept, &dag.ops(), ops).map_err(SemanticsError::CellClass)?;
+    Ok(dag)
 }

@@ -3,11 +3,13 @@
 //! golden document's `op_dag = [Op{add; ; []}]`; every other form is written from the clause text and is this crate's own test.
 
 use fireline_contract::document::{encode_document, parse_document};
+use fireline_contract::dtypes::{DtypeSource, DtypeTable};
 use fireline_contract::fields::{Contract, parse_contract};
 use fireline_contract::op_dag::*;
-use fireline_contract::op_facts::{CellClassError, FactTable};
+use fireline_contract::op_facts::FactTable;
 
 const SIDECAR: &str = include_str!("data/kiss_op_facts.json");
+const DTYPES: &str = include_str!("data/kiss_dtype_manifest.json");
 
 fn contract_bytes(accept: &str, identity: &str, kind: &str, dag: &str) -> Vec<u8> {
     let sections = [
@@ -155,9 +157,6 @@ fn malformed_values_decline() {
         "[Op{add}]",
         "[Op{add; ;}]",
         "[Op{add; ; [] }]",
-        "[Op{; ; []}]",
-        "[Op{a b; ; []}]",
-        "[Op{matmul{x}; ; []}]",
         "[Op{add; k; []}]",
         "[Op{add; k=; []}]",
         "[Op{add; k=1, k=2; []}]",
@@ -182,95 +181,186 @@ fn the_identity_names_the_root() {
     assert_eq!(identity_op_name("add"), "add");
     assert_eq!(identity_op_name("reduce{reduce_axes=[0]}"), "reduce");
     assert_eq!(identity_op_name("matmul[lhs:f32, rhs:f32]"), "matmul");
-    with(
-        "sk8|ew2|f32|t",
-        "add",
-        "machine-checkable-IR",
-        "[Op{add; ; []}]",
-        |c| {
-            assert_eq!(read_op_dag(c).map(|d| d.ops()), Ok(vec!["add"]));
-        },
-    );
-    with(
-        "sk8|ew2|f32|t",
-        "mul",
-        "machine-checkable-IR",
-        "[Op{add; ; []}]",
-        |c| {
-            assert_eq!(read_op_dag(c), Err(OpDagError::RootMismatch));
-        },
-    );
-    // declared-op-tag with no node: nothing to compare.
-    with("sk8|oth|f32|t", "mul", "declared-op-tag", "[]", |c| {
-        assert_eq!(read_op_dag(c).map(|d| d.nodes.len()), Ok(0));
-    });
 }
 
-// 6.3-0006 over a contract: the fusion's ops, not just its root, are asked.
+fn sources() -> (FactTable, DtypeTable) {
+    (
+        FactTable::from_json(SIDECAR).unwrap(),
+        DtypeTable::from_json(DTYPES).unwrap(),
+    )
+}
+
+fn semantics(accept: &str, identity: &str, kind: &str, dag: &str) -> Result<usize, SemanticsError> {
+    let (ops, dt) = sources();
+    with(accept, identity, kind, dag, |c| {
+        check_semantics(c, &ops, &dt).map(|d| d.nodes.len())
+    })
+}
+
+fn tag(r: Result<usize, SemanticsError>) -> &'static str {
+    match r {
+        Ok(_) => "ok",
+        Err(e) => e.wire_tag(),
+    }
+}
+
+// 6.3-0006 over a contract: the fusion's ops, not just its root, are asked (KISS#829 ruling 3).
 #[test]
 fn the_cell_class_is_checked_over_every_op_node() {
-    let t = FactTable::from_json(SIDECAR).unwrap();
-    let fusion = "[Bind(0), Bind(1), Op{matmul; ; [0, 1]}, Op{add; ; [2, 1]}]";
-    with(
-        "sk8|ctr|f32|t",
-        "add",
-        "machine-checkable-IR",
-        fusion,
-        |c| {
-            assert_eq!(check_contract_cell_class(c, &t), Ok(()));
-        },
+    let fusion = "[Source{param; index=0}, Op{matmul; ; [0]}, Op{add; ; [1]}]";
+    assert_eq!(
+        semantics("sk8|ctr|f32|t", "add", "machine-checkable-IR", fusion),
+        Ok(3)
     );
-    with(
-        "sk8|ndx|f32|t",
-        "add",
-        "machine-checkable-IR",
-        fusion,
-        |c| {
-            assert!(matches!(
-                check_contract_cell_class(c, &t),
-                Err(ContractCellClassError::CellClass(
-                    CellClassError::Unsupported { .. }
-                ))
-            ));
-        },
+    assert_eq!(
+        semantics("sk8|ew2|f32|t", "add", "machine-checkable-IR", fusion),
+        Ok(3)
     );
-    with(
-        "sk8|ew2|f32|t",
-        "add",
-        "machine-checkable-IR",
-        fusion,
-        |c| {
-            assert_eq!(check_contract_cell_class(c, &t), Ok(()));
-        },
+    assert_eq!(
+        tag(semantics(
+            "sk8|ndx|f32|t",
+            "add",
+            "machine-checkable-IR",
+            fusion
+        )),
+        "cell-class-unsupported-by-op"
     );
-    // declared-op-tag with no node is not rejected on this assertion.
-    with("sk8|ctr|f32|t", "add", "declared-op-tag", "[]", |c| {
-        assert_eq!(check_contract_cell_class(c, &t), Ok(()));
-    });
-    with(
-        "sk8|ctr|f32|t",
-        "gather",
-        "machine-checkable-IR",
-        "[Op{gather; ; []}]",
-        |c| {
-            assert!(matches!(
-                check_contract_cell_class(c, &t),
-                Err(ContractCellClassError::CellClass(CellClassError::Unsupported { class, .. })) if class == "ctr"
-            ));
-        },
+    // A Source or Bind node never has the fact.
+    assert_eq!(
+        tag(semantics(
+            "sk8|ctr|f32|t",
+            "add",
+            "machine-checkable-IR",
+            "[Source{param; index=0}, Op{add; ; [0]}]"
+        )),
+        "cell-class-unsupported-by-op"
     );
-    with(
-        "sk8|ctr|f32|t",
-        "add",
-        "machine-checkable-IR",
-        "[Op{add; ; [0]}]",
-        |c| {
-            assert!(matches!(
-                check_contract_cell_class(c, &t),
-                Err(ContractCellClassError::OpDag(
-                    OpDagError::ChildNotEarlier { .. }
-                ))
-            ));
-        },
+}
+
+// KISS#829 rulings 1 and 2: an empty op_dag declines under machine-checkable-IR, and is exempt under declared-op-tag; any node is checked.
+#[test]
+fn an_empty_dag_depends_on_the_semantics_kind() {
+    assert_eq!(
+        tag(semantics(
+            "sk8|ctr|f32|t",
+            "add",
+            "machine-checkable-IR",
+            "[]"
+        )),
+        "op-dag-empty"
     );
+    assert_eq!(
+        semantics("sk8|ctr|f32|t", "add", "declared-op-tag", "[]"),
+        Ok(0)
+    );
+    assert_eq!(
+        tag(semantics(
+            "sk8|ctr|f32|t",
+            "add",
+            "declared-op-tag",
+            "[Op{add; ; []}]"
+        )),
+        "cell-class-unsupported-by-op"
+    );
+    assert_eq!(
+        tag(semantics(
+            "sk8|ew2|f32|t",
+            "add",
+            "lifted-IR",
+            "[Op{add; ; []}]"
+        )),
+        "bad-semantics-kind"
+    );
+}
+
+#[test]
+fn the_root_is_the_identitys_op() {
+    assert_eq!(
+        semantics(
+            "sk8|ew2|f32|t",
+            "add",
+            "machine-checkable-IR",
+            "[Op{add; ; []}]"
+        ),
+        Ok(1)
+    );
+    assert_eq!(
+        semantics(
+            "sk8|ew2|f32|t",
+            "add[a:f32]",
+            "machine-checkable-IR",
+            "[Op{add; ; []}]"
+        ),
+        Ok(1)
+    );
+    for (identity, dag) in [
+        ("mul", "[Op{add; ; []}]"),
+        ("add", "[Source{param; index=0}]"),
+    ] {
+        let r = semantics("sk8|ew2|f32|t", identity, "machine-checkable-IR", dag);
+        assert_eq!(tag(r.clone()), "op-identity-root-mismatch");
+        assert_eq!(r.unwrap_err().section(), "record");
+    }
+}
+
+#[test]
+fn names_and_widths_come_from_the_sources() {
+    let u = |dag: &str| {
+        tag(semantics(
+            "sk8|ew2|f32|t",
+            "neg",
+            "machine-checkable-IR",
+            dag,
+        ))
+    };
+    assert_eq!(u("[Op{frobnicate; ; []}]"), "op-dag-unknown-op");
+    assert_eq!(u("[Op{neg{axis=0}; ; []}]"), "op-dag-unknown-op");
+    assert_eq!(
+        u("[Source{const; dtype=f32, bits=0x3F800000}, Op{neg; ; [0]}]"),
+        "ok"
+    );
+    assert_eq!(
+        u("[Source{const; dtype=f32, bits=0x3F80}, Op{neg; ; [0]}]"),
+        "op-dag-bad-source"
+    );
+    assert_eq!(
+        u("[Source{const; dtype=f99, bits=0x3F800000}, Op{neg; ; [0]}]"),
+        "op-dag-bad-source"
+    );
+    assert_eq!(
+        u("[Source{param; index=0}, Source{param; index=1}, Op{neg; ; [0]}]"),
+        "op-dag-multiple-roots"
+    );
+    assert_eq!(
+        parse_op_dag("[Op{neg; ; [5]}]").unwrap_err().wire_tag(),
+        "op-dag-child-not-earlier"
+    );
+}
+
+#[test]
+fn the_dtype_manifest_loads_and_refuses_other_documents() {
+    let t = DtypeTable::from_json(DTYPES).unwrap();
+    assert_eq!(t.len(), 27);
+    assert_eq!(t.storage_bits("f32"), Some(32));
+    assert_eq!(t.storage_bits("f99"), None);
+    use fireline_contract::dtypes::DtypeError;
+    assert!(matches!(
+        DtypeTable::from_json("{"),
+        Err(DtypeError::Json(_))
+    ));
+    assert!(matches!(
+        DtypeTable::from_json("{}"),
+        Err(DtypeError::Schema(_))
+    ));
+    let m = |d: &str| format!("{{\"schema\":\"kiss-dtype-manifest-v1\",\"dtypes\":{d}}}");
+    assert!(matches!(
+        DtypeTable::from_json(&m("[{\"token\":\"a\"}]")),
+        Err(DtypeError::Schema(_))
+    ));
+    assert!(matches!(
+        DtypeTable::from_json(&m(
+            "[{\"token\":\"a\",\"storage_bits\":8},{\"token\":\"a\",\"storage_bits\":8}]"
+        )),
+        Err(DtypeError::Schema(_))
+    ));
 }
