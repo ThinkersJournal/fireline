@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.1] — `fireline-contract::op_facts`: skeleton for the cell-class-vs-op assertion (6.3-0006)
+
+New module `fireline_contract::op_facts`: `check_cell_class_supported(accept_predicate, ops, &dyn OpFactSource)` decides KISS-CONTRACT 6.3-0006 from facts the op declares (KISS-OPS 6.13-0009 contraction for `ctr`, 6.11-0012 index role for `ndx`, 6.19-0036 reduce axis for `rdc`); `ew1`..`ew3` and `oth` impose nothing; a fusion passes if any op of its DAG has the fact. The crate carries no per-op table: the facts come from an `OpFactSource`. `FactTable::parse_tsv` is a provisional loader (tests only), to be replaced by KISS's op-facts sidecar loader once kiss ships one. Additive; no existing behaviour changes. All crates 0.4.1. Lane-carried version, no fragment (as #47, #56, #57, #58). Not to be published on its own until the sidecar loader lands (PM).
+
 ## [0.4.0] — **BREAKING**: `fireline-contract` `check_consistency` declines a `precision_class` that contradicts the tiers
 
 **Who is affected:** producers of KISS-Contract documents (and anything that calls `check_consistency` / `read_contract`) whose Capabilities `precision_class` is outside the five KISS-OPS-6.8-0007 tokens, or differs from the label KISS-OPS-6.8-0008 derives from `per_backend_ulp_tiers` and `bit_stability`, or that declares `reduced-mantissa-permitted` with no tier (KISS-CONTRACT 6.8-0002, KISS-OPS-6.17-0012). Those documents were accepted by 0.3.1 and are now declined. **Fix:** derive `precision_class` from the tiers (tier 0 is `strict` under `bit_stability = portable`, else `correctly-rounded`; `max_ulp > 0` is `bounded-ulp`; only `max_relative`/`max_absolute` is `bounded-tolerance`; no tier is `unbounded`; the loosest tier governs) and give a reduced-mantissa cell a tier.
