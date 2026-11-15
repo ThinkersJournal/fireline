@@ -30,6 +30,7 @@ pub mod fields;
 pub mod identity;
 pub mod interface;
 pub mod layout;
+pub mod op_dag;
 pub mod op_facts;
 pub mod read;
 pub mod values;
