@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.2] — `fireline-contract::op_facts` reads KISS's op-facts sidecar and decides 6.3-0006
+
+`FactTable::from_json` loads KISS's generated `conformance/corpus/op_facts.json` (schema `kiss-op-facts-v1`, KISS#825, 0.18.3) with a small built-in JSON reader, so the crate stays dependency-free; it replaces the provisional `FactTable::parse_tsv` (never published). `check_cell_class_supported` (KISS-CONTRACT 6.3-0006: `ctr` needs a contraction, `ndx` the index-operand role, `rdc` a declared reduce axis; any op of a fusion's DAG suffices) now runs over the real facts, vendored as `tests/data/kiss_op_facts.json` with its provenance. New `FactsError` (`Json(offset)`, `Schema(reason)`). Additive: no document is newly declined, because the Semantics `op_dag` reader (6.4-0002) that would feed it is not built. Known gap: a non-carrier scan op (`cumsum`, `cumprod`, `cummax`) resolves its axis from its inner carrier (6.19-0036), which the sidecar does not carry, so `rdc` declines for them. Verified: 128 ops load, the vendored file is byte-identical to KISS 96c8ca8, tests, clippy `-D warnings`.
+
 ## [0.4.1] — `fireline-contract::op_facts`: skeleton for the cell-class-vs-op assertion (6.3-0006)
 
 New module `fireline_contract::op_facts`: `check_cell_class_supported(accept_predicate, ops, &dyn OpFactSource)` decides KISS-CONTRACT 6.3-0006 from facts the op declares (KISS-OPS 6.13-0009 contraction for `ctr`, 6.11-0012 index role for `ndx`, 6.19-0036 reduce axis for `rdc`); `ew1`..`ew3` and `oth` impose nothing; a fusion passes if any op of its DAG has the fact. The crate carries no per-op table: the facts come from an `OpFactSource`. `FactTable::parse_tsv` is a provisional loader (tests only), to be replaced by KISS's op-facts sidecar loader once kiss ships one. Additive; no existing behaviour changes. All crates 0.4.1. Lane-carried version, no fragment (as #47, #56, #57, #58). Not to be published on its own until the sidecar loader lands (PM).
