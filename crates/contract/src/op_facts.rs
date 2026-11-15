@@ -15,7 +15,7 @@
 //! the root). The relation is one-directional: a matmul keyed `oth` is not seen here.
 //!
 //! **Not here:** the `op_identity` forms (6.3-0003, -0004) and resolving non-primitive nodes (6.4-0005). Reading the Semantics `op_dag` into op names is
-//! [`crate::op_dag`], and [`crate::op_dag::check_contract_cell_class`] runs this rule over a contract, exempting a `declared-op-tag` contract whose
+//! [`crate::op_dag`], and [`crate::op_dag::check_semantics`] runs this rule over a contract, exempting a `declared-op-tag` contract whose
 //! Semantics carries no node. **Draft-tracking.**
 
 use core::fmt;
@@ -141,18 +141,18 @@ impl FactTable {
     /// # Errors
     /// [`FactsError::Json`] for malformed JSON, [`FactsError::Schema`] for a document of another shape.
     pub fn from_json(text: &str) -> Result<Self, FactsError> {
-        let root = json::parse(text).map_err(FactsError::Json)?;
+        let root = crate::json::parse(text).map_err(FactsError::Json)?;
         let bad = |s: &str| FactsError::Schema(s.to_owned());
-        if root.get("schema").and_then(json::Value::as_str) != Some("kiss-op-facts-v1") {
+        if root.get("schema").and_then(crate::json::Value::as_str) != Some("kiss-op-facts-v1") {
             return Err(bad("schema is not kiss-op-facts-v1"));
         }
-        let Some(json::Value::Obj(ops)) = root.get("ops") else {
+        let Some(crate::json::Value::Obj(ops)) = root.get("ops") else {
             return Err(bad("no ops object"));
         };
         let mut map = BTreeMap::new();
         for (name, v) in ops {
             let flag = |k: &str| match v.get(k) {
-                Some(json::Value::Bool(b)) => Ok(*b),
+                Some(crate::json::Value::Bool(b)) => Ok(*b),
                 _ => Err(FactsError::Schema(format!("{name}: {k} is not a boolean"))),
             };
             let reduce_axis = flag("declares_reduce_axis")?;
@@ -178,187 +178,6 @@ impl FactTable {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-}
-
-/// A minimal JSON reader: just enough for `op_facts.json`, kept private so the crate stays dependency-free.
-mod json {
-    pub enum Value {
-        Null,
-        Bool(bool),
-        Num,
-        Str(String),
-        Arr,
-        Obj(Vec<(String, Value)>),
-    }
-
-    impl Value {
-        pub fn get(&self, key: &str) -> Option<&Value> {
-            match self {
-                Value::Obj(kv) => kv.iter().find(|(k, _)| k == key).map(|(_, v)| v),
-                _ => None,
-            }
-        }
-        pub fn as_str(&self) -> Option<&str> {
-            match self {
-                Value::Str(s) => Some(s),
-                _ => None,
-            }
-        }
-    }
-
-    pub fn parse(text: &str) -> Result<Value, usize> {
-        let mut p = P {
-            b: text.as_bytes(),
-            i: 0,
-            depth: 0,
-        };
-        let v = p.value()?;
-        p.ws();
-        if p.i == p.b.len() { Ok(v) } else { Err(p.i) }
-    }
-
-    struct P<'a> {
-        b: &'a [u8],
-        i: usize,
-        depth: usize,
-    }
-
-    impl P<'_> {
-        fn ws(&mut self) {
-            while matches!(self.b.get(self.i), Some(b' ' | b'\t' | b'\n' | b'\r')) {
-                self.i += 1;
-            }
-        }
-        fn lit(&mut self, word: &str, v: Value) -> Result<Value, usize> {
-            if self.b[self.i..].starts_with(word.as_bytes()) {
-                self.i += word.len();
-                Ok(v)
-            } else {
-                Err(self.i)
-            }
-        }
-        fn value(&mut self) -> Result<Value, usize> {
-            self.ws();
-            match self.b.get(self.i).copied() {
-                Some(b'n') => self.lit("null", Value::Null),
-                Some(b't') => self.lit("true", Value::Bool(true)),
-                Some(b'f') => self.lit("false", Value::Bool(false)),
-                Some(b'"') => self.string().map(Value::Str),
-                Some(b'[') => self.nest(|p| p.array()),
-                Some(b'{') => self.nest(|p| p.object()),
-                Some(b'-' | b'0'..=b'9') => {
-                    let s = self.i;
-                    while matches!(
-                        self.b.get(self.i),
-                        Some(b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')
-                    ) {
-                        self.i += 1;
-                    }
-                    if self.i == s { Err(s) } else { Ok(Value::Num) }
-                }
-                _ => Err(self.i),
-            }
-        }
-        fn nest(&mut self, f: fn(&mut Self) -> Result<Value, usize>) -> Result<Value, usize> {
-            self.depth += 1;
-            if self.depth > 64 {
-                return Err(self.i);
-            }
-            let v = f(self);
-            self.depth -= 1;
-            v
-        }
-        fn array(&mut self) -> Result<Value, usize> {
-            self.i += 1;
-            self.ws();
-            if self.b.get(self.i) == Some(&b']') {
-                self.i += 1;
-                return Ok(Value::Arr);
-            }
-            loop {
-                self.value()?;
-                self.ws();
-                match self.b.get(self.i) {
-                    Some(b',') => self.i += 1,
-                    Some(b']') => {
-                        self.i += 1;
-                        return Ok(Value::Arr);
-                    }
-                    _ => return Err(self.i),
-                }
-            }
-        }
-        fn object(&mut self) -> Result<Value, usize> {
-            self.i += 1;
-            let mut out: Vec<(String, Value)> = Vec::new();
-            self.ws();
-            if self.b.get(self.i) == Some(&b'}') {
-                self.i += 1;
-                return Ok(Value::Obj(out));
-            }
-            loop {
-                self.ws();
-                if self.b.get(self.i) != Some(&b'"') {
-                    return Err(self.i);
-                }
-                let at = self.i;
-                let k = self.string()?;
-                if out.iter().any(|(e, _)| *e == k) {
-                    return Err(at);
-                }
-                self.ws();
-                if self.b.get(self.i) != Some(&b':') {
-                    return Err(self.i);
-                }
-                self.i += 1;
-                out.push((k, self.value()?));
-                self.ws();
-                match self.b.get(self.i) {
-                    Some(b',') => self.i += 1,
-                    Some(b'}') => {
-                        self.i += 1;
-                        return Ok(Value::Obj(out));
-                    }
-                    _ => return Err(self.i),
-                }
-            }
-        }
-        fn string(&mut self) -> Result<String, usize> {
-            self.i += 1;
-            let mut out: Vec<u8> = Vec::new();
-            loop {
-                let c = *self.b.get(self.i).ok_or(self.i)?;
-                self.i += 1;
-                match c {
-                    b'"' => return String::from_utf8(out).map_err(|_| self.i),
-                    b'\\' => {
-                        let e = *self.b.get(self.i).ok_or(self.i)?;
-                        self.i += 1;
-                        match e {
-                            b'"' | b'\\' | b'/' => out.push(e),
-                            b'n' => out.push(b'\n'),
-                            b't' => out.push(b'\t'),
-                            b'r' => out.push(b'\r'),
-                            b'b' => out.push(8),
-                            b'f' => out.push(12),
-                            b'u' => {
-                                let h = self.b.get(self.i..self.i + 4).ok_or(self.i)?;
-                                let h = core::str::from_utf8(h).map_err(|_| self.i)?;
-                                let n = u32::from_str_radix(h, 16).map_err(|_| self.i)?;
-                                let ch = char::from_u32(n).ok_or(self.i)?;
-                                self.i += 4;
-                                let mut buf = [0u8; 4];
-                                out.extend_from_slice(ch.encode_utf8(&mut buf).as_bytes());
-                            }
-                            _ => return Err(self.i),
-                        }
-                    }
-                    0..=31 => return Err(self.i),
-                    _ => out.push(c),
-                }
-            }
-        }
     }
 }
 

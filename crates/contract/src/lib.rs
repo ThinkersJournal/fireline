@@ -26,9 +26,11 @@
 
 pub mod consistency;
 pub mod document;
+pub mod dtypes;
 pub mod fields;
 pub mod identity;
 pub mod interface;
+mod json;
 pub mod layout;
 pub mod op_dag;
 pub mod op_facts;
