@@ -11,8 +11,19 @@
 use fireline_contract::ParseError;
 use fireline_contract::fields::FieldError;
 use fireline_contract::interface::SignatureError;
-use fireline_contract::read::{ReadError, read_contract};
+use fireline_contract::kiss_tables::KissTables;
+use fireline_contract::read::{Checked, ReadError};
 use fireline_contract::values::ValueError;
+
+/// `read_contract` over KISS's vendored op facts and dtype manifest (the Semantics layer needs both).
+fn read_contract<'a>(bytes: &'a [u8], versions: &[u64]) -> Result<Checked<'a>, ReadError> {
+    KissTables::from_json(
+        include_str!("data/kiss_op_facts.json"),
+        include_str!("data/kiss_dtype_manifest.json"),
+    )
+    .expect("vendored KISS tables")
+    .read_contract(bytes, versions)
+}
 
 const DATA: &str = include_str!("data/kiss_section_vectors.tsv");
 

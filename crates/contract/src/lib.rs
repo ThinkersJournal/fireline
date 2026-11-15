@@ -31,6 +31,7 @@ pub mod fields;
 pub mod identity;
 pub mod interface;
 mod json;
+pub mod kiss_tables;
 pub mod layout;
 pub mod op_dag;
 pub mod op_facts;
