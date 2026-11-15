@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.1] — `fireline-synth` requires `unpopped-vocab` `~0.47.0`; **0.3.0 was never published**
+
+`fireline-synth` moves its `unpopped-vocab` requirement from `~0.46.2` to `~0.47.0` (Unpopped's sk8 release 0.47.0 is BREAKING and excludes `~0.46`; PM [TASK] 2026-11-14: one publish instead of two). **0.3.0 (the entry below) was merged but never published to crates.io**; the first published release of the 0.3 line is 0.3.1, so published `fireline-announce`, `fireline-grammar`, `fireline-synth` and `fireline-contract` go from their last published versions straight to 0.3.1. All workspace crates carry 0.3.1; `fireline-classify` and the root `fireline` crate stay unpublished at 0.3.1 by PM ruling. `fireline-synth` compiles and its tests pass unchanged against the published `unpopped-vocab` 0.47.0. ROADMAP: `fireline-contract` on crates.io is 0.2.9. Lane-carried version PR, no fragment (as #47, #56).
+
 ## [0.3.0] — **BREAKING**: `fireline-synth` requires `unpopped-vocab` `~0.46`; interface crates unified at 0.3.0
 
 `fireline-synth` moves its `unpopped-vocab` requirement from `^0.45.12` to `~0.46` (PM [TASK] 2026-11-14: Baracuda found 0.2.0 excludes unpopped 0.46, so a consumer of both gets two copies of the vocabulary). A changed vocabulary requirement is breaking for synth consumers, so by the pre-1.0 rule the project number is 0.3.0 and `fireline-announce`, `fireline-grammar`, `fireline-synth`, `fireline-classify`, `fireline-contract` and `fireline-dlpack` all carry it. README require-lines are `~0.3`; `fireline-synth` requires `fireline-grammar` as `~0.3`. No source change. Lane-carried version PR, no fragment (as #47).
