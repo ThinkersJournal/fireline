@@ -173,11 +173,20 @@ fn math_fidelity_carries_its_width() {
 #[test]
 fn bit_stability_is_a_closed_set_with_one_coupling() {
     for ok in BIT_STABILITY {
+        // tier 0 derives `strict` only under `portable` (KISS-OPS-6.8-0008)
+        let class = if ok == "portable" {
+            "strict"
+        } else {
+            "correctly-rounded"
+        };
         assert_eq!(
-            check(&edited(&[(
-                "bit_stability = portable",
-                &format!("bit_stability = {ok}")
-            )])),
+            check(&edited(&[
+                ("bit_stability = portable", &format!("bit_stability = {ok}")),
+                (
+                    "precision_class = strict",
+                    &format!("precision_class = {class}")
+                ),
+            ])),
             Ok(()),
             "{ok}"
         );
@@ -205,6 +214,10 @@ fn bit_stability_is_a_closed_set_with_one_coupling() {
             (
                 "bit_stability = portable",
                 &format!("bit_stability = {stability}"),
+            ),
+            (
+                "precision_class = strict",
+                "precision_class = correctly-rounded",
             ),
         ])
     };
@@ -338,6 +351,7 @@ fn audited_status_is_derived() {
                 "per_backend_ulp_tiers = [cuda:sm89{max_ulp=0}]",
                 "per_backend_ulp_tiers = []",
             ),
+            ("precision_class = strict", "precision_class = unbounded"),
             (
                 "audited_status = audited",
                 &format!("audited_status = {status}"),
@@ -360,10 +374,170 @@ fn audited_status_is_derived() {
     assert_eq!(check(&unnamed("audited")), derived("unaudited", "audited"));
     // bit_stability is not an input: two Guarantees that differ only in it derive the same status
     assert_eq!(
-        check(&edited(&[(
-            "bit_stability = portable",
-            "bit_stability = none"
-        )])),
+        check(&edited(&[
+            ("bit_stability = portable", "bit_stability = none"),
+            (
+                "precision_class = strict",
+                "precision_class = correctly-rounded"
+            ),
+        ])),
         Ok(())
+    );
+}
+
+// 6.7-0005 with KISS-OPS-6.8-0007/-0008/-0009: `precision_class` is one of five tokens and is derived from the tiers and `bit_stability`.
+#[test]
+fn precision_class_is_derived_from_the_tiers() {
+    let with = |tiers: &str, stability: &str, class: &str| {
+        // an empty list declares no tier, so the document is `unaudited` (6.8-0010)
+        let status = if tiers == "[]" {
+            "unaudited"
+        } else {
+            "audited"
+        };
+        check(&edited(&[
+            (
+                "audited_status = audited",
+                &format!("audited_status = {status}"),
+            ),
+            (
+                "per_backend_ulp_tiers = [cuda:sm89{max_ulp=0}]",
+                &format!("per_backend_ulp_tiers = {tiers}"),
+            ),
+            (
+                "bit_stability = portable",
+                &format!("bit_stability = {stability}"),
+            ),
+            (
+                "precision_class = strict",
+                &format!("precision_class = {class}"),
+            ),
+        ]))
+    };
+    let wrong = |derived: &'static str, found: &str| {
+        Err(ConsistencyError::PrecisionClass {
+            derived,
+            found: found.into(),
+        })
+    };
+    // the golden: tier 0 and portable is `strict`
+    assert_eq!(check(&unhex_doc()), Ok(()));
+    // the table, row by row
+    assert_eq!(with("[cuda:sm89{max_ulp=0}]", "portable", "strict"), Ok(()));
+    assert_eq!(
+        with(
+            "[cuda:sm89{max_ulp=0}]",
+            "same-hardware",
+            "correctly-rounded"
+        ),
+        Ok(())
+    );
+    assert_eq!(
+        with("[cuda:sm89{max_ulp=0}]", "none", "correctly-rounded"),
+        Ok(())
+    );
+    assert_eq!(
+        with("[cuda:sm89{max_ulp=4}]", "portable", "bounded-ulp"),
+        Ok(())
+    );
+    assert_eq!(
+        with(
+            "[cuda:sm89{max_relative=1e-6}]",
+            "none",
+            "bounded-tolerance"
+        ),
+        Ok(())
+    );
+    assert_eq!(
+        with(
+            "[cuda:sm89{max_absolute=1e-6,max_relative=1e-6}]",
+            "none",
+            "bounded-tolerance"
+        ),
+        Ok(())
+    );
+    assert_eq!(with("[]", "same-hardware", "unbounded"), Ok(()));
+    // a contradicting class is refused with what the rule yields
+    assert_eq!(
+        with("[cuda:sm89{max_ulp=0}]", "portable", "bounded-ulp"),
+        wrong("strict", "bounded-ulp")
+    );
+    assert_eq!(
+        with("[cuda:sm89{max_ulp=0}]", "same-hardware", "strict"),
+        wrong("correctly-rounded", "strict")
+    );
+    assert_eq!(
+        with("[cuda:sm89{max_ulp=3}]", "portable", "strict"),
+        wrong("bounded-ulp", "strict")
+    );
+    // several targets: the loosest governs
+    assert_eq!(
+        with(
+            "[cuda:sm89{max_ulp=0},vulkan:v13{max_ulp=2}]",
+            "portable",
+            "bounded-ulp"
+        ),
+        Ok(())
+    );
+    assert_eq!(
+        with(
+            "[cuda:sm89{max_ulp=0},vulkan:v13{max_relative=1e-3}]",
+            "portable",
+            "bounded-ulp"
+        ),
+        wrong("bounded-tolerance", "bounded-ulp")
+    );
+    // a spelling outside the five (`bit-reproducible` is not a member)
+    for bad in ["bit-reproducible", "Strict", "", "exact"] {
+        assert_eq!(
+            with("[cuda:sm89{max_ulp=0}]", "portable", bad),
+            bad_vocab("capabilities.precision_class", bad),
+            "{bad:?}"
+        );
+    }
+    // a malformed tier list
+    for bad in [
+        "cuda:sm89{max_ulp=0}",
+        "[cuda:sm89{max_ulp=0}",
+        "[{max_ulp=0}]",
+        "[cuda:sm89{max_ulp=0},]",
+        "[cuda:sm89{max_ulp}]",
+    ] {
+        assert_eq!(
+            with(bad, "portable", "strict"),
+            Err(ConsistencyError::Tiers),
+            "{bad:?}"
+        );
+    }
+}
+
+fn unhex_doc() -> Vec<u8> {
+    unhex(GOLDEN)
+}
+
+// 6.8-0002 (KISS-OPS-6.17-0012, board 443): a `reduced-mantissa-permitted` cell declares a tier; a bit-stable one need not.
+#[test]
+fn a_reduced_mantissa_cell_declares_a_tier() {
+    let rm = |tiers: &str| {
+        check(&edited(&[
+            (
+                "math_fidelity = bit-stable",
+                "math_fidelity = reduced-mantissa-permitted:10",
+            ),
+            (
+                "per_backend_ulp_tiers = [cuda:sm89{max_ulp=0}]",
+                &format!("per_backend_ulp_tiers = {tiers}"),
+            ),
+            ("precision_class = strict", "precision_class = unbounded"),
+            ("audited_status = audited", "audited_status = unaudited"),
+        ]))
+    };
+    assert_eq!(rm("[]"), Err(ConsistencyError::ReducedMantissaNeedsTier));
+    assert_eq!(
+        rm("[cuda:sm89{max_relative=1e-3}]"),
+        Err(ConsistencyError::AuditedStatus {
+            derived: "audited",
+            found: "unaudited".into()
+        })
     );
 }
