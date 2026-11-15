@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.4] — `fireline-contract::op_dag` reads the Semantics `op_dag` (6.4-0002, 6.11-0007) and runs 6.3-0006 over a contract
+
+New module `fireline_contract::op_dag`: `parse_op_dag` reads the `op_dag` array (`Op{name; attrs; [children]}`, `Bind(i)`, `Source{tag; attrs}`) with children strictly earlier, the root last, the closed `Source` tag set and each tag's attribute keys; `read_op_dag` also checks the root against `op_identity` (6.4-0002); `check_contract_cell_class` runs `op_facts::check_cell_class_supported` over every `Op` node of a contract's DAG, exempting a `declared-op-tag` contract with no node. Additive and not wired into `read_contract`: wiring it would newly decline documents (a 0.5.0 question for the PM). Not checked: a `const`'s bit width against its dtype, whether an op name is a KISS-Ops op (the op-facts source's `UnknownOp`), resolution to the primitive floor (6.4-0005, 6.4-0010). Verified: golden `op_dag = [Op{add; ; []}]`, fusion, nested attribute values, the fault forms, tests, clippy `-D warnings`.
+
 ## [0.4.3] — `fireline-contract::op_facts` reads `declares_reduce_axis`, so `rdc` is decided for inner-carrier ops
 
 Re-vendors KISS's op-facts sidecar (kiss cc73ec4, 0.18.4, KISS#827) and reads its `declares_reduce_axis` fact instead of a non-null `reduce_axes`. The scan ops (`cumsum`, `cumprod`, `cummax`), `argmax`/`argmin` and the pools now meet class `rdc` through their inner carrier (KISS-OPS 6.19-0036), and `matmul` does too (it declares a reduce axis as well as being a contraction; `ctr` and `rdc` are separate classes decided separately). Removes the 0.4.2 known gap. Additive: no document is newly declined (the op_dag reader, 6.4-0002, is not built). Verified: vendored file byte-identical to KISS cc73ec4, 128 ops, tests, clippy `-D warnings`.
