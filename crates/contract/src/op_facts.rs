@@ -14,7 +14,7 @@
 //! fusion the requirement is met if **any** op of the Semantics DAG has the fact, so the caller passes every op of the DAG (a plain op: just
 //! the root). The relation is one-directional: a matmul keyed `oth` is not seen here.
 //!
-//! **Not here:** the `op_identity` forms (6.3-0003, -0004) and resolving non-primitive nodes (6.4-0005). Reading the Semantics `op_dag` into op names is
+//! **Not here:** the `op_identity` forms (6.3-0003, -0004) and resolving non-primitive nodes (6.4-0005, [`crate::op_resolve`]). Reading the Semantics `op_dag` into op names is
 //! [`crate::op_dag`], and [`crate::op_dag::check_semantics`] runs this rule over a contract, exempting a `declared-op-tag` contract whose
 //! Semantics carries no node. **Draft-tracking.**
 

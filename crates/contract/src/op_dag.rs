@@ -9,8 +9,8 @@
 //! token and its `bits` are zero-padded to that width ([`DtypeSource`]), the DAG is non-empty and has one root, the last node. [`check_semantics`]
 //! is the whole Semantics assertion over a contract: `semantics_kind`, the DAG, the root against `op_identity` (6.4-0002) and 6.3-0006.
 //! The rulings are KISS#829's: a `machine-checkable-IR` DAG has at least one node; a `declared-op-tag` one may be empty and is then not rejected
-//! on 6.3-0006; the root is compared to `op_identity` by bare op name. Not done: resolving non-primitive nodes to the primitive floor (6.4-0005,
-//! 6.4-0010). The vectors are KISS's `op_dag_vectors` (`tests/op_dag_vectors.rs`). **Draft-tracking.**
+//! on 6.3-0006; the root is compared to `op_identity` by bare op name. Resolving non-primitive nodes to the primitive floor (6.4-0005,
+//! 6.4-0010) is [`crate::op_resolve`], not run here. The vectors are KISS's `op_dag_vectors` (`tests/op_dag_vectors.rs`). **Draft-tracking.**
 
 use core::fmt;
 

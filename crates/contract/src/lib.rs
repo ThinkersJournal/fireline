@@ -35,6 +35,7 @@ pub mod kiss_tables;
 pub mod layout;
 pub mod op_dag;
 pub mod op_facts;
+pub mod op_resolve;
 pub mod read;
 pub mod values;
 
