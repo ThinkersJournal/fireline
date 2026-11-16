@@ -6,14 +6,19 @@
 use fireline_contract::op_dag::parse_op_dag;
 use fireline_contract::op_resolve::{DecompError, DecompTable, Resolution};
 
-const FILE: &str = include_str!("data/kiss_op_decomposition.json");
+const RAW: &str = include_str!("data/kiss_op_decomposition.json");
+
+/// The file with LF line endings: a Windows checkout may hold it CRLF (`core.autocrlf`), and the mutation anchors below span lines.
+fn file() -> String {
+    RAW.replace("\r\n", "\n")
+}
 
 fn dag(s: &str) -> fireline_contract::op_dag::OpDag<'_> {
     parse_op_dag(s).expect("dag")
 }
 
 fn table() -> DecompTable {
-    DecompTable::from_json(FILE).expect("vendored file reads")
+    DecompTable::from_json(&file()).expect("vendored file reads")
 }
 
 #[test]
@@ -36,8 +41,9 @@ fn recorded_level_and_floor_equal_the_walk() {
     );
     // mutation control: a table whose recorded level is wrong is caught (anchor must match exactly once)
     let needle = "\"matmul\": {\n      \"kind\": \"non_primitive\",\n      \"level\": 1,";
-    assert_eq!(FILE.matches(needle).count(), 1, "mutation anchor");
-    let bad = FILE.replace(needle, &needle.replace("\"level\": 1", "\"level\": 2"));
+    let file = file();
+    assert_eq!(file.matches(needle).count(), 1, "mutation anchor");
+    let bad = file.replace(needle, &needle.replace("\"level\": 1", "\"level\": 2"));
     // level 2 still strictly exceeds its children, so it loads, and check_recorded names the op
     assert_eq!(
         DecompTable::from_json(&bad).unwrap().check_recorded(),
@@ -48,7 +54,7 @@ fn recorded_level_and_floor_equal_the_walk() {
 #[test]
 fn every_published_outcome_vector_is_reproduced() {
     let t = table();
-    let root = serde_free_outcomes(FILE);
+    let root = serde_free_outcomes(&file());
     assert_eq!(root.len(), 11, "vector count in this vendored file");
     let mut seen = (false, false, false);
     for (op, unavailable, want) in &root {
@@ -98,12 +104,13 @@ fn dag_aggregation_declines_first_then_smallest_deferred() {
 
 #[test]
 fn a_cyclic_or_dangling_table_is_refused() {
-    let dangling = FILE.replacen(
+    let file = file();
+    let dangling = file.replacen(
         "\"direct\": [\n        \"asin\",",
         "\"direct\": [\n        \"no_such_op\",",
         1,
     );
-    assert_ne!(dangling, FILE, "mutation applied");
+    assert_ne!(dangling, file, "mutation applied");
     assert!(matches!(
         DecompTable::from_json(&dangling),
         Err(DecompError::Unresolvable(_))
