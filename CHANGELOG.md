@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.2] — CI only: the advisory `portfolio` job moves to CodeRipper 0.47.5
+
+CI only: the `portfolio` job now calls coderipper `portfolio.yml` at c72a6e0 (coderipper#356), which installs CodeRipper 0.47.5. The rule-id migration tool found nothing to rename here (no `.coderipper.toml` check or blocking names, no `--skip-rule` uses). No code changed.
+
 ## [0.5.1] — ROADMAP refreshed to the 0.5.0 state; `fireline-classify` and the `fireline` root crate publish held
 
 Docs only. The ROADMAP table now shows the crates.io column at 0.5.0 for the four published crates, moves `in_place` typing, the ULP-tier rules and the op DAG with cell class out of "waiting on KISS", and names the trigger for publishing `fireline-classify` (KISS quantisation group settles and the KISS lane tells this lane). No code changed; every crate moves to 0.5.1 in lockstep.
