@@ -3,7 +3,7 @@
 State 2026-11-17: 0.5.3 on main (unpublished beyond 0.5.0 for four crates; PM publishes). fireline#66 (CI pin to CodeRipper 0.47.5) MERGED 2026-11-16T15:20Z, worktree/branch cleaned. fireline#67 (op_resolve, 6.4-0005/-0010) MERGED 2026-11-16T19:40Z at 3ec42bd, worktree/branch cleaned.
 
 **Tasks held / waits**
-WAIT: classify publish hold (PM 2026-11-15) | check: ask kiss/PM whether quantisation group settled; read C:/Projects/PM-HANDOFF.md | wake: 2026-11-17T13:30:00Z
+WAIT: classify publish hold (PM 2026-11-15): asked kiss 2026-11-17 whether quantisation group settled (6.1-0014..16 text unchanged since 2026-10-25; KISS R1.26 still lists packing + rounding/saturation open) | check: read kiss reply; C:/Projects/PM-HANDOFF.md | wake: 2026-11-18T13:30:00Z
 
 - KISS vectors: 6.4-0005/-0010 DONE (fireline#67 merged). 6.3-0003/-0004 op_identity: structure layer BUILT and committed on lane/fireline-next (NOT pushed, no PR: #68 used 2026-11-17 UTC; open ONE PR on 2026-11-18 UTC or when PM says); the 12 bad-value vectors wait on KISS#838 (generated field kind/vocab/accepts/range corpus, KISS's 2026-11-18 PR, 0.19.1). PM 2026-11-17: open MY 11-18 PR structure-only and say in it the 12 stay undecided with that reason (ROADMAP row names the follow-up); decide them in a LATER PR once #838 is on main; never hand-keep the table. 6.7-0006: KISS#836 options note is out, board 449 not yet ruled. Still gated: 6.7-0006 (board 449 options note) and 6.3-0003/-0004 op_identity (board 451); build each against its file with no hand-kept tables (KissTables pattern) once kiss sends [NOTICE].
 WAIT: kiss vocabulary/type schema for op_identity bad-value + board 449 ruling on options note (KISS#836) | check: git -C C:/Projects/KISS fetch -q | wake: 2026-11-17T14:00:00Z
