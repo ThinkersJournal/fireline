@@ -1,0 +1,3 @@
+kind: docs: README and ROADMAP brought to the 0.5.3 state
+---
+Docs only, no code. README no longer says nothing is implemented. ROADMAP: workspace 0.5.3 at origin/main 440660b; resolution to the primitive floor (6.4-0005, 6.4-0010) moves from "waiting on KISS" to built (`op_resolve`, fireline#67); 6.7-0006 and 6.3-0003/-0004 now name boards 449 and 451; the "diffed" note says which KISS vector files are vendored and which cases are copied into test code. Found by a claim-by-claim check of README and ROADMAP at b1ee475 (every claim paired with the command that proves it). `HANDOFF.md` rewritten to the lane's current state.
