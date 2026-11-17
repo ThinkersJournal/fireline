@@ -8,6 +8,11 @@
 //! OWFa 1.0, as that specification states); v1.1 has identical tables for these formats. Only the format numbers and the value formula are
 //! used. This crate is not an MX-compliant implementation: it converts nothing and has no scale.
 //!
+//! **The byte packing is unmeasured.** The nibble order of `f4e2m1` (inherited from `i4`/`u4`, 6.1-0008) and the four-per-three-bytes,
+//! least-significant-bit-first layout of the 6-bit formats are the KISS Draft's pin, adopted from the Unpopped storage convention. OCP MX fixes
+//! neither, and nobody has checked them against CUTLASS, Mojo, Triton or hardware (KISS-Classify 6.1-0014, -0015; KISS ROADMAP R1.26,
+//! `options-r1-26-block-scaling.md` Q4). A measurement could revise them, and `pack`, `unpack` and `packed_len` would then change.
+//!
 //! **Draft-tracking.** KISS-Classify is a Draft; expect rework when it moves. Every rule cites its clause id. Converting a float *into*
 //! one of these formats (round to nearest even, saturation) is owned by KISS-Ops and KISS-Emit, not by 6.1-0014..-0016, and is not here.
 //!

@@ -14,6 +14,10 @@ least-significant bit first), and the rule that an MX element is a storage and o
 - **Require it with a tilde** (`fireline-classify = "~0.5"`) or an exact version, never a caret. `tools/tilde-lint` fails a caret.
 - **Hello world:** `cargo run -p fireline-classify --example classify_hello_world`, or the doctest on the crate root.
 
+## Packing is unmeasured
+
+**The byte packing is unmeasured.** The nibble order of `f4e2m1` (inherited from `i4`/`u4`, 6.1-0008) and the four-per-three-bytes, least-significant-bit-first layout of the 6-bit formats are the KISS Draft's pin, adopted from the Unpopped storage convention. OCP MX fixes neither, and nobody has checked them against CUTLASS, Mojo, Triton or hardware (KISS-Classify 6.1-0014, -0015; KISS ROADMAP R1.26, `options-r1-26-block-scaling.md` Q4). A measurement could revise them, and `pack`, `unpack` and `packed_len` would then change.
+
 ## Provenance
 
 Credit: the format definitions follow the **OCP Microscaling Formats (MX) Specification, Version 1.0 (Sep 2023)**, Open Compute Project, by authors from Microsoft, AMD, Arm, Intel, Meta, NVIDIA and Qualcomm, whose use is governed by the Open Web Foundation Modified Final Specification Agreement (OWFa 1.0) as that specification states. Version 1.1 (Oct 9, 2026) has identical tables for these three element formats. Only the format numbers and the value formula are used: no text and no code is copied. This crate is **not** an MX-compliant implementation (it converts nothing and has no scale), so do not read the OWFa patent promise as covering it; see `docs/PATENT-SWEEP.md`.
