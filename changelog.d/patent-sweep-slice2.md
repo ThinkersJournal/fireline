@@ -1,3 +1,0 @@
-kind: patent sweep, ninth pass slice 2 (docs only)
----
-`docs/PATENT-SWEEP.md` gains rows 85 to 100: the grants, continuations and EP members of 25 publications that earlier passes read as applications, with their independent claims read in full and an all-elements comparison against what `fireline-contract` does. All clear on the text as published; the two pending continuations (`US 2026/0079847 A1`, `US 2025/0181351 A1`) are watched. Dependent claims, descriptions, prosecution histories and the USPTO, EPO and WIPO records were not read. No code changed. Verified by re-running the family extraction against two patents whose family was already known.
