@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.6] — patent sweep, ninth pass slice 2 (docs only)
+
+`docs/PATENT-SWEEP.md` gains rows 85 to 100: the grants, continuations and EP members of 25 publications that earlier passes read as applications, with their independent claims read in full and an all-elements comparison against what `fireline-contract` does. All clear on the text as published; the two pending continuations (`US 2026/0079847 A1`, `US 2025/0181351 A1`) are watched. Dependent claims, descriptions, prosecution histories and the USPTO, EPO and WIPO records were not read. No code changed. Verified by re-running the family extraction against two patents whose family was already known.
+
 ## [0.5.5] — `fireline-classify` docs: the byte packing is NOT measured (KISS R1.26 Q4); `fireline-contract::op_identity` (structure only)
 
 **`fireline-classify` (docs only): the byte packing is a convention, not a measured fact.** Published 0.1.0 states two packings flatly: the `f4e2m1` nibble order (low nibble = even index, inherited from `i4`/`u4`) and the 6-bit layout (four elements per three bytes, least-significant bit first), in `MxElement::pack`, `unpack` and `packed_len`, with nothing saying they were never checked. They are the KISS Draft's pin, adopted from the Unpopped lane's storage convention; OCP MX fixes neither, and they are NOT measured against CUTLASS, Mojo, Triton or hardware (KISS ROADMAP R1.26 Q4, `options-r1-26-block-scaling.md`). They may change in a breaking release. The crate docs (the first sentence of `pack`, `unpack` and `packed_len`, the crate root) and the README now say so. No code changed in `fireline-classify`.
