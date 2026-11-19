@@ -9,12 +9,12 @@
 //! no record), `DuplicateAttr`, `Incomplete` (a carrier written bare, or a field missing), `AttrOrder`, `BadRoleTuple`, checked in that precedence
 //! after the shape. Whether a line was reduced to the bare name is a producer rule (6.3-0004) and is not decided here.
 //!
-//! **Not decided here, on purpose: field value types.** Whether `keepdim=1` is a bad flag, `oob_policy=wrap` is outside its enum, `axis=8` is
-//! past `MAX_RANK`, or an `accumulator` is a float dtype needs each field's type, vocabulary and range, which KISS publishes only as prose in
-//! `spec/ops.md` 6.19.2 and 6.19.3 (its reference parses the Markdown). No JSON in `conformance/corpus` carries them, and this crate keeps no
-//! hand-written table, so [`OpIdentity::attrs`] hands back the **unchecked value text** and the `op-identity-bad-value` decline is not produced.
-//! The one universal check made is the shape of a value (a token of `[a-z0-9_-]`, or a bracketed list of digit runs with no spaces). **A line this
-//! accepts is therefore structurally valid, not value-valid.** **Draft-tracking.**
+//! **Field values are a second, separate step.** [`parse_op_identity`] checks only the shape of a value (a token of `[a-z0-9_-]`, or a bracketed
+//! list of digit runs with no spaces) and hands back the **unchecked value text**, so **a line it accepts is structurally valid, not value-valid.**
+//! [`check_values`] decides the value types, vocabularies and ranges from [`FieldTypes`], which [`FieldTypes::from_json`] reads from KISS's
+//! `conformance/corpus/opattrs_field_types.json` (kind, vocabulary, accepted dtypes and the bounds written in each field's `rule` text); this crate keeps
+//! no hand-written table. A rule whose text this crate cannot read is a load error, never a guess. Precedence between a value decline and the
+//! structural ones is not pinned by any KISS vector (each vector has exactly one fault); value checks run after the structure. **Draft-tracking.**
 
 use core::fmt;
 use std::collections::BTreeMap;
@@ -39,6 +39,8 @@ pub enum IdentityDecline {
     AttrOrder,
     /// The role tuple is empty or has an entry that is not `role:dtype` (a dtype token or `*`).
     BadRoleTuple,
+    /// A field's value is outside its type, vocabulary or range. Produced only by [`check_values`], which needs a [`FieldTypes`].
+    BadValue,
 }
 
 impl IdentityDecline {
@@ -53,6 +55,7 @@ impl IdentityDecline {
             Self::Incomplete => "op-identity-incomplete",
             Self::AttrOrder => "op-identity-attr-order",
             Self::BadRoleTuple => "op-identity-bad-role-tuple",
+            Self::BadValue => "op-identity-bad-value",
         }
     }
 }
@@ -267,4 +270,232 @@ pub fn parse_op_identity<'a>(
         attrs: given,
         roles,
     })
+}
+
+/// The value type of one OpAttrs field, read from a KISS `rule` string.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Rule {
+    Enum(Vec<String>),
+    Flag,
+    /// Canonical decimal, 0 to `max`.
+    Count(u128),
+    /// `[a,b,..]` canonical decimals, strictly ascending, non-empty, each below `below`; `single` when the rule demands exactly one axis.
+    AxisSet {
+        below: u128,
+        single: bool,
+    },
+    /// `[a,b,..]` canonical decimals, `1..=max_len` of them, each at most `max_elem`.
+    Vector {
+        max_len: usize,
+        max_elem: u128,
+    },
+    /// `compute-dtype` or one of the listed dtypes.
+    Accumulator(Vec<String>),
+    Dtype(Vec<String>),
+}
+
+/// The ordered, typed OpAttrs fields of every op that has a record, read from KISS's `opattrs_field_types.json`.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct FieldTypes(BTreeMap<String, Vec<(String, Rule)>>);
+
+/// `opattrs_field_types.json` could not be read. Typed; never a repair.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum FieldTypesError {
+    /// Not valid JSON (byte offset of the first problem).
+    Json(usize),
+    /// Valid JSON but not `kiss-opattrs-field-types-v1`, or a field whose kind or rule text this crate cannot read.
+    Schema(String),
+}
+
+impl fmt::Display for FieldTypesError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "opattrs field types: {self:?}")
+    }
+}
+
+impl std::error::Error for FieldTypesError {}
+
+/// The first run of decimal digits of `s` at or after the first occurrence of `marker`.
+fn number_after(s: &str, marker: &str) -> Option<u128> {
+    let rest = &s[s.find(marker)? + marker.len()..];
+    let rest = rest.trim_start();
+    let end = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..end].parse().ok()
+}
+
+fn strings(v: Option<&crate::json::Value>) -> Option<Vec<String>> {
+    v?.as_arr()?
+        .iter()
+        .map(|x| x.as_str().map(str::to_owned))
+        .collect()
+}
+
+impl FieldTypes {
+    /// Read the per-field types (schema `kiss-opattrs-field-types-v1`).
+    ///
+    /// # Errors
+    /// [`FieldTypesError::Json`] for malformed JSON, [`FieldTypesError::Schema`] for another shape, an unknown `kind`, or a `rule` whose bounds
+    /// cannot be read.
+    pub fn from_json(text: &str) -> Result<Self, FieldTypesError> {
+        use crate::json::Value;
+        let root = crate::json::parse(text).map_err(FieldTypesError::Json)?;
+        let bad = |m: String| FieldTypesError::Schema(m);
+        if root.get("schema").and_then(Value::as_str) != Some("kiss-opattrs-field-types-v1") {
+            return Err(bad("schema is not kiss-opattrs-field-types-v1".into()));
+        }
+        let Some(Value::Obj(ops)) = root.get("ops") else {
+            return Err(bad("no ops object".into()));
+        };
+        let mut map = BTreeMap::new();
+        for (op, fields) in ops {
+            let arr = fields
+                .as_arr()
+                .ok_or_else(|| bad(format!("{op}: not an array")))?;
+            let mut out = Vec::new();
+            for f in arr {
+                let name = f
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| bad(format!("{op}: a field has no name")))?;
+                let kind = f.get("kind").and_then(Value::as_str).unwrap_or("");
+                let rule = f.get("rule").and_then(Value::as_str).unwrap_or("");
+                let here = |m: &str| bad(format!("{op}.{name}: {m}"));
+                let rule = match kind {
+                    "enum" => Rule::Enum(strings(f.get("vocab")).ok_or_else(|| here("no vocab"))?),
+                    "flag" => Rule::Flag,
+                    "count" => Rule::Count(
+                        number_after(rule, " to ")
+                            .or_else(|| number_after(rule, "<="))
+                            .ok_or_else(|| here("no upper bound"))?,
+                    ),
+                    "axis-set" => Rule::AxisSet {
+                        below: number_after(rule, "each <").ok_or_else(|| here("no axis bound"))?,
+                        single: rule.contains("exactly one axis"),
+                    },
+                    "vector" => Rule::Vector {
+                        max_len: usize::try_from(
+                            number_after(rule, "1 to ").ok_or_else(|| here("no length bound"))?,
+                        )
+                        .map_err(|_| here("length bound"))?,
+                        max_elem: number_after(rule, "each <=")
+                            .ok_or_else(|| here("no element bound"))?,
+                    },
+                    "accumulator-dtype" => Rule::Accumulator(
+                        strings(f.get("accepts")).ok_or_else(|| here("no accepts"))?,
+                    ),
+                    "dtype" => {
+                        Rule::Dtype(strings(f.get("accepts")).ok_or_else(|| here("no accepts"))?)
+                    }
+                    other => return Err(here(&format!("unknown kind {other:?}"))),
+                };
+                out.push((name.to_owned(), rule));
+            }
+            map.insert(op.clone(), out);
+        }
+        Ok(Self(map))
+    }
+
+    /// The number of ops that have a typed record.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Whether the table has no op.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// The field names of `op` in the order the table lists them (`None` for an op with no typed record).
+    #[must_use]
+    pub fn field_names(&self, op: &str) -> Option<Vec<&str>> {
+        self.0
+            .get(op)
+            .map(|v| v.iter().map(|(n, _)| n.as_str()).collect())
+    }
+}
+
+/// A canonical decimal: digits only, no sign, no leading zero (but `0` itself).
+fn canonical(s: &str) -> Option<u128> {
+    if s.is_empty() || !s.bytes().all(|b| b.is_ascii_digit()) || (s.len() > 1 && s.starts_with('0'))
+    {
+        return None;
+    }
+    s.parse().ok()
+}
+
+fn list_items(v: &str) -> Option<Vec<&str>> {
+    let inner = v.strip_prefix('[')?.strip_suffix(']')?;
+    Some(if inner.is_empty() {
+        Vec::new()
+    } else {
+        inner.split(',').collect()
+    })
+}
+
+impl Rule {
+    fn accepts(&self, v: &str) -> bool {
+        match self {
+            Self::Enum(vocab) => vocab.iter().any(|x| x == v),
+            Self::Flag => v == "true" || v == "false",
+            Self::Count(max) => canonical(v).is_some_and(|n| n <= *max),
+            Self::AxisSet { below, single } => list_items(v).is_some_and(|items| {
+                let nums: Option<Vec<u128>> = items.iter().map(|i| canonical(i)).collect();
+                nums.is_some_and(|n| {
+                    !n.is_empty()
+                        && n.iter().all(|x| x < below)
+                        && n.windows(2).all(|w| w[0] < w[1])
+                        && (!*single || n.len() == 1)
+                })
+            }),
+            Self::Vector { max_len, max_elem } => list_items(v).is_some_and(|items| {
+                (1..=*max_len).contains(&items.len())
+                    && items
+                        .iter()
+                        .all(|i| canonical(i).is_some_and(|n| n <= *max_elem))
+            }),
+            Self::Accumulator(ok) => v == "compute-dtype" || ok.iter().any(|x| x == v),
+            Self::Dtype(ok) => ok.iter().any(|x| x == v),
+        }
+    }
+}
+
+/// Check every field value of a structurally valid line against `types`.
+///
+/// # Errors
+/// [`IdentityDecline::BadValue`] if a value is outside its type, vocabulary or range, or if `types` has no record for an op that the line spells
+/// attributes for, or spells different field names from it (the two KISS files disagree: nothing is accepted on a guess).
+pub fn check_values(id: &OpIdentity<'_>, types: &FieldTypes) -> Result<(), IdentityDecline> {
+    if id.attrs.is_empty() {
+        return Ok(());
+    }
+    let fields = types.0.get(id.op).ok_or(IdentityDecline::BadValue)?;
+    if fields.len() != id.attrs.len() {
+        return Err(IdentityDecline::BadValue);
+    }
+    for ((name, rule), (key, val)) in fields.iter().zip(&id.attrs) {
+        if name != key || !rule.accepts(val) {
+            return Err(IdentityDecline::BadValue);
+        }
+    }
+    Ok(())
+}
+
+/// [`parse_op_identity`] then [`check_values`]: the full decision on a line.
+///
+/// # Errors
+/// An [`IdentityDecline`], structural first, then [`IdentityDecline::BadValue`].
+pub fn parse_op_identity_checked<'a>(
+    line: &'a str,
+    attrs: &dyn AttrSource,
+    dtypes: &dyn DtypeSource,
+    types: &FieldTypes,
+) -> Result<OpIdentity<'a>, IdentityDecline> {
+    let id = parse_op_identity(line, attrs, dtypes)?;
+    check_values(&id, types)?;
+    Ok(id)
 }
