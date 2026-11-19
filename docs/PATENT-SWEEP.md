@@ -633,4 +633,6 @@ Re-read; the earlier row is **unchanged on the published text** (so no new readi
 - The CPC-class search and "a patent the searches never surfaced" limits of slice 1 stand.
 - **This pass does not clear any crate for publishing**, and no attorney has reviewed any of it.
 
+**Slice 3 attempt, 2026-11-19 (row 3, `US 2023/0025245 A1`): nothing new read.** Google Patents' page (HTTP 200) lists the filing, the 2022 PCT/CN/DE priority entries and "Pending", with no claims section, no office actions and no grant. The published-application PDF from patentimages is image-only (`pdftotext` returns 0 lines), so dependent claims were not read, and the amended claims remain unread (UNVERIFIED: USPTO Patent Center application 17374664 / Global Dossier, which this lane cannot reach). The row-3 verdict is unchanged: `needs-review`, board 307.
+
 — lane: fireline
