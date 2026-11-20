@@ -633,4 +633,24 @@ Re-read; the earlier row is **unchanged on the published text** (so no new readi
 - The CPC-class search and "a patent the searches never surfaced" limits of slice 1 stand.
 - **This pass does not clear any crate for publishing**, and no attorney has reviewed any of it.
 
+**Slice 3 attempt, 2026-11-19 (row 3, `US 2023/0025245 A1`): nothing new read.** Google Patents' page (HTTP 200) lists the filing, the 2022 PCT/CN/DE priority entries and "Pending", with no claims section, no office actions and no grant. The published-application PDF from patentimages is image-only (`pdftotext` returns 0 lines), so dependent claims were not read, and the amended claims remain unread (UNVERIFIED: USPTO Patent Center application 17374664 / Global Dossier, which this lane cannot reach). The row-3 verdict is unchanged: `needs-review`, board 307.
+
+## Addendum: fireline-contract, ninth pass, slice 3: family members of rows 1, 2, 4, 5, 6, 7, 9, 10, 12, 13 (CLAIM READ, NOT COMPLETE)
+
+Read 2026-11-19 through Google Patents (statuses and family links are Google's display, UNVERIFIED against USPTO, EPO, WIPO); independent claims came from `tools/patent-claims.py` (spot-checked here on US 8,146,066: claim 1 matches the text below). Positive control: the lookup finds row 1's A1 (US 2012/0180030) and row 2's PCT (WO 2007/149884 A2). Only the first independent claim of each member was read in full; the system and program-product siblings were counted, not read. Rows 4, 5, 9, 10 and 13 show no new member and keep their verdicts.
+
+| Member | Of row | Google status | Key limitation of claim 1 | Verdict |
+|---|---|---|---|---|
+| US 8,146,066 B2 (caching compute kernels) | 1-2 | Active, 2030-07-05 | runtime "dynamically choosing a respective type of processing element" and "identifying ... previously compiled compute kernels" | clear: needs a runtime that receives operation requests and schedules execution; the crates have none. **Nearest of the group.** |
+| US 8,136,104 B2 | 1-2 | Active, 2030-07-09 | "dynamically selecting one of the multiple types of processing elements", preparing kernels from a queue of IR entries | clear, same reason |
+| US 8,136,102 B2 | 1-2 | Active, 2030-07-05 | compiling, "searching a set of previously compiled compute kernels", selecting one for the second processing element | clear, same reason |
+| US 7,814,486, 8,443,348, 8,381,202, 8,261,270, 8,024,708, 8,375,368 B2; WO 2007/149884 A2 | 1-2 | Active (WO ceased) | multi-thread runtime, API-by-language, dispatch with callback, reference comparison, debugging, profiling | clear: each executes kernels on processing elements. US 7,814,486's expiry reads 2027-04-20 in the tool and 2027-03-05 in a page summary: unresolved |
+| US 10,140,099 B2; US 2019/0095303 A1 (abandoned) | 6 | Active 2037-01-04; Abandoned | integer replacement of floating-point calculations and code generation; ULP lookup, total ULP error, presenting | clear for the crates; the ULP limb stays a needs-review for where the formula is implemented (Fuel, kiss-ref), as in row 6 |
+| US 7,239,636, 8,116,203, 9,036,643 B2 | 7 | Expired | a virtual-channel request, capability lists, and an Ethernet pause frame | clear: a pause frame on a network link; **UNVERIFIED for 7,239,636 and 8,116,203, read as a page summary only** |
+| EP 2,485,149 A1 | 12 | Ceased | symbolic execution of bytecode under a deterministic thread schedule | clear; one claim block shown |
+
+**No new `needs-review`.** The design gate (re-read before `fireline-provider` or any selection step) should name US 8,146,066, 8,136,104 and 8,136,102 beside rows 1-2.
+
+**Not read:** "Cited by" and "Similar documents" on every page (truncated); Broadcom's US 7,212,534, 7,684,330, 8,023,413, 8,565,240 and EP 1,280,302 B1; MathWorks EP 3,252,594 A1; row 10's CN and DE members; dependent claims; every USPTO record. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
+
 — lane: fireline
