@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.7] — op_identity value checking (all 43 KISS vectors decided)
+
+`fireline_contract::op_identity` gains `FieldTypes::from_json` (reads KISS's `opattrs_field_types.json`, KISS#838), `check_values` and `parse_op_identity_checked`, and `IdentityDecline::BadValue` (`op-identity-bad-value`). Enum vocabularies, flags, canonical-decimal counts and their bounds, strictly ascending axis sets (exactly one axis for `prefix_scan`), vectors and accumulator and index dtypes are decided from the table, with no table kept in the crate; a rule whose text cannot be read is a load error. `parse_op_identity` itself is unchanged and still accepts a value-invalid line. Verified: the 13 accept and 30 decline vectors, including the 12 `bad-value` ones, are decided as KISS decided them; the typed file's ops and field order agree with `op_facts.json`; mutating the table moves the decision (anchors asserted to apply).
+
 ## [0.5.6] — patent sweep, ninth pass slice 2 (docs only)
 
 `docs/PATENT-SWEEP.md` gains rows 85 to 100: the grants, continuations and EP members of 25 publications that earlier passes read as applications, with their independent claims read in full and an all-elements comparison against what `fireline-contract` does. All clear on the text as published; the two pending continuations (`US 2026/0079847 A1`, `US 2025/0181351 A1`) are watched. Dependent claims, descriptions, prosecution histories and the USPTO, EPO and WIPO records were not read. No code changed. Verified by re-running the family extraction against two patents whose family was already known.
