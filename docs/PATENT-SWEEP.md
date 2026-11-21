@@ -654,3 +654,38 @@ Read 2026-11-19 through Google Patents (statuses and family links are Google's d
 **Not read:** "Cited by" and "Similar documents" on every page (truncated); Broadcom's US 7,212,534, 7,684,330, 8,023,413, 8,565,240 and EP 1,280,302 B1; MathWorks EP 3,252,594 A1; row 10's CN and DE members; dependent claims; every USPTO record. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
 
 — lane: fireline
+
+## Addendum: fireline-contract, ninth pass, slice 4: family members of rows 14-68 (CLAIM 1 READ, NOT COMPLETE)
+
+Read 2026-11-21 by a Sonnet subagent for the FireLine lane; family links from Google Patents' priority/parent/child blocks, claims through `tools/patent-claims.py` (positive control: US 8,146,066 returns its claim 1). **Statuses and family links are Google's display, UNVERIFIED against USPTO, EPO or WIPO.** **Reading depth is shallower than slices 1-3: for most members only the first ~330-700 characters of claim 1 were seen; sibling independent claims and dependent claims were NOT read.** Foreign members are read as served (machine translation, or the original language). The lane spot-checked one result (US 11,604,649: claim 1 matches). NOT legal advice; NOT a freedom-to-operate opinion. None of these members appeared in earlier slices.
+
+| Member | Of row | Google status | Key limitation of claim 1 | Verdict |
+|---|---|---|---|---|
+| US 11,604,649 B2; US 11,907,717 B2; CN 112749120 B | 20 | Active (est. 2040-11-11 for the first) | GPU memory-access instruction decode, registers/cache/shared memory, fused load-store | clear: instruction decode and GPU memory access |
+| US 2025/0272777 A1 | 28 | Pending | GPU sub-cores, generic-pointer address from a named memory type's base plus offset (claims 1-20 canceled) | clear on the text as published; WATCH |
+| US 11,809,849 B1 | 37 | Active (est. 2041-10-08) | compiler for an NN accelerator, modulo allocation | clear |
+| US 2025/0190220 A1 | 47 | Pending | copy operations in a program representation, speculative GPU code | clear on the text as published |
+| US 2025/0004937 A1; EP 3,616,067 B1; WO 2018/200630 A1 | 44 | Pending; Active; Ceased | memory shape (rows, columns, major dimension) allocating a physical portion of a memory array | clear: a memory controller allocating cells; **nearest vocabulary of the slice** |
+| US 11,556,757 B1 | 48 | Active | sub-tensor columns computed within cache layers | clear |
+| US 8,504,796 B2 | 36 | Expired | memory banks, virtualized addresses | clear |
+| US 9,158,517; 9,405,517; 9,411,567; 9,417,858; 9,424,014 B2 | 52 | Expired | optimizing compiler, control flow graph, dominator tree | clear |
+| US 10,853,906; 11,138,686; 11,308,574; 11,468,541; 11,948,224; 12,148,063; 12,373,911 B2; US 10,726,514 B2; US 2025/0117874 A1 (pending) | 56 | Active | GPU or multi-chip module with a dynamic-precision FP unit | clear: hardware |
+| US 10,884,734; 11,797,301; 11,797,302; 11,797,303; 11,816,481; 11,816,482; 12,321,743 B2; US 2025/0362910 A1 (pending) | 57 | Active | processor with ALUs, MMA instruction decoder, register file | clear: hardware |
+| US 8,301,803 B2 | 60 | Active | compressing signal samples with a block exponent | clear; nearest vocabulary: "block exponent" |
+| US 6,266,769 B1; US 6,282,554 B1 | 61 | Expired | packed FP/integer conversion in registers | clear |
+| US 11,429,349 B1; US 11,983,509 B2; US 12,417,078 B2; US 2025/0383842 A1 (pending); WO 2022/204069 A1 | 62 | Active/Pending/Ceased | multiply-accumulate and floating-point accumulator circuits | clear: circuit |
+| JP 7742310 B2; KR 102865324 B1; CN 114008632 A | 26 | Active/Active/Pending | descriptor operation, then a second operation on generic tensor raw data (as row 82) | clear on the translation; original text not checked |
+| CN 102354300 B | 32 | Active | GPU shared-memory access with alignment checks | clear (first limb read only) |
+| CN 120653879 A; DE 102024130511 A1 | 16 | Pending | an MMA circuit plus a device memory of scaling-metadata blocks | clear: the circuit is required; **closest vocabulary to our scale-metadata layout** |
+| DE 102023130107 A1 | 14 | Pending | multiplier units on low-precision FP operands | clear |
+| CN 109478169 B | 30 | Active | memory controller with address decoder | clear |
+
+**No `needs-review`.** Pending rows are the published text, not the amended claims.
+
+**UNREAD (no verdict, never "clear"):** GB 2609700 B and EP 3,991,109 A4 (the tool found no claims section); row 47's AU 2022202661 B2, AU 2024203233 B2, CN 115237551 B, DE 102022109521 A1, JP 7745502 B2 and KR members; CN 110574013 B (row 44); row 57's CN 108874744 B, CN 113961872/874/875 B, CN 114969644 B, DE 102018110607 A1; TW 100133354 A (row 32); TW 111114941 A (row 55); JP 6761891 B2, KR 102719994 B1, JP 2019500870 A (row 30); EP 3037980 A3 and JP 6630558 B2 (row 53); WO 2020/200246 A1 (rows 63-65); CN 103399780 B (row 68).
+
+**No new member found** for rows 15, 17, 21, 22, 25, 27, 45, 49, 54, 55, 59, 66. Pages for rows 46, 50, 29 and 31 returned no family block, which is **not** evidence of no family. Rows 69-80 skipped (off-subject); rows 71-83 not chased in this slice.
+
+**Still owed:** sibling independent claims and dependent claims of every row here (only claim 1 was seen for the row 56 and 57 families); the UNREAD list; Patent Center/Global Dossier records (unreachable from this lane); the CPC-class search. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
+
+— lane: fireline
