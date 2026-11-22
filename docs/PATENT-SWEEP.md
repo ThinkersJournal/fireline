@@ -654,3 +654,73 @@ Read 2026-11-19 through Google Patents (statuses and family links are Google's d
 **Not read:** "Cited by" and "Similar documents" on every page (truncated); Broadcom's US 7,212,534, 7,684,330, 8,023,413, 8,565,240 and EP 1,280,302 B1; MathWorks EP 3,252,594 A1; row 10's CN and DE members; dependent claims; every USPTO record. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
 
 — lane: fireline
+
+## Addendum: fireline-contract, ninth pass, slice 4: family members of rows 14-68 (CLAIM 1 READ, NOT COMPLETE)
+
+Read 2026-11-21 by a Sonnet subagent for the FireLine lane; family links from Google Patents' priority/parent/child blocks, claims through `tools/patent-claims.py` (positive control: US 8,146,066 returns its claim 1). **Statuses and family links are Google's display, UNVERIFIED against USPTO, EPO or WIPO.** **Reading depth is shallower than slices 1-3: for most members only the first ~330-700 characters of claim 1 were seen; sibling independent claims and dependent claims were NOT read.** Foreign members are read as served (machine translation, or the original language). The lane spot-checked one result (US 11,604,649: claim 1 matches). NOT legal advice; NOT a freedom-to-operate opinion. None of these members appeared in earlier slices.
+
+| Member | Of row | Google status | Key limitation of claim 1 | Verdict |
+|---|---|---|---|---|
+| US 11,604,649 B2; US 11,907,717 B2; CN 112749120 B | 20 | Active (est. 2040-11-11 for the first) | GPU memory-access instruction decode, registers/cache/shared memory, fused load-store | clear: instruction decode and GPU memory access |
+| US 2025/0272777 A1 | 28 | Pending | GPU sub-cores, generic-pointer address from a named memory type's base plus offset (claims 1-20 canceled) | clear on the text as published; WATCH |
+| US 11,809,849 B1 | 37 | Active (est. 2041-10-08) | compiler for an NN accelerator, modulo allocation | clear |
+| US 2025/0190220 A1 | 47 | Pending | copy operations in a program representation, speculative GPU code | clear on the text as published |
+| US 2025/0004937 A1; EP 3,616,067 B1; WO 2018/200630 A1 | 44 | Pending; Active; Ceased | memory shape (rows, columns, major dimension) allocating a physical portion of a memory array | clear: a memory controller allocating cells; **nearest vocabulary of the slice** |
+| US 11,556,757 B1 | 48 | Active | sub-tensor columns computed within cache layers | clear |
+| US 8,504,796 B2 | 36 | Expired | memory banks, virtualized addresses | clear |
+| US 9,158,517; 9,405,517; 9,411,567; 9,417,858; 9,424,014 B2 | 52 | Expired | optimizing compiler, control flow graph, dominator tree | clear |
+| US 10,853,906; 11,138,686; 11,308,574; 11,468,541; 11,948,224; 12,148,063; 12,373,911 B2; US 10,726,514 B2; US 2025/0117874 A1 (pending) | 56 | Active | GPU or multi-chip module with a dynamic-precision FP unit | clear: hardware |
+| US 10,884,734; 11,797,301; 11,797,302; 11,797,303; 11,816,481; 11,816,482; 12,321,743 B2; US 2025/0362910 A1 (pending) | 57 | Active | processor with ALUs, MMA instruction decoder, register file | clear: hardware |
+| US 8,301,803 B2 | 60 | Active | compressing signal samples with a block exponent | clear; nearest vocabulary: "block exponent" |
+| US 6,266,769 B1; US 6,282,554 B1 | 61 | Expired | packed FP/integer conversion in registers | clear |
+| US 11,429,349 B1; US 11,983,509 B2; US 12,417,078 B2; US 2025/0383842 A1 (pending); WO 2022/204069 A1 | 62 | Active/Pending/Ceased | multiply-accumulate and floating-point accumulator circuits | clear: circuit |
+| JP 7742310 B2; KR 102865324 B1; CN 114008632 A | 26 | Active/Active/Pending | descriptor operation, then a second operation on generic tensor raw data (as row 82) | clear on the translation; original text not checked |
+| CN 102354300 B | 32 | Active | GPU shared-memory access with alignment checks | clear (first limb read only) |
+| CN 120653879 A; DE 102024130511 A1 | 16 | Pending | an MMA circuit plus a device memory of scaling-metadata blocks | clear: the circuit is required; **closest vocabulary to our scale-metadata layout** |
+| DE 102023130107 A1 | 14 | Pending | multiplier units on low-precision FP operands | clear |
+| CN 109478169 B | 30 | Active | memory controller with address decoder | clear |
+
+**No `needs-review`.** Pending rows are the published text, not the amended claims.
+
+**UNREAD (no verdict, never "clear"):** GB 2609700 B and EP 3,991,109 A4 (the tool found no claims section); row 47's AU 2022202661 B2, AU 2024203233 B2, CN 115237551 B, DE 102022109521 A1, JP 7745502 B2 and KR members; CN 110574013 B (row 44); row 57's CN 108874744 B, CN 113961872/874/875 B, CN 114969644 B, DE 102018110607 A1; TW 100133354 A (row 32); TW 111114941 A (row 55); JP 6761891 B2, KR 102719994 B1, JP 2019500870 A (row 30); EP 3037980 A3 and JP 6630558 B2 (row 53); WO 2020/200246 A1 (rows 63-65); CN 103399780 B (row 68).
+
+**No new member found** for rows 15, 17, 21, 22, 25, 27, 45, 49, 54, 55, 59, 66. Pages for rows 46, 50, 29 and 31 returned no family block, which is **not** evidence of no family. Rows 69-80 skipped (off-subject); rows 71-83 not chased in this slice.
+
+**Still owed:** sibling independent claims and dependent claims of every row here (only claim 1 was seen for the row 56 and 57 families); the UNREAD list; Patent Center/Global Dossier records (unreachable from this lane); the CPC-class search. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
+
+— lane: fireline
+
+## Addendum: fireline-contract, ninth pass, slice 4b: the members slice 4 left unread (CLAIM READ, NOT COMPLETE)
+
+Read 2026-11-21 by a Sonnet subagent for the FireLine lane with `tools/patent-claims.py` (positive control: US 8,146,066 returns its claim 1); every independent claim shown was read except where noted. **Statuses are Google's display, UNVERIFIED against USPTO, EPO, WIPO or CNIPA.** Non-English members were read as Google's machine translation (CN, DE, JP, KR as served); the JP translations are partly garbled, so their claim numbering is approximate. The lane spot-checked CN 103399780 B (claim 1 matches). NOT legal advice; NOT a freedom-to-operate opinion.
+
+| Member | Of row | Google status | Key limitation of the independent claims | Verdict |
+|---|---|---|---|---|
+| CN 110574013 B | 44 | Active | a user-defined "memory shape" (columns, rows, major dimension) allocating a contiguous physical portion of a memory array; stores into adjacent memory cells | clear: needs a memory device |
+| AU 2022202661 B2; AU 2024203233 B2; CN 115237551 B; DE 102022109521 A1 (pending); JP 7745502 B2 | 47 | Active (DE Pending) | a compiler causing GPU code to be speculatively performed on CPU branch conditions, or identifying speculatively parallel instructions and copy operations | clear: needs a compiler and a GPU |
+| CN 108874744 B; DE 102018110607 A1 (pending); CN 113961872 B; CN 113961874 B; CN 113961875 B; CN 114969644 B; US 10,884,734 B2 | 57 | Active (DE Pending) | MMA/MFMA datapath, decoder, register file, scheduler, partial-product alignment, adder (US 10,884,734: ALUs loading from a register file for an MMA instruction; all three independents) | clear: hardware |
+| US 10,853,906 B2 | 56 | Active | GPGPU with a dynamic-precision floating-point unit (precision tracker, logarithmic transform); all three independents | clear: floating-point hardware |
+| JP 6761891 B2; KR 102719994 B1 | 30 | Active | memory controller with a power-of-two primary and secondary address decoder, command queue, arbiter (KR: claim 1 only) | clear: a memory controller |
+| JP 6630558 B2 | 53 | Expired | a server with a cache and GPU cores multiplying a compressed sparse-matrix representation (claim 1 only) | clear on claim 1 |
+| WO 2020/200246 A1 | 63-65 | Ceased | a control unit with a tensor control module decoding an instruction whose operand holds a descriptor identifier | clear: instruction decode and an execution unit |
+| JP 2019500870 A | 30 | Active | a biomedical method of selecting patients by VHL gene function | clear: unrelated (claim 1 and dependents only) |
+| CN 103399780 B | 68 | Expired | the only independent claim: integer-overflow detection by simulating execution of a target binary in a virtual machine, translating it to LLVM, and symbolic execution with constraint solving | clear on its face: the crate does none of the three; the topical "integer overflow" overlap is why it is named, and the lane (not the tool) judges that the crate does no binary lifting or symbolic execution |
+
+**Still UNREAD (no verdict):** GB 2609700 B (the tool returns no claims section; siblings AU/CN/DE/JP above are clear, but jurisdictions can differ); EP 3037980 A3 (Withdrawn; search report, no claims); TW 100133354 A and TW 111114941 A (not opened); KR 102719994 B1's other independents and JP 6630558 B2's other independents (only claim 1 read).
+
+**Still owed:** dependent claims everywhere; the row 56 and 57 families' other members' sibling independent claims (only US 10,853,906 and US 10,884,734 were read in full); Patent Center, EPO and WIPO records. **This pass does not clear any crate for publishing**, and no attorney has reviewed it.
+
+— lane: fireline
+
+### Slice 4c (2026-11-22): two row 57 siblings read whole (all three independent claims each)
+
+Read with `tools/patent-claims.py` by the lane itself (independent claims in full; dependents 2-8 and 16-17 only as far as the tool prints them). Statuses are Google's display, UNVERIFIED against USPTO.
+
+| Member | Google status | Independent claims 1 / 9 / 15 | Elements that touch our code | Verdict |
+|---|---|---|---|---|
+| US 11,797,301 B2 (est. 2038-01-04) | Active | a multi-threaded processor, a SIMD multi-threaded processor and a method, each with a decoder for a floating-point MMA instruction, a buffer of 16-bit floating-point matrix data, a scheduler, an FMA unit doing a dot product, logic to shift partial products, an ALU accumulating into a register (claim 9 adds cores, front end, L1/L2 caches, load/store units, interconnect) | none: `fireline-contract` has no decoder, scheduler, FMA unit, ALU or register and performs no floating-point dot product | clear |
+| US 12,321,743 B2 (est. 2037-11-29) | Active | the same three claim shapes, with "FP16" in place of "16-bit floating point" | none, same reason | clear |
+
+Both fall within the row 57 verdict already recorded (hardware). The row 57 family has about six more granted members that remain unread beyond claim 1 (US 11,797,302, 11,797,303, 11,816,481, 11,816,482 and the pending US 2025/0362910 A1).
+
+— lane: fireline
