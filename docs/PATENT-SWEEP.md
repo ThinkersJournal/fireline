@@ -689,3 +689,25 @@ Read 2026-11-21 by a Sonnet subagent for the FireLine lane; family links from Go
 **Still owed:** sibling independent claims and dependent claims of every row here (only claim 1 was seen for the row 56 and 57 families); the UNREAD list; Patent Center/Global Dossier records (unreachable from this lane); the CPC-class search. **This slice does not clear any crate for publishing**, and no attorney has reviewed it.
 
 — lane: fireline
+
+## Addendum: fireline-contract, ninth pass, slice 4b: the members slice 4 left unread (CLAIM READ, NOT COMPLETE)
+
+Read 2026-11-21 by a Sonnet subagent for the FireLine lane with `tools/patent-claims.py` (positive control: US 8,146,066 returns its claim 1); every independent claim shown was read except where noted. **Statuses are Google's display, UNVERIFIED against USPTO, EPO, WIPO or CNIPA.** Non-English members were read as Google's machine translation (CN, DE, JP, KR as served); the JP translations are partly garbled, so their claim numbering is approximate. The lane spot-checked CN 103399780 B (claim 1 matches). NOT legal advice; NOT a freedom-to-operate opinion.
+
+| Member | Of row | Google status | Key limitation of the independent claims | Verdict |
+|---|---|---|---|---|
+| CN 110574013 B | 44 | Active | a user-defined "memory shape" (columns, rows, major dimension) allocating a contiguous physical portion of a memory array; stores into adjacent memory cells | clear: needs a memory device |
+| AU 2022202661 B2; AU 2024203233 B2; CN 115237551 B; DE 102022109521 A1 (pending); JP 7745502 B2 | 47 | Active (DE Pending) | a compiler causing GPU code to be speculatively performed on CPU branch conditions, or identifying speculatively parallel instructions and copy operations | clear: needs a compiler and a GPU |
+| CN 108874744 B; DE 102018110607 A1 (pending); CN 113961872 B; CN 113961874 B; CN 113961875 B; CN 114969644 B; US 10,884,734 B2 | 57 | Active (DE Pending) | MMA/MFMA datapath, decoder, register file, scheduler, partial-product alignment, adder (US 10,884,734: ALUs loading from a register file for an MMA instruction; all three independents) | clear: hardware |
+| US 10,853,906 B2 | 56 | Active | GPGPU with a dynamic-precision floating-point unit (precision tracker, logarithmic transform); all three independents | clear: floating-point hardware |
+| JP 6761891 B2; KR 102719994 B1 | 30 | Active | memory controller with a power-of-two primary and secondary address decoder, command queue, arbiter (KR: claim 1 only) | clear: a memory controller |
+| JP 6630558 B2 | 53 | Expired | a server with a cache and GPU cores multiplying a compressed sparse-matrix representation (claim 1 only) | clear on claim 1 |
+| WO 2020/200246 A1 | 63-65 | Ceased | a control unit with a tensor control module decoding an instruction whose operand holds a descriptor identifier | clear: instruction decode and an execution unit |
+| JP 2019500870 A | 30 | Active | a biomedical method of selecting patients by VHL gene function | clear: unrelated (claim 1 and dependents only) |
+| CN 103399780 B | 68 | Expired | the only independent claim: integer-overflow detection by simulating execution of a target binary in a virtual machine, translating it to LLVM, and symbolic execution with constraint solving | clear on its face: the crate does none of the three; the topical "integer overflow" overlap is why it is named, and the lane (not the tool) judges that the crate does no binary lifting or symbolic execution |
+
+**Still UNREAD (no verdict):** GB 2609700 B (the tool returns no claims section; siblings AU/CN/DE/JP above are clear, but jurisdictions can differ); EP 3037980 A3 (Withdrawn; search report, no claims); TW 100133354 A and TW 111114941 A (not opened); KR 102719994 B1's other independents and JP 6630558 B2's other independents (only claim 1 read).
+
+**Still owed:** dependent claims everywhere; the row 56 and 57 families' other members' sibling independent claims (only US 10,853,906 and US 10,884,734 were read in full); Patent Center, EPO and WIPO records. **This pass does not clear any crate for publishing**, and no attorney has reviewed it.
+
+— lane: fireline
