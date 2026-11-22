@@ -163,3 +163,11 @@ fn the_loader_refuses_other_documents() {
         Ok(true)
     );
 }
+
+#[test]
+fn schema_v2_is_accepted_beside_v1_and_v3_is_not() {
+    let t = |v: &str| FactTable::from_json(&format!("{{\"schema\":\"{v}\",\"ops\":{{}}}}"));
+    assert!(t("kiss-op-facts-v1").is_ok());
+    assert!(t("kiss-op-facts-v2").is_ok());
+    assert!(matches!(t("kiss-op-facts-v3"), Err(FactsError::Schema(_))));
+}

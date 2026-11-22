@@ -16,6 +16,8 @@ use core::fmt;
 
 /// The `contract_version` of the schema this crate follows: the decimal token `4` (6.1-0008).
 pub const CONTRACT_VERSION: u64 = 4;
+/// The `contract_version` values this reader accepts: 4, and 5 (KISS 476 stage 2) which a reader accepts alongside 4 until 4 is retired.
+pub const SUPPORTED_CONTRACT_VERSIONS: &[u64] = &[4, 5];
 /// The only recognised `contract_kind` (6.1-0007, 6.11-0002).
 pub const CONTRACT_KIND: &str = "kiss-contract";
 /// The magic that begins every document (6.11-0002): ASCII `KISC`.
