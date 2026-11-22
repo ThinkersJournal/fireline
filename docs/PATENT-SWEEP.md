@@ -711,3 +711,16 @@ Read 2026-11-21 by a Sonnet subagent for the FireLine lane with `tools/patent-cl
 **Still owed:** dependent claims everywhere; the row 56 and 57 families' other members' sibling independent claims (only US 10,853,906 and US 10,884,734 were read in full); Patent Center, EPO and WIPO records. **This pass does not clear any crate for publishing**, and no attorney has reviewed it.
 
 — lane: fireline
+
+### Slice 4c (2026-11-22): two row 57 siblings read whole (all three independent claims each)
+
+Read with `tools/patent-claims.py` by the lane itself (independent claims in full; dependents 2-8 and 16-17 only as far as the tool prints them). Statuses are Google's display, UNVERIFIED against USPTO.
+
+| Member | Google status | Independent claims 1 / 9 / 15 | Elements that touch our code | Verdict |
+|---|---|---|---|---|
+| US 11,797,301 B2 (est. 2038-01-04) | Active | a multi-threaded processor, a SIMD multi-threaded processor and a method, each with a decoder for a floating-point MMA instruction, a buffer of 16-bit floating-point matrix data, a scheduler, an FMA unit doing a dot product, logic to shift partial products, an ALU accumulating into a register (claim 9 adds cores, front end, L1/L2 caches, load/store units, interconnect) | none: `fireline-contract` has no decoder, scheduler, FMA unit, ALU or register and performs no floating-point dot product | clear |
+| US 12,321,743 B2 (est. 2037-11-29) | Active | the same three claim shapes, with "FP16" in place of "16-bit floating point" | none, same reason | clear |
+
+Both fall within the row 57 verdict already recorded (hardware). The row 57 family has about six more granted members that remain unread beyond claim 1 (US 11,797,302, 11,797,303, 11,816,481, 11,816,482 and the pending US 2025/0362910 A1).
+
+— lane: fireline
