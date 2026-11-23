@@ -5,7 +5,7 @@ State 2026-11-22: main = 160b26d (#72 merged, 0.5.8). Remote branch lane/firelin
 **First action on wake:** soft-stopped per pm-kernels TASK; pm-kernels wakes by [TASK] mail at 2026-11-23T00:04Z (no timers). Then run `lane-restart waits`, check KISS (476 adoption: accept v1+v2, contract 4+5); else take optional patent-sweep rows.
 
 **Waits**
-WAIT: board 449 ruling on the 6.7-0006 cost row, or KISS vectors for it, or the KISS 476 files | check: git -C C:/Projects/KISS fetch -q | wake: 2026-11-23T00:00:00Z
+WAIT: KISS#843 merge (476 files) or board 449 ruling | check: gh pr view 843 -R ThinkersJournal/KISS --json state | wake: 2026-11-24T00:00:00Z
 - 6.7-0006: KISS main 21173ed (board 481, 0.22.0): `KISS-CONTRACT-6.7-0006` still `untestable` (#44, no byte layout / cost_class vocab). HOLD: keep text as is; no contract reader/docs work until KISS rules it and its vectors exist (board 449: cost = outside-view metrics as READ values with units + declared|measured).
 - KISS 476 (dissolve PR 11-23, per pm-kernels): stage 2 = contract_version 4->5, op_facts v1->v2 (kernel_rules removed), DVRS device record trailing cooperative_launch byte. Accept v1+v2 and contract 4+5 until it lands; do not wait on it. Build against the file, no hand-kept tables (KissTables pattern).
 
