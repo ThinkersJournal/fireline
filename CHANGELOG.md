@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.6.0] — **BREAKING**: fireline-synth requires unpopped-vocab ~0.56 (was ~0.47)
+
+`fireline-synth` now depends on `unpopped-vocab` `~0.56.0` (resolved 0.56.5). No source change was needed: the workspace builds and all tests pass. `fireline-grammar` has no direct `unpopped-vocab` dependency. This unblocks consumers that hold one copy of the vocab crate (baracuda, fuel).
+
 ## [0.5.8] — patent sweep slice 4, 4b and 4c; canonical LICENSE-APACHE
 
 Documentation and licence text only; no crate code changed. `docs/PATENT-SWEEP.md` gains ninth pass slices 4, 4b and 4c: the family members of rows 14-68 and the previously unread members (claim 1 or all independent claims, as each addendum states; no `needs-review`; several members still UNREAD and listed). `LICENSE-APACHE` is replaced by the portfolio's canonical Apache-2.0 text (CR-stripped sha256 `cfc7749b96f63bd3`, 11358 bytes; the old file was `30cb2dd1`, 10846 bytes), copied from Unpopped `origin/main`.
