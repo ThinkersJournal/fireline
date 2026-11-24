@@ -28,6 +28,10 @@ pub const MAX_DEVICE_ID_LEN: usize = 4096;
 pub const MAX_DTYPE_SET: usize = 64;
 /// Most accuracy records in one device record (6.6-0006, `MAX_ACCURACY_RECORDS`).
 pub const MAX_ACCURACY_RECORDS: u32 = 65536;
+/// Most unnamed-type identifiers in one device record (6.6-0006, `MAX_UNNAMED_TYPES`).
+pub const MAX_UNNAMED_TYPES: u32 = 64;
+/// Longest unnamed-type identifier (6.6-0006, 6.6-0011).
+pub const MAX_UNNAMED_TYPE_LEN: usize = 256;
 /// `max_ulp` value meaning the device declares **no bound** for the key (6.6-0008).
 pub const NO_BOUND: u32 = 0xFFFF_FFFF;
 /// `math_fidelity` `1`: `bit-stable` (6.6-0008).
@@ -61,6 +65,35 @@ pub struct DeviceRecord {
     pub compute_dtypes: Vec<String>,
     /// The accuracy claims, strictly ascending by `(op, math_fidelity, dtype)`.
     pub accuracy: Vec<AccuracyRecord>,
+    /// The raw identifiers of types the device exposes that KISS cannot name, in the order the provider reports them (6.6-0011). Opaque:
+    /// never interpreted, never compared to a key, never a dtype. Up to 64, each 1 to 256 bytes. A non-empty list means the `target`
+    /// and the dtype sets under-claim.
+    pub unnamed_types: Vec<Vec<u8>>,
+    /// Whether the device offers cooperative launch (6.6-0012): a set of launches can be co-resident, so a kernel that waits on the
+    /// progress of another launch can complete. Written as the record's trailing byte, `1` only for a device that offers it.
+    pub cooperative_launch: bool,
+}
+
+/// A pairing of a kernel with a device that a consumer must decline (6.6-0009, 6.6-0012).
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum PairingDecline {
+    /// The kernel's Contract declares `requires_co_resident_launch` as `true` and the device's `cooperative_launch` is `0` (6.6-0012).
+    CooperativeLaunchNotOffered,
+}
+
+impl DeviceRecord {
+    /// Whether a kernel may be dispatched to this device, as far as the device record decides it. Only the co-residency rule is
+    /// here (6.6-0012; the dtype intersection of 6.6-0009 is the caller's, over the Contract's Capabilities).
+    ///
+    /// # Errors
+    /// [`PairingDecline::CooperativeLaunchNotOffered`] when `requires_co_resident_launch` and the device does not offer it.
+    pub fn pairing(&self, requires_co_resident_launch: bool) -> Result<(), PairingDecline> {
+        if requires_co_resident_launch && !self.cooperative_launch {
+            return Err(PairingDecline::CooperativeLaunchNotOffered);
+        }
+        Ok(())
+    }
 }
 
 /// A device response `DVRS` (6.6-0004). A provider with no device answers with an empty `devices`, which is a genuine negative (6.6-0002).
@@ -130,6 +163,17 @@ fn check_record(d: &DeviceRecord, is_dtype: &dyn Fn(&str) -> bool) -> Result<(),
     let count = u32::try_from(d.accuracy.len()).unwrap_or(u32::MAX);
     if count > MAX_ACCURACY_RECORDS {
         return Err(FrameError::AccuracyCountTooLarge(count));
+    }
+    let unnamed = u32::try_from(d.unnamed_types.len()).unwrap_or(u32::MAX);
+    if unnamed > MAX_UNNAMED_TYPES {
+        return Err(FrameError::UnnamedCountTooLarge(unnamed));
+    }
+    for u in &d.unnamed_types {
+        if u.is_empty() || u.len() > MAX_UNNAMED_TYPE_LEN {
+            return Err(FrameError::UnnamedTypeLen(
+                u32::try_from(u.len()).unwrap_or(u32::MAX),
+            ));
+        }
     }
     for a in &d.accuracy {
         check_token(&a.op)?;
@@ -207,6 +251,12 @@ pub fn encode_dvrs(
             put_token(&mut out, &a.dtype);
             out.extend_from_slice(&a.max_ulp.to_le_bytes());
         }
+        out.extend_from_slice(&(d.unnamed_types.len() as u32).to_le_bytes());
+        for u in &d.unnamed_types {
+            out.extend_from_slice(&(u.len() as u32).to_le_bytes());
+            out.extend_from_slice(u);
+        }
+        out.push(u8::from(d.cooperative_launch));
     }
     put_correlation(&mut out, r.correlation_id);
     Ok(out)
@@ -272,8 +322,9 @@ pub fn decode_dvrs(
     if count > MAX_DEVICES {
         return Err(FrameError::DeviceCountTooLarge(count));
     }
-    // The smallest device record is 4 + 1 + 2 + 1 + 1 + 4 bytes (a 1-byte id, a 1-char target, two empty sets, no accuracy).
-    const MIN_DEVICE: usize = 4 + 1 + 2 + 1 + 1 + 4;
+    // The smallest device record is 4 + 1 + 2 + 1 + 1 + 4 + 4 + 1 bytes (a 1-byte id, a 1-char target, two empty sets, no accuracy, no
+    // unnamed type, the cooperative_launch byte).
+    const MIN_DEVICE: usize = 4 + 1 + 2 + 1 + 1 + 4 + 4 + 1;
     if (count as usize).saturating_mul(MIN_DEVICE) > bytes.len().saturating_sub(r.at) {
         return Err(FrameError::Truncated);
     }
@@ -309,12 +360,35 @@ pub fn decode_dvrs(
                 max_ulp,
             });
         }
+        let unnamed = r.u32()?;
+        if unnamed > MAX_UNNAMED_TYPES {
+            return Err(FrameError::UnnamedCountTooLarge(unnamed));
+        }
+        // The smallest unnamed-type record is a 4-byte length and 1 byte.
+        if (unnamed as usize).saturating_mul(4 + 1) > bytes.len().saturating_sub(r.at) {
+            return Err(FrameError::Truncated);
+        }
+        let mut unnamed_types = Vec::with_capacity(unnamed as usize);
+        for _ in 0..unnamed {
+            let len = r.u32()?;
+            if len == 0 || len as usize > MAX_UNNAMED_TYPE_LEN {
+                return Err(FrameError::UnnamedTypeLen(len));
+            }
+            unnamed_types.push(r.take(len as usize)?.to_vec());
+        }
+        let cooperative_launch = match r.u8()? {
+            0 => false,
+            1 => true,
+            other => return Err(FrameError::CooperativeLaunch(other)),
+        };
         let d = DeviceRecord {
             device_id,
             target,
             store_dtypes,
             compute_dtypes,
             accuracy,
+            unnamed_types,
+            cooperative_launch,
         };
         check_record(&d, is_dtype)?;
         devices.push(d);

@@ -113,6 +113,13 @@ pub fn check_cell_class_supported(
     })
 }
 
+/// Whether `schema` is an `op_facts.json` schema this reader accepts: `kiss-op-facts-v1`, or `kiss-op-facts-v2` (KISS 476, `kernel_rules`
+/// removed; the fact fields this crate reads are unchanged). Both are accepted until v1 is gone from KISS main.
+#[must_use]
+pub fn is_supported_schema(schema: &str) -> bool {
+    matches!(schema, "kiss-op-facts-v1" | "kiss-op-facts-v2")
+}
+
 /// A fact table read from KISS's `op_facts.json`; see the module docs.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct FactTable(BTreeMap<String, OpFacts>);
@@ -143,8 +150,12 @@ impl FactTable {
     pub fn from_json(text: &str) -> Result<Self, FactsError> {
         let root = crate::json::parse(text).map_err(FactsError::Json)?;
         let bad = |s: &str| FactsError::Schema(s.to_owned());
-        if root.get("schema").and_then(crate::json::Value::as_str) != Some("kiss-op-facts-v1") {
-            return Err(bad("schema is not kiss-op-facts-v1"));
+        if !root
+            .get("schema")
+            .and_then(crate::json::Value::as_str)
+            .is_some_and(crate::op_facts::is_supported_schema)
+        {
+            return Err(bad("schema is not kiss-op-facts-v1 or -v2"));
         }
         let Some(crate::json::Value::Obj(ops)) = root.get("ops") else {
             return Err(bad("no ops object"));

@@ -31,7 +31,47 @@ pub struct Contract<'a> {
     pub sections: [Vec<Field<'a>>; 7],
 }
 
+/// `entry_exit_visibility` (6.8-0014): what the contract promises about the kernel's output writes at the launch boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Visibility {
+    /// `caller-ordered` (the value when the field is absent): the caller orders later work after the launch.
+    CallerOrdered,
+    /// `visible-at-exit`: the output writes are visible to any work ordered after the launch completes, with no further caller fence.
+    VisibleAtExit,
+}
+
 impl<'a> Contract<'a> {
+    /// `requires_co_resident_launch` (6.7-0007, Capabilities): `true` means the kernel waits on the progress of other launches and may
+    /// be dispatched only to a device whose record offers `cooperative_launch` (KISS-ANNOUNCE-6.6-0012). An absent field is `false`.
+    ///
+    /// # Errors
+    /// [`FieldError::BadValue`] for any value other than exactly `true` or `false`.
+    pub fn requires_co_resident_launch(&self) -> Result<bool, FieldError> {
+        match self.get(4, "requires_co_resident_launch") {
+            None | Some("false") => Ok(false),
+            Some("true") => Ok(true),
+            Some(_) => Err(FieldError::BadValue {
+                section: 5,
+                key: "requires_co_resident_launch",
+            }),
+        }
+    }
+
+    /// `entry_exit_visibility` (6.8-0014, Guarantees). An absent field is [`Visibility::CallerOrdered`].
+    ///
+    /// # Errors
+    /// [`FieldError::BadValue`] for any value other than exactly `caller-ordered` or `visible-at-exit`.
+    pub fn entry_exit_visibility(&self) -> Result<Visibility, FieldError> {
+        match self.get(5, "entry_exit_visibility") {
+            None | Some("caller-ordered") => Ok(Visibility::CallerOrdered),
+            Some("visible-at-exit") => Ok(Visibility::VisibleAtExit),
+            Some(_) => Err(FieldError::BadValue {
+                section: 6,
+                key: "entry_exit_visibility",
+            }),
+        }
+    }
+
     /// The value of `key` in section `section` (`0..7`, in the order of `document::SECTION_NAMES`), if the contract carries it.
     #[must_use]
     pub fn get(&self, section: usize, key: &str) -> Option<&'a str> {
@@ -81,7 +121,14 @@ pub enum FieldError {
         /// The key.
         key: String,
     },
-    /// The Dispatch section is neither the five geometry fields nor the single `dispatch_model = geometry-agnostic` line (6.6-0001).
+    /// A field whose value is not one the field's clause allows (`requires_co_resident_launch`, 6.7-0007; `entry_exit_visibility`, 6.8-0014).
+    BadValue {
+        /// The section number, `1` to `7`.
+        section: usize,
+        /// The key.
+        key: &'static str,
+    },
+    /// The Dispatch section is neither the geometry fields nor the single `dispatch_model = geometry-agnostic` line (6.6-0001).
     DispatchAlternatives,
 }
 
@@ -103,6 +150,12 @@ impl fmt::Display for FieldError {
                 f,
                 "contract section {section}: field `{key}` is out of order or repeated"
             ),
+            Self::BadValue { section, key } => {
+                write!(
+                    f,
+                    "contract section {section}: field `{key}` has a value its clause does not allow"
+                )
+            }
             Self::DispatchAlternatives => write!(
                 f,
                 "contract dispatch: not exactly one of the two alternatives of 6.6-0001"
@@ -140,6 +193,13 @@ const INTERFACE: &[Entry] = &[
     ("alignment_bytes", false),
     ("output_layouts", true),
 ];
+/// The Dispatch geometry fields of contract version 5 (6.6-0001): `thread_mapping` and `addressing_rule` are retired.
+const DISPATCH_GEOMETRY_V5: &[Entry] = &[
+    ("invocation_domain", false),
+    ("workgroup_sizing", false),
+    ("count_to_grid", false),
+];
+/// The Dispatch geometry fields of contract version 4.
 const DISPATCH_GEOMETRY: &[Entry] = &[
     ("invocation_domain", false),
     ("workgroup_sizing", false),
@@ -156,6 +216,30 @@ const CAPABILITIES: &[Entry] = &[
     ("determinism_class", false),
     ("precision_class", false),
     ("cost", false),
+];
+/// Capabilities at contract version 5: the version-4 fields and the optional trailing `requires_co_resident_launch` (6.7-0007).
+const CAPABILITIES_V5: &[Entry] = &[
+    ("accept_predicate", false),
+    ("supported_dtype_set", false),
+    ("awkward_layout_strategy", false),
+    ("in_place_eligible_variants", false),
+    ("index_width", false),
+    ("determinism_class", false),
+    ("precision_class", false),
+    ("cost", false),
+    ("requires_co_resident_launch", true),
+];
+/// Guarantees at contract version 5: the version-4 fields and the optional trailing `entry_exit_visibility` (6.8-0014).
+const GUARANTEES_V5: &[Entry] = &[
+    ("reference_function", false),
+    ("per_backend_ulp_tiers", false),
+    ("determinism_class", false),
+    ("math_fidelity", false),
+    ("accumulation_type", false),
+    ("bit_stability", false),
+    ("audited_status", false),
+    ("cost_provenance", false),
+    ("entry_exit_visibility", true),
 ];
 const GUARANTEES: &[Entry] = &[
     ("reference_function", false),
@@ -256,13 +340,16 @@ pub fn parse_contract<'a>(doc: &Document<'a>) -> Result<Contract<'a>, FieldError
     for (i, bytes) in doc.sections.iter().enumerate() {
         sections[i] = lines(i + 1, bytes)?;
     }
+    // Version 4 and version 5 each have their own field schemas; a field of one is an unexpected field in the other. A version above 5
+    // is held to the version-5 schemas (the caller's `supported_versions` decides what reaches here).
+    let v5 = doc.contract_version >= 5;
     let schemas: [&[Entry]; 7] = [
         IDENTITY,
         SEMANTICS,
         INTERFACE,
         &[],
-        CAPABILITIES,
-        GUARANTEES,
+        if v5 { CAPABILITIES_V5 } else { CAPABILITIES },
+        if v5 { GUARANTEES_V5 } else { GUARANTEES },
         PROVENANCE,
     ];
     for (i, schema) in schemas.iter().enumerate() {
@@ -280,7 +367,16 @@ pub fn parse_contract<'a>(doc: &Document<'a>) -> Result<Contract<'a>, FieldError
             return Err(FieldError::DispatchAlternatives);
         }
     } else {
-        check(4, dispatch, DISPATCH_GEOMETRY).map_err(|e| match e {
+        check(
+            4,
+            dispatch,
+            if v5 {
+                DISPATCH_GEOMETRY_V5
+            } else {
+                DISPATCH_GEOMETRY
+            },
+        )
+        .map_err(|e| match e {
             FieldError::MissingField { .. }
             | FieldError::OutOfOrder { .. }
             | FieldError::UnexpectedField { .. } => FieldError::DispatchAlternatives,

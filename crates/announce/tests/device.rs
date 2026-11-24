@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //! The KISS-Announce device-query frames (§6.6): the exact bytes of `DVRQ`, `DVRS` and `DVDC` diffed against KISS
-//! `conformance/corpus/announce_vectors.json` (KISS origin/main 73c341b5), and the reader's typed declines. Draft-tracking: the wire is
+//! `conformance/corpus/announce_vectors.json` (KISS #843 head 139e925c: unnamed_types 6.6-0011 and the trailing cooperative_launch byte 6.6-0012), and the reader's typed declines. Draft-tracking: the wire is
 //! not frozen, so expect rework when the Draft moves. The `is_dtype` predicate here is a local stand-in for the Classify dtype table
 //! (the non-reserved tokens of KISS `conformance/corpus/dtype_manifest.json` that these tests use).
 
@@ -21,7 +21,7 @@ fn is_dtype(t: &str) -> bool {
 }
 
 const DVRQ: &str = "44 56 52 51 00";
-const DVRS: &str = "44 56 52 53 01 00 00 00 04 00 00 00 67 70 75 30 09 63 75 64 61 3A 73 6D 38 39 04 04 62 66 31 36 03 66 31 36 03 66 33 32 02 69 38 03 04 62 66 31 36 03 66 31 36 03 66 33 32 02 00 00 00 03 65 78 70 01 03 66 33 32 01 00 00 00 03 65 78 70 02 03 66 33 32 04 00 00 00 00";
+const DVRS: &str = "44 56 52 53 01 00 00 00 04 00 00 00 67 70 75 30 09 63 75 64 61 3A 73 6D 38 39 04 04 62 66 31 36 03 66 31 36 03 66 33 32 02 69 38 03 04 62 66 31 36 03 66 31 36 03 66 33 32 02 00 00 00 03 65 78 70 01 03 66 33 32 01 00 00 00 03 65 78 70 02 03 66 33 32 04 00 00 00 00 00 00 00 00 00";
 const DVDC: &str = "44 56 44 43 04 00 00 00 00";
 
 fn s(v: &[&str]) -> Vec<String> {
@@ -48,6 +48,8 @@ fn device() -> DeviceRecord {
                 max_ulp: 4,
             },
         ],
+        unnamed_types: vec![],
+        cooperative_launch: false,
     }
 }
 
@@ -209,7 +211,7 @@ fn record_bounds_are_hard_rejects() {
         &is_dtype,
     )
     .unwrap();
-    let at = b.len() - 1 - 4;
+    let at = b.len() - 1 - 1 - 4 - 4; // correlation, cooperative_launch, unnamed_count, accuracy_count
     b[at..at + 4].copy_from_slice(&(MAX_ACCURACY_RECORDS + 1).to_le_bytes());
     assert_eq!(
         decode_dvrs(&b, &is_dtype),
@@ -295,4 +297,117 @@ fn accuracy_records_are_consistent() {
     d.accuracy[1].max_ulp = 0;
     let bytes = encode_dvrs(&wrap(d.clone()), &is_dtype).unwrap();
     assert_eq!(decode_dvrs(&bytes, &is_dtype).unwrap().0.devices[0], d);
+}
+
+// KISS-ANNOUNCE-6.6-0012: the trailing cooperative_launch byte is 0 or 1; anything else is a typed decline, and a record that ends
+// before it is truncated. Strict new shape: no reading of an old record by its length.
+#[test]
+fn cooperative_launch_is_a_strict_trailing_byte() {
+    let full = hex(DVRS);
+    let at = full.len() - 2; // [..., cooperative_launch, correlation]
+    for v in 2u8..=255 {
+        let mut b = full.clone();
+        b[at] = v;
+        assert_eq!(
+            decode_dvrs(&b, &is_dtype),
+            Err(FrameError::CooperativeLaunch(v)),
+            "byte {v}"
+        );
+    }
+    let mut b = full.clone();
+    b[at] = 1;
+    let (r, _) = decode_dvrs(&b, &is_dtype).unwrap();
+    assert!(r.devices[0].cooperative_launch);
+    assert_eq!(encode_dvrs(&r, &is_dtype).unwrap(), b);
+    // the record ends before the byte: the pre-#843 shape (no byte) is truncated, never accepted
+    let mut old = full.clone();
+    old.remove(at);
+    assert_eq!(decode_dvrs(&old, &is_dtype), Err(FrameError::Truncated));
+    old.truncate(at);
+    assert_eq!(decode_dvrs(&old, &is_dtype), Err(FrameError::Truncated));
+}
+
+// KISS-ANNOUNCE-6.6-0011: unnamed_types, written in the reported order, bounded, opaque.
+#[test]
+fn unnamed_types_round_trip_and_bounds() {
+    let wrap = |d: DeviceRecord| DeviceResponse {
+        devices: vec![d],
+        correlation_id: None,
+    };
+    let mut d = device();
+    d.unnamed_types = vec![
+        b"vulkan:component_type:1000491002".to_vec(),
+        b"a:b:c".to_vec(),
+    ];
+    let bytes = encode_dvrs(&wrap(d.clone()), &is_dtype).unwrap();
+    assert_eq!(decode_dvrs(&bytes, &is_dtype).unwrap().0.devices[0], d);
+    let mut d = device();
+    d.unnamed_types = vec![Vec::new()];
+    assert_eq!(
+        encode_dvrs(&wrap(d), &is_dtype),
+        Err(FrameError::UnnamedTypeLen(0))
+    );
+    let mut d = device();
+    d.unnamed_types = vec![vec![b'x'; 257]];
+    assert_eq!(
+        encode_dvrs(&wrap(d), &is_dtype),
+        Err(FrameError::UnnamedTypeLen(257))
+    );
+    let mut d = device();
+    d.unnamed_types = vec![vec![b'x']; 65];
+    assert_eq!(
+        encode_dvrs(&wrap(d), &is_dtype),
+        Err(FrameError::UnnamedCountTooLarge(65))
+    );
+    // a reader: unnamed_count 65 with nothing behind it, and an identifier length 0 / 257, are declines
+    let base = hex(DVRS);
+    let cnt = base.len() - 1 - 1 - 4; // unnamed_count
+    let mut b = base.clone();
+    b[cnt..cnt + 4].copy_from_slice(&65u32.to_le_bytes());
+    assert_eq!(
+        decode_dvrs(&b, &is_dtype),
+        Err(FrameError::UnnamedCountTooLarge(65))
+    );
+    for bad in [0u32, 257] {
+        let mut b = base[..cnt].to_vec();
+        b.extend_from_slice(&1u32.to_le_bytes());
+        b.extend_from_slice(&bad.to_le_bytes());
+        b.extend_from_slice(&[b'x'; 300]);
+        b.extend_from_slice(&[0, 0]);
+        assert_eq!(
+            decode_dvrs(&b, &is_dtype),
+            Err(FrameError::UnnamedTypeLen(bad)),
+            "len {bad}"
+        );
+    }
+}
+
+// KISS-ANNOUNCE-6.6-0012: a kernel that requires co-resident launch is not paired with a device whose byte is 0.
+#[test]
+fn a_co_resident_kernel_is_declined_on_a_device_without_cooperative_launch() {
+    let mut d = device();
+    d.cooperative_launch = false;
+    assert_eq!(
+        d.pairing(true),
+        Err(PairingDecline::CooperativeLaunchNotOffered)
+    );
+    assert_eq!(d.pairing(false), Ok(()));
+    d.cooperative_launch = true;
+    assert_eq!(d.pairing(true), Ok(()));
+    assert_eq!(d.pairing(false), Ok(()));
+}
+
+// KISS-ANNOUNCE-6.6-0012: with two devices, a first record lacking the byte (the pre-#843 shape) is a decline, not a re-alignment.
+#[test]
+fn a_record_without_the_byte_is_not_read_by_length() {
+    let two = DeviceResponse {
+        devices: vec![device(), device()],
+        correlation_id: None,
+    };
+    let mut b = encode_dvrs(&two, &is_dtype).unwrap();
+    // one device's frame is tag, count, the record, then the correlation byte: the record's last byte is the cooperative_launch
+    let coop_at = encode_dvrs(&response(), &is_dtype).unwrap().len() - 2;
+    assert_eq!(b[coop_at], 0);
+    b.remove(coop_at);
+    assert!(decode_dvrs(&b, &is_dtype).is_err());
 }

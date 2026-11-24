@@ -104,8 +104,12 @@ impl AttrTable {
     pub fn from_json(text: &str) -> Result<Self, AttrTableError> {
         let root = crate::json::parse(text).map_err(AttrTableError::Json)?;
         let bad = AttrTableError::Schema;
-        if root.get("schema").and_then(crate::json::Value::as_str) != Some("kiss-op-facts-v1") {
-            return Err(bad("schema is not kiss-op-facts-v1".into()));
+        if !root
+            .get("schema")
+            .and_then(crate::json::Value::as_str)
+            .is_some_and(crate::op_facts::is_supported_schema)
+        {
+            return Err(bad("schema is not kiss-op-facts-v1 or -v2".into()));
         }
         let Some(crate::json::Value::Obj(ops)) = root.get("ops") else {
             return Err(bad("no ops object".into()));

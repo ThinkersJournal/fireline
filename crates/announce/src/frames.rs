@@ -102,6 +102,12 @@ pub enum FrameError {
     AccuracyNotAscending,
     /// An accuracy record for a dtype outside the record's `compute_dtypes` (6.6-0007).
     AccuracyDtypeNotComputed(String),
+    /// An `unnamed_count` above 64 (6.6-0006, 6.6-0011).
+    UnnamedCountTooLarge(u32),
+    /// An unnamed-type identifier length of `0` or above 256 (6.6-0006, 6.6-0011).
+    UnnamedTypeLen(u32),
+    /// A `cooperative_launch` byte other than `0` or `1` (6.6-0012).
+    CooperativeLaunch(u8),
 }
 
 impl FrameError {
@@ -173,6 +179,16 @@ impl fmt::Display for FrameError {
                 f,
                 "announce: accuracy claimed for `{t}`, which is not in compute_dtypes"
             ),
+            Self::UnnamedCountTooLarge(n) => write!(f, "announce: unnamed_count {n} above 64"),
+            Self::UnnamedTypeLen(n) => {
+                write!(
+                    f,
+                    "announce: unnamed-type identifier length {n} outside 1..=256"
+                )
+            }
+            Self::CooperativeLaunch(b) => {
+                write!(f, "announce: cooperative_launch {b} is not 0 or 1")
+            }
         }
     }
 }
