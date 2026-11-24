@@ -411,3 +411,50 @@ fn a_record_without_the_byte_is_not_read_by_length() {
     b.remove(coop_at);
     assert!(decode_dvrs(&b, &is_dtype).is_err());
 }
+
+// 6.6-0012: a record that ENDS where the cooperative_launch byte belongs is truncated, and that is decided BEFORE the record is
+// judged. Here the record is otherwise invalid (math_fidelity 3, which only the record check refuses), so a reader that tolerated end
+// of input at the byte (cooperative_launch = 0, then the record check) would answer MathFidelity(3), not Truncated.
+#[test]
+fn a_record_ending_before_the_byte_is_truncated_before_it_is_judged() {
+    let one = |fidelity: u8| {
+        let mut d = device();
+        d.accuracy.truncate(1);
+        d.accuracy[0].math_fidelity = fidelity;
+        let r = DeviceResponse {
+            devices: vec![d],
+            correlation_id: None,
+        };
+        encode_dvrs(&r, &is_dtype).unwrap()
+    };
+    let (a, b) = (one(1), one(2));
+    let at_fid = (0..a.len())
+        .find(|&i| a[i] != b[i])
+        .expect("one byte differs");
+    assert_eq!(
+        (0..a.len()).filter(|&i| a[i] != b[i]).count(),
+        1,
+        "the fidelity byte is the only difference"
+    );
+    let mut bad = a;
+    bad[at_fid] = 3;
+    // control: the complete record is refused for its fidelity, so the record check does see this fault
+    assert_eq!(
+        decode_dvrs(&bad, &is_dtype),
+        Err(FrameError::MathFidelity(3))
+    );
+    let coop_at = bad.len() - 2; // [..., cooperative_launch, correlation]
+    // the record ends exactly where the byte belongs (not even the correlation byte follows)
+    assert_eq!(
+        decode_dvrs(&bad[..coop_at], &is_dtype),
+        Err(FrameError::Truncated)
+    );
+    // a bad byte names itself
+    let mut two = hex(DVRS);
+    let at = two.len() - 2;
+    two[at] = 2;
+    assert_eq!(
+        decode_dvrs(&two, &is_dtype).unwrap_err().to_string(),
+        "announce: cooperative_launch 2 is not 0 or 1"
+    );
+}
