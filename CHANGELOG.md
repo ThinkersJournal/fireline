@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.1] — op_facts v2 fixture and the contract v5 golden pinned
+
+`tests/data/kiss_op_facts.json` is now the merged v2 file (KISS main be637a51) and the v5 golden document from `contract_vectors.json` (1349 bytes) is a fixture: it frames, parses at contract_version 5, passes the cross-section rules, and is refused as a v4 document. No reader change was needed; the existing readers already accepted both.
+
 ## [0.7.0] — **BREAKING**: DVRS device record gains `unnamed_types` and a strict trailing `cooperative_launch` byte; contract 4+5 and op_facts v1+v2 accepted
 
 The announce reader now requires the DVRS trailing `cooperative_launch` byte (strict: a record without it is rejected) and reads `unnamed_types`; `DeviceRecord::pairing` added. The contract reader accepts contract_version 4 and 5 with version-gated field schemas (`requires_co_resident_launch`, `entry_exit_visibility` from 5), and op_facts v1 and v2 (`SUPPORTED_CONTRACT_VERSIONS`). Every DVRS provider must emit `unnamed_count` and `cooperative_launch`; known providers: fireline announce and KISS `conformance/tests/announce_device_query.rs`. Written against KISS#843 (still open); the v5 golden diff and swap of tests/data/kiss_op_facts.json to v2 follow its merge. Also moves the portfolio CI pin c72a6e03 -> dc45e363 (installs CodeRipper 0.47.15; coderipper main is 0.47.21). `cargo test --workspace` passes.
