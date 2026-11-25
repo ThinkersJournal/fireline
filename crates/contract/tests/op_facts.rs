@@ -171,3 +171,56 @@ fn schema_v2_is_accepted_beside_v1_and_v3_is_not() {
     assert!(t("kiss-op-facts-v2").is_ok());
     assert!(matches!(t("kiss-op-facts-v3"), Err(FactsError::Schema(_))));
 }
+
+// The v2 sidecar (KISS main be637a51) read whole: the three facts this crate reads, for every op, pinned to the merged file's sets.
+// A dropped op or a flipped fact anywhere in the table fails here, not only for the ops other tests happen to name.
+#[test]
+fn the_v2_sidecar_has_exactly_the_pinned_fact_sets() {
+    let t = table();
+    assert_eq!(t.len(), 128);
+    let pinned = |pick: fn(OpFacts) -> bool, want: &[&str]| {
+        let mut got: Vec<&str> = t
+            .ops()
+            .filter(|op| pick(t.facts(op).expect("every listed op has facts")))
+            .collect();
+        got.sort_unstable();
+        assert_eq!(got, want);
+    };
+    pinned(|f| f.contraction, &["matmul"]);
+    pinned(
+        |f| f.index_role,
+        &[
+            "embedding",
+            "gather",
+            "index_select",
+            "scatter",
+            "scatter_add",
+        ],
+    );
+    pinned(
+        |f| f.reduce_axis,
+        &[
+            "all",
+            "any",
+            "argmax",
+            "argmin",
+            "avg_pool",
+            "cummax",
+            "cumprod",
+            "cumsum",
+            "layer_norm",
+            "log_softmax",
+            "logsumexp",
+            "matmul",
+            "max_pool",
+            "prefix_scan",
+            "reduce",
+            "reduce_mean",
+            "reduce_norm2",
+            "reduce_std",
+            "reduce_var",
+            "rms_norm",
+            "softmax",
+        ],
+    );
+}

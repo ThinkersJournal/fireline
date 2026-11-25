@@ -1,5 +1,5 @@
 {
-  "schema": "kiss-op-facts-v1",
+  "schema": "kiss-op-facts-v2",
   "generated_from": "tools/kiss_op_facts.py (python tools/kiss_op_facts.py; reads spec/ops.md)",
   "fact_clauses": {
     "family": [

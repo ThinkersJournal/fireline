@@ -185,6 +185,11 @@ impl FactTable {
         self.0.len()
     }
 
+    /// The names of the ops the table knows, in order.
+    pub fn ops(&self) -> impl Iterator<Item = &str> {
+        self.0.keys().map(String::as_str)
+    }
+
     /// Whether the table knows no op.
     #[must_use]
     pub fn is_empty(&self) -> bool {
