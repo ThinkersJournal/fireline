@@ -108,7 +108,7 @@ impl MxElement {
     /// The three MX element dtypes.
     pub const ALL: [Self; 3] = [Self::F4E2M1, Self::F6E2M3, Self::F6E3M2];
 
-    /// The element for a Classify dtype token, or `None` for any other token (including the other 24).
+    /// The element for a Classify dtype token, or `None` for any other token (including the other 31 of the 34 tokens in KISS 0.24.0's `dtype_manifest.json`, the 3 reserved ones among them).
     #[must_use]
     pub fn from_token(token: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|e| e.token() == token)
