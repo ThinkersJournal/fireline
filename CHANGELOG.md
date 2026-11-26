@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.1] — KISS 0.24.0 corpus re-vendored (34 dtype tokens)
+
+Re-vendored `kiss_dtype_manifest.json` (27 -> 34 rows: f128 i128 u128 i256 u256 f8e3m4 f8ue4m3) and `kiss_opattrs_field_types.json` from KISS `conformance/corpus` at origin/main e628c96 (spec text a9ad8cf; unpublished). `op_facts`, `op_decomposition` and `op_identity_vectors` are byte-identical (LF-normalised) and untouched. No fireline source carries a closed dtype list: `fireline-contract` reads widths from the manifest, so it needed no code change; the one test that pinned `len() == 27` now pins 34 and asserts the seven new widths. `cargo test --workspace` passes (47 result lines ok, 0 failed).
+
+Doc-only: `fireline-classify`'s `MxElement::from_token` comment now counts "the other 31 of the 34" manifest tokens (was 24 of 27); no code or quantisation behaviour changed (KISS lane OK'd, 2026-11-26).
+
 ## [0.10.0] — deps: unpopped-vocab ~0.58 to ~0.59 in fireline-synth
 
 `fireline-synth` now pins `unpopped-vocab = "~0.59.1"` (resolved 0.59.1, published; tag v0.59.1) so a consumer's build holds one copy of the vocabulary crate: with the old ~0.58 pin, baracuda's cuda-seam and vulkane's take-0.59 each saw two `unpopped` versions and `OperandDesc` as two types. Unpopped 0.59 adds `KernelError::CollectiveAfterReturn` to a `non_exhaustive` enum, so there is no compile break. `fireline-synth` is the only crate pinning it (`git grep unpopped -- '*Cargo.toml'` finds `crates/synth/Cargo.toml`; the same grep finds that line on `origin/main`, so the grep sees pins). Verified: `cargo test --workspace` passes.
