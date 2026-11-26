@@ -340,9 +340,16 @@ fn names_and_widths_come_from_the_sources() {
 #[test]
 fn the_dtype_manifest_loads_and_refuses_other_documents() {
     let t = DtypeTable::from_json(DTYPES).unwrap();
-    assert_eq!(t.len(), 27);
+    assert_eq!(t.len(), 34); // KISS 0.24.0 (a9ad8cf): the 27 + f128 i128 u128 i256 u256 f8e3m4 f8ue4m3
     assert_eq!(t.storage_bits("f32"), Some(32));
     assert_eq!(t.storage_bits("f99"), None);
+    assert_eq!(t.storage_bits("f128"), Some(128));
+    assert_eq!(t.storage_bits("i128"), Some(128));
+    assert_eq!(t.storage_bits("u128"), Some(128));
+    assert_eq!(t.storage_bits("i256"), Some(256));
+    assert_eq!(t.storage_bits("u256"), Some(256));
+    assert_eq!(t.storage_bits("f8e3m4"), Some(8));
+    assert_eq!(t.storage_bits("f8ue4m3"), Some(8));
     use fireline_contract::dtypes::DtypeError;
     assert!(matches!(
         DtypeTable::from_json("{"),
