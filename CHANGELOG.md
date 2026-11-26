@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.0] — **BREAKING**: `unpopped-vocab` ~0.56 to ~0.57 in fireline-synth
+
+`fireline-synth` now depends on `unpopped-vocab` `~0.57.0` (resolved 0.57.0, published 2026-11-26, itself a breaking line), so the vocabulary types in its public API change with it and one copy of the vocabulary stays in a consumer's tree. No FireLine source change was needed: the workspace builds against 0.57.0 unchanged. Verified locally: `cargo test --workspace` all pass, `cargo clippy --workspace --all-targets -- -D warnings` clean, `cargo fmt --check` clean. Raised because baracuda's cuda-seam cannot compile until fireline publishes on 0.57.
+
 ## [0.7.2] — CI pin (CodeRipper 0.48.1) and lock-only dependency update
 
 Pinned `portfolio.yml` in `ci.yml` to coderipper@467fd259 (installs CodeRipper 0.48.1). Lock-only update clearing SUP-015: toml 1.2.2, toml_parser 1.1.6, unpopped-vocab 0.56.12, hashbrown 0.17.2, zerocopy and zerocopy-derive 0.8.65. Not breaking; no source change. Verified locally: 359 tests passed in 47 bins, clippy -D warnings clean, fmt clean; `cargo tree -d` shows only syn 2.0.119 vs 3.0.10.

@@ -1,3 +1,0 @@
-kind: **BREAKING**: `unpopped-vocab` ~0.56 to ~0.57 in fireline-synth
----
-`fireline-synth` now depends on `unpopped-vocab` `~0.57.0` (resolved 0.57.0, published 2026-11-26, itself a breaking line), so the vocabulary types in its public API change with it and one copy of the vocabulary stays in a consumer's tree. No FireLine source change was needed: the workspace builds against 0.57.0 unchanged. Verified locally: `cargo test --workspace` all pass, `cargo clippy --workspace --all-targets -- -D warnings` clean, `cargo fmt --check` clean. Raised because baracuda's cuda-seam cannot compile until fireline publishes on 0.57.
