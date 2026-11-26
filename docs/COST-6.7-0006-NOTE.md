@@ -13,6 +13,8 @@ Date 2026-11-26. Lane note, **no code until KISS settles scope** (pm-kernels TAS
 - `cost_provenance` **is** checked: in the `declared`/`measured` vocabulary, and Guarantees equals Provenance (6.8-0006, 6.9-0006).
 - The 6.6-0006 expression parser exists (`Expr::parse_in` with a `Context`), used for Dispatch fields, so a cost expression can be parsed with the same code.
 
+**Update 2026-11-26 (pm-kernels NOTICE, KISS at 153c09a, contract.md:2160 and :224, ROADMAP R1.25):** keep `cost = 1` as it is; the cost-class set and the value syntax are **unspecified until R1.25 is ruled** (needs CireSnave's verbatim word); this lane mints no cost outcomes. The table below is therefore a list of what each KISS outcome *would* need, not a plan, and nothing in it is scheduled.
+
 ## What each outcome of #125 would need (decision table, no code)
 
 | KISS outcome | fireline-contract work | Needs from KISS first |
