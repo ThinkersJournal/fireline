@@ -10,7 +10,7 @@ WAIT: pm-assist slot mail for lane/fireline-1126 PR | check: git ls-remote --hea
 
 **TASK 1 (on pm-assist's slot mail, a 6.33(4) catch-up release; do NOT self-open):** open ONE docs-only PR from lane/fireline-1126 (merge origin/main first; fragment changelog.d/patent-sweep-3-roadmap.md already there, PM stamps). Contents: docs/PATENT-SWEEP.md slice 3 + watch row + '245 description reading; ROADMAP at 0.8.0 with classify/root rulings; docs/COST-6.7-0006-NOTE.md. [READY] pm-assist cc pm-kernels.
 
-**TASK 2 (pm-kernels [TASK], 2026-11-26):** descriptions of US 2026/0147493 (row 83), US 2025/0181351 (row 92), US 12,423,007 B1 (row 38), US 11,720,351 B2 (row 92) into docs/PATENT-SWEEP.md (see its "Not done" line near the end). Verdicts only: outside as read / needs more with limb / NOT CLEARED unread; never "clear". Then, if no row is left: lane-restart assert-idle, soft-stop with reason.
+**TASK 2 DONE (commit fcb8c73):** descriptions of '493, '007, '351 (A1, B2) read by search and recorded in docs/PATENT-SWEEP.md, all outside as read; Nvidia texts not read end to end, prosecution histories still owed.
 
 **Owed, none urgent:** watch row: re-read '245 amended claims when Patent Center/Espacenet answer (403 on 2026-11-26) or on a grant. 6.7-0006: KISS-Contract #125 OPEN, no code; KISS confirmed `cost = 1` stays, R1.25 unruled (docs/COST-6.7-0006-NOTE.md). Held: drop v1/contract 4 once no provider emits them.
 
