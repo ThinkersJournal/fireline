@@ -2,7 +2,7 @@
 name = "fireline"
 version.workspace = true
 edition = "2024"
-description = "Reserved name: the interface crates (both sides of each interface) between Fuel and the other ML projects, one crate per interface. Placeholder, no functionality yet."
+description = "Reserved name: the interface crates (both sides of each interface) between Fuel and the other ML projects, one crate per interface. The root crate carries no code of its own; each interface is a separate fireline-* crate."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
