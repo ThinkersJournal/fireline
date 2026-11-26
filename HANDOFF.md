@@ -2,15 +2,12 @@ ON WAKE: fetch the Synapse inbox first (mcp__synapse__fetch); the task that woke
 
 # HANDOFF (fireline lane)
 
-WAIT: fireline#77 merge | check: gh pr view 77 --json state,mergedAt | wake: 2026-11-26T03:00:00Z
-WAIT: fireline#76 merge | check: gh pr view 76 --json state,mergedAt | wake: 2026-11-26T03:00:00Z
+State 2026-11-26 ~01:25Z. origin/main 3bfe2b9 = 0.8.0, all six crates published by the PM (crates.io read 01:17Z). #76 and #77 merged, their branches/worktrees removed. Work worktree: C:/Projects/fireline-wt-0525 on lane/fireline-1126 @13a7c01 (pushed, NO PR). Old worktree C:/Projects/fireline-wt-lane (merged lane/fireline-0524) stays pending board 504: no delete, no checkout, no force.
 
-State 2026-11-26 ~00:30Z. PR #76 (lane/fireline-0526 @fbd75a7, pin+lock-only+fragment) OPEN, CI queued; [READY] sent to pm-assist. Still owed: report CI per-rule counts vs the 102 table (0.47.15: MOD-011 x91, MOD-008 x2, MOD-005 x2, MOD-001 x2, WSP-013/SUP-016/OPS-012/OPS-011/MOD-006 x1) to pm-kernels; new Medium+ = disposition, never revert/config.
+WAIT: pm-assist slot mail for lane/fireline-1126 PR | check: git ls-remote --heads origin lane/fireline-1126 | wake: 2026-11-26T13:00:00Z
 
-**URGENT PR #77 (lane/fireline-u57, worktree C:/Projects/fireline-wt-u57): unpopped-vocab ~0.57 bump, [READY] sent; baracuda waits. If #76 merges first, re-resolve Cargo.lock on u57 (unpopped-vocab 0.57.0 must win).**
+**TASK 1 (on pm-assist's slot mail, a 6.33(4) catch-up release; do NOT self-open):** open ONE docs-only PR from lane/fireline-1126 (merge origin/main first; fragment changelog.d/patent-sweep-3-roadmap.md already there, PM stamps). Contents: PATENT-SWEEP slice 3 + watch row + '245 description reading; ROADMAP at 0.8.0 with classify/root hold notes; docs/COST-6.7-0006-NOTE.md. [READY] pm-assist cc pm-kernels.
 
-**TASK 2 (after #76 and #77 merge; pm-kernels: stop before the ROADMAP refresh until then):** branch lane/fireline-1126 (worktree C:/Projects/fireline-wt-0525) holds commit 035f233 = PATENT-SWEEP slice 3 (done, [FINDING] sent). Remaining: refresh ROADMAP table (dated 2026-11-17, workspace 0.5.3) and the 6.7-0006 cost-expression row status with KISS (held `untestable`, #44); add a changelog.d fragment FIRST; ONE PR per day, so ride a later slot.
+**Owed, none urgent:** (a) patent descriptions of US 2026/0147493, US 2025/0181351, US 12,423,007 B1, US 11,720,351 B2 (verdicts only outside as read / needs more with limb / NOT CLEARED unread; never "clear"); (b) watch row: re-read '245 amended claims when Patent Center/Espacenet answer (403 today) or on a grant; (c) 6.7-0006: KISS-Contract #125 OPEN, no code; ask KISS whether `cost = 1` (their own serialized example) is legal. Open question sent to pm-kernels: is the root crate `fireline` 0.8.0 (placeholder description) meant to ship; I did not yank. Held: drop v1/contract 4 once no provider emits them. If no row left: lane-restart assert-idle, then soft-stop with reason.
 
-**Held:** 6.7-0006 `untestable` in KISS (#44): no contract reader/docs work until KISS rules and vectors exist. Later: drop v1/contract 4 once no provider emits them. Next ROADMAP row: none named yet; asked pm-kernels.
-
-**Rules that bit:** fragment FIRST; em-dash breaks awk regex (use python); `git branch -D` only after gh+ls-remote verify; never force-remove a worktree with uncommitted files (ask); ack each message_id once; positive control for every absence.
+**Rules that bit:** fragment FIRST; em-dash breaks awk regex (use python); `git branch -D` only after gh+ls-remote verify; never force-remove a worktree with uncommitted files; ack each message_id once; positive control for every absence; do not push to a branch pm-assist is stamping; a session timer is not a wait.
