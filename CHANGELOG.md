@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.0] — **BREAKING**: `unpopped-vocab` ~0.59 to ~0.60 in fireline-synth
+
+`fireline-synth` now depends on `unpopped-vocab` `~0.60.1` (resolved 0.60.1, published 2026-11-26, tag v0.60.1), so the vocabulary types in its public API (`JitRequest` carries `OperandDesc`/`ElementKind`) change with it and a consumer's tree holds one copy: baracuda's cuda-seam failed with type-identity errors against fireline-synth 0.10.1 (`~0.59.1`) while unpopped 0.60.1 is published. Unpopped 0.60.0 adds seven `ElementKind` variants and `KernelError::DtypeNotComputed`. No FireLine source change was needed: `git grep ElementKind -- crates` finds only `ElementKind::F32` constructions (no exhaustive match), and `fireline-contract` reads dtype widths from the vendored KISS manifest, where `op_dag.rs` already asserts `len() == 34` and the seven new widths. `fireline-synth` is the only crate pinning `unpopped` (`git grep unpopped -- '*Cargo.toml'` finds `crates/synth/Cargo.toml`; the same grep finds that line before the edit). Verified: `cargo test --workspace` passes, 0 failed. A PR others wait on (6.33(1)).
+
 ## [0.10.1] — KISS 0.24.0 corpus re-vendored (34 dtype tokens)
 
 Re-vendored `kiss_dtype_manifest.json` (27 -> 34 rows: f128 i128 u128 i256 u256 f8e3m4 f8ue4m3) and `kiss_opattrs_field_types.json` from KISS `conformance/corpus` at origin/main e628c96 (spec text a9ad8cf; unpublished). `op_facts`, `op_decomposition` and `op_identity_vectors` are byte-identical (LF-normalised) and untouched. No fireline source carries a closed dtype list: `fireline-contract` reads widths from the manifest, so it needed no code change; the one test that pinned `len() == 27` now pins 34 and asserts the seven new widths. `cargo test --workspace` passes (47 result lines ok, 0 failed).
