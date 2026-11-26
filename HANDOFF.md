@@ -2,11 +2,7 @@ ON WAKE: fetch the Synapse inbox first (mcp__synapse__fetch); do not soft-stop b
 
 # HANDOFF (fireline lane)
 
-State 2026-11-26: fireline#80 MERGED main 100f490d (0.10.0 BREAKING; the PM publishes). Worktree C:/Projects/fireline-wt-lane is live. Branch lane/fireline-kiss024 (pushed, rebased on 100f490d, no PR): re-vendored KISS 0.24.0 dtype manifest (34) + opattrs field types, classify doc count 24->31 (KISS lane OK'd), tests green.
-
-**Next:**
-1. Next PR needs a RELEASE MAIL (pm-assist): ask pm-assist for the slot, then open the PR for lane/fireline-kiss024; sign `- lane: fireline`.
-2. Then soft-stop (pm-kernels kiss-0.24.0-check said soft-stop after).
+State 2026-11-26: TASK take-060-urgent (pm-kernels) done: branch lane/unpopped-060, PR unpopped-vocab ~0.60.1 (fragment changelog.d/unpopped-060.md; version 0.11.0 is pm-assist's). #81 main=e88476a1 before it. Worktree C:/Projects/fireline-wt-lane. After the PR merges: delete branch (gh api DELETE + verify absent), start fresh lane branch. No ROADMAP row for fireline.
 
 **WAITS (mail wakes you; no timers):** dlpack provider held on 398 A; classify KISS-quantisation condition stays OPEN; cost 6.7-0006 waits on KISS R1.25 (#125); patent description reads of new rows.
 
