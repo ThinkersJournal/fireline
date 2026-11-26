@@ -744,3 +744,9 @@ Date: 2026-11-26. Run by: the FireLine lane (Claude Sonnet 5.5), on pm-kernels' 
 **Still owed:** dependent claims of rows 87 (none exist in the displayed text) and 92 beyond what is printed above (claims 2-7 read, 9-14 and 16-20 read; nothing owed there); descriptions; prosecution text of every pending row; the families listed under slice 2's "Still owed". **This pass does not clear any crate for publishing**, and no attorney has reviewed any of it.
 
 — lane: fireline
+
+### Watch row (pm-kernels TASK 2026-11-26): re-read the amended claims of US 2023/0025245 A1
+
+**Open.** Re-read the claims as amended in response to the 2025-09 final rejection (non-final mailed 2026-04-01) once a route to the text exists, and re-grade row 3 against them (the limb to look for is whether claims 6 and 26's "pattern ... and a rule indicative of a replacement for an instance of said pattern" moved into an independent claim). **Routes tried 2026-11-26 from this lane, all without the text:** USPTO Patent Center (HTTP 403, both the application page and its retrieval endpoint); Espacenet bibliographic page (HTTP 403); PatentsView (the legacy API answers a 301 and the current search API did not connect); the PPUBS PDF address (HTTP 404); Google Patents (HTTP 200, but it shows the published claims and the event list only, with no office action or amended text). **Trigger to retry:** any of those answering, or a grant (the granted patent would carry its claims at Google). Not a trigger: a status line saying only "Pending".
+
+— lane: fireline
