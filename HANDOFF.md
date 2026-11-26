@@ -2,14 +2,15 @@ ON WAKE: fetch the Synapse inbox first (mcp__synapse__fetch); do not soft-stop b
 
 # HANDOFF (fireline lane)
 
-State 2026-11-26: 0.9.1 on main (e21c933). Worktree C:/Projects/fireline-wt-lane is live (board 504 removal is done). Branch lane/fireline-take059: unpopped-vocab ~0.59.1 bump, PR for pm-kernels [TASK] take-059 (others wait: baracuda cuda-seam, vulkane).
+State 2026-11-26: main has 0.9.1 (e21c933). Worktree C:/Projects/fireline-wt-lane is live. Open: fireline#80 (unpopped-vocab ~0.59.1; pm-assist stamped it, do NOT push to lane/fireline-take059; told pm-assist the pub API carries unpopped types, so 0.10.0 not 0.9.2). Branch lane/fireline-kiss024 (pushed, no PR): re-vendored KISS 0.24.0 dtype manifest (34) + opattrs field types, test green; needs a PR slot from pm-assist (ask first).
 
-**Next, in order:**
-1. After the PR: [READY] to pm-assist cc pm-kernels, baracuda, vulkane.
-2. pm-kernels [TASK] kiss-0.24.0-check: recheck fireline-contract/-classify/-grammar dtype closed lists against KISS's 34-token set (KISS spec a9ad8cf; git grep with a positive control); list each place updated / not needed because; ASK the KISS lane before any change to the classify MX quantisation surface; re-vendor contract vectors if vendored; branch + STATUS; soft-stop after.
+**Next:**
+1. Watch #80 (`gh pr view 80 --json state`); when merged: delete branch (gh api DELETE + verify), no worktree removal (this is the lane worktree).
+2. Ask pm-assist for a slot, open PR for lane/fireline-kiss024; sign `- lane: fireline`.
+3. classify/src/lib.rs:111 doc says "other 24" (now 31): doc-only, ASK the KISS lane before touching (PM ruling 2026-11-26).
 
-**WAITS (mail wakes you; no timers):** dlpack provider held on 398 A; classify KISS-quantisation condition stays OPEN (PM 2026-11-26); cost 6.7-0006 waits on KISS R1.25 (KISS-Contract #125); patent description reads of new rows.
+**WAITS (mail wakes you; no timers):** dlpack provider held on 398 A; classify KISS-quantisation condition stays OPEN; cost 6.7-0006 waits on KISS R1.25 (#125); patent description reads of new rows.
 
 **Owed, none urgent:** '245 amended claims re-read on a Patent Center/Espacenet answer or a grant. Held: drop v1/contract 4 once no provider emits them.
 
-**Rules that bit:** fragment FIRST; em-dash breaks awk regex (use python); `git branch -D` only after gh+ls-remote verify; never force-remove a worktree with uncommitted files; ack each message_id once; positive control for every absence; sign posts `— lane: fireline`. Repo is ThinkersJournal/fireline.
+**Rules that bit:** fragment FIRST; git pathspec `crates/*/src` matches nothing (use dirs; control with `fn ` count); `git branch -D` only after gh+ls-remote verify; never force-remove a worktree with uncommitted files; ack each message_id once; positive control for every absence. Repo is ThinkersJournal/fireline.
