@@ -17,7 +17,7 @@ Date 2026-11-26. Lane note, **no code until KISS settles scope** (pm-kernels TAS
 
 | KISS outcome | fireline-contract work | Needs from KISS first |
 |---|---|---|
-| **Declined; scalar-valued cost stays** | parse `cost` as `<class> <expr>` and run 6.7-0006's three MUSTs: an expression in the grammar, symbols inside the launch-scalar vocabulary, no bare per-element scalar | the **value syntax** of `cost` (how class and expression are spelled), the **closed set of cost classes** (the example shows `elementwise`), and vectors; today none of the three is in the clause text I read |
+| **Declined; scalar-valued cost stays** | parse `cost` as `<class> <expr>` and run 6.7-0006's three MUSTs: an expression in the grammar, symbols inside the launch-scalar vocabulary, no bare per-element scalar | the **value syntax** of `cost` (how class and expression are spelled), the **closed set of cost classes** (the example shows `elementwise`), and vectors; today none of the three is stated: the prose example spells "cost class `elementwise`, cost `1 * n`", but the serialized example in the same spec (line 2160) is `cost = 1`, a bare scalar with no class, and a grep for "cost class" finds no enumeration of classes (read 2026-11-26) |
 | **Vector adopted** (pinned field changed) | the same, with N expressions; a single expression read as the compute term; arity and axis names checked | the axis set and its order, the value syntax, and a contract version bump (the field changes meaning, so contract 6 would carry it; v4 and v5 keep the scalar reading) |
 | **Optional sibling field** | a new optional trailing Capabilities field, like `requires_co_resident_launch` (6.7-0007, pinned after `cost`), with the same absent-means-default pattern | its name, position (the "pinned last" rule makes ordering a schema question) and absent meaning |
 | **`cost_provenance` alone** | nothing: it is already enforced | nothing |
@@ -26,8 +26,9 @@ Date 2026-11-26. Lane note, **no code until KISS settles scope** (pm-kernels TAS
 
 Nothing here can be built honestly now. The decisive missing input is the same in every row: **the value syntax of `cost` and its vectors**. Without a KISS corpus vector, any reader this crate wrote would be written from the clause text only ("ours", in the ROADMAP's sense, not "diffed"). **Do not build it from a guess**; the held status in ROADMAP stays.
 
-## One thing to ask KISS when it answers
+## Two things to ask KISS when it answers
 
-Does 6.7-0006's "cost class" have a closed token set, and where is it written? The clause names the class and the contract example uses `elementwise`; a reader needs the set to reject an unknown class (6.1: unknown token is a typed decline).
+1. Does 6.7-0006's "cost class" have a closed token set, and where is it written? The prose example uses `elementwise`; a reader needs the set to reject an unknown class (6.1: unknown token is a typed decline).
+2. Which spelling of `cost` is normative on the wire? The serialized example is `cost = 1`, which 6.7-0006 appears to forbid ("MUST NOT carry a bare per-element scalar"); fireline's own golden vectors use `cost = 1` too, so they would fail a real 6.7-0006 reader. That is a finding for KISS, not a change here.
 
 — lane: fireline
