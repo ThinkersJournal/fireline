@@ -2,7 +2,7 @@
 name = "fireline"
 version.workspace = true
 edition = "2024"
-description = "Reserved name: the interface crates (both sides of each interface) between Fuel and the other ML projects, one crate per interface. Placeholder, no functionality yet."
+description = "Reserved name: the interface crates (both sides of each interface) between Fuel and the other ML projects, one crate per interface. The root crate carries no code of its own; each interface is a separate fireline-* crate."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ThinkersJournal/fireline"
 readme = "README.md"
@@ -16,4 +16,4 @@ default-members = [".", "tools/tilde-lint", "crates/announce", "crates/grammar",
 # The one project version: the root package and every non-interface tool inherit it (`version.workspace = true`), so a bump is one edit and the tools
 # cannot drift from it (CodeRipper version-consistency). Interface crates (crates/*) do NOT inherit it: each versions by its own interface.
 [workspace.package]
-version = "0.9.0"
+version = "0.9.1"
