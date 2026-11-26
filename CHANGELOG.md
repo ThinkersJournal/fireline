@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.2] — CI pin (CodeRipper 0.48.1) and lock-only dependency update
+
+Pinned `portfolio.yml` in `ci.yml` to coderipper@467fd259 (installs CodeRipper 0.48.1). Lock-only update clearing SUP-015: toml 1.2.2, toml_parser 1.1.6, unpopped-vocab 0.56.12, hashbrown 0.17.2, zerocopy and zerocopy-derive 0.8.65. Not breaking; no source change. Verified locally: 359 tests passed in 47 bins, clippy -D warnings clean, fmt clean; `cargo tree -d` shows only syn 2.0.119 vs 3.0.10.
+
 ## [0.7.1] — op_facts v2 fixture and the contract v5 golden pinned
 
 `tests/data/kiss_op_facts.json` is now the merged v2 file (KISS main be637a51) and the v5 golden document from `contract_vectors.json` (1349 bytes) is a fixture: it frames, parses at contract_version 5, passes the cross-section rules, and is refused as a v4 document. No reader change was needed; the existing readers already accepted both.
