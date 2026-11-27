@@ -2,7 +2,7 @@ ON WAKE: fetch the Synapse inbox first (mcp__synapse__fetch); do not soft-stop b
 
 # HANDOFF (fireline lane)
 
-State 2026-11-26: TASK take-060-urgent (pm-kernels) done: branch lane/unpopped-060, PR unpopped-vocab ~0.60.1 (fragment changelog.d/unpopped-060.md; version 0.11.0 is pm-assist's). #81 main=e88476a1 before it. Worktree C:/Projects/fireline-wt-lane. After the PR merges: delete branch (gh api DELETE + verify absent), start fresh lane branch. No ROADMAP row for fireline.
+State 2026-11-27: fireline#83 MERGED (0.12.0 on main 1aac183; PM publishes fireline, then fishstringer#59). Branch lane/next carries the stamp-version path-dep (`~0.12`) fix + fragment; PR opened. On wake: `gh pr list --head lane/next`; if merged -> verify+delete remote branch, fresh lane/next from origin/main. No open TASK.
 
 **WAITS (mail wakes you; no timers):** dlpack provider held on 398 A; classify KISS-quantisation condition stays OPEN; cost 6.7-0006 waits on KISS R1.25 (#125); patent description reads of new rows.
 
