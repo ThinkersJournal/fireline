@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.12.0] — **BREAKING**: `unpopped-vocab` ~0.60 to ~0.61 in fireline-synth
+
+`fireline-synth` now depends on `unpopped-vocab` `~0.61` (resolved 0.61.0, tag v0.61.0), so the vocabulary types in its public API (`OperandDesc`, `ArchSku`, `TargetId`, `crates/synth/src/lib.rs` lines 46-70) change with it and a consumer's tree holds one copy: a consumer on unpopped-vocab 0.60 gets different types. Unpopped 0.61.0 adds `UnaryOp::Popc`, `Clz` and `Brev`. No FireLine source change was needed: `git grep UnaryOp -- crates` finds 0 hits (control: `git grep unpopped-vocab -- crates` finds the synth dependency and a doc comment), so there is no exhaustive match to extend. Verified: `cargo test --workspace` exits 0. A PR others wait on (baracuda, fuel).
+
 ## [0.11.0] — **BREAKING**: `unpopped-vocab` ~0.59 to ~0.60 in fireline-synth
 
 `fireline-synth` now depends on `unpopped-vocab` `~0.60.1` (resolved 0.60.1, published 2026-11-26, tag v0.60.1), so the vocabulary types in its public API (`JitRequest` carries `OperandDesc`/`ElementKind`) change with it and a consumer's tree holds one copy: baracuda's cuda-seam failed with type-identity errors against fireline-synth 0.10.1 (`~0.59.1`) while unpopped 0.60.1 is published. Unpopped 0.60.0 adds seven `ElementKind` variants and `KernelError::DtypeNotComputed`. No FireLine source change was needed: `git grep ElementKind -- crates` finds only `ElementKind::F32` constructions (no exhaustive match), and `fireline-contract` reads dtype widths from the vendored KISS manifest, where `op_dag.rs` already asserts `len() == 34` and the seven new widths. `fireline-synth` is the only crate pinning `unpopped` (`git grep unpopped -- '*Cargo.toml'` finds `crates/synth/Cargo.toml`; the same grep finds that line before the edit). Verified: `cargo test --workspace` passes, 0 failed. A PR others wait on (6.33(1)).
