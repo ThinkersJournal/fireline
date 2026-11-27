@@ -1,0 +1,3 @@
+kind: **BREAKING**: `unpopped-vocab` `~0.61` to `~0.62` in `fireline-synth`
+---
+`fireline-synth`'s public API names `unpopped-vocab` types (`OperandDesc`, `ArchSku`, `TargetId` in `Synthesizer`'s request), so taking the breaking 0.62 line is breaking for fireline's consumers: those on `unpopped-vocab` 0.61 move to 0.62 (one copy of the crate per build). Unpopped 0.62.0 added `Stmt::TileLoad`, `TileMma`, `TileFill`, `TileStore` (`Stmt` is exhaustive) and `MemorySpace::Tile`; fireline matches neither type, so nothing in this workspace needed a Tile arm. Verified: `cargo check --workspace --all-targets` and `cargo test --workspace` pass.
