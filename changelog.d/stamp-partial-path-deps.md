@@ -1,3 +1,0 @@
-kind: stamp-version moves MAJOR.MINOR path-dependency requirements
----
-`tools/stamp-version.py` now also moves path-dependency requirements that name only MAJOR.MINOR (`version = "~0.12"`), keeping the operator, when the new version changes MAJOR.MINOR. Before, only requirements equal to the full old version were stamped, so a minor bump left `fireline-synth`'s `fireline-grammar` requirement behind and the gate had to hand-fix it (as for #80 and #83). Verified: a unit check on path, reversed-order and non-path lines (non-path untouched; a patch bump is a no-op) and a `--dry-run` 0.12.0 -> 0.13.0 on this tree.
