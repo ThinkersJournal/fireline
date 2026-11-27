@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.12.1] — stamp-version moves MAJOR.MINOR path-dependency requirements
+
+`tools/stamp-version.py` now also moves path-dependency requirements that name only MAJOR.MINOR (`version = "~0.12"`), keeping the operator, when the new version changes MAJOR.MINOR. Before, only requirements equal to the full old version were stamped, so a minor bump left `fireline-synth`'s `fireline-grammar` requirement behind and the gate had to hand-fix it (as for #80 and #83). Verified: a unit check on path, reversed-order and non-path lines (non-path untouched; a patch bump is a no-op) and a `--dry-run` 0.12.0 -> 0.13.0 on this tree.
+
 ## [0.12.0] — **BREAKING**: `unpopped-vocab` ~0.60 to ~0.61 in fireline-synth
 
 `fireline-synth` now depends on `unpopped-vocab` `~0.61` (resolved 0.61.0, tag v0.61.0), so the vocabulary types in its public API (`OperandDesc`, `ArchSku`, `TargetId`, `crates/synth/src/lib.rs` lines 46-70) change with it and a consumer's tree holds one copy: a consumer on unpopped-vocab 0.60 gets different types. Unpopped 0.61.0 adds `UnaryOp::Popc`, `Clz` and `Brev`. No FireLine source change was needed: `git grep UnaryOp -- crates` finds 0 hits (control: `git grep unpopped-vocab -- crates` finds the synth dependency and a doc comment), so there is no exhaustive match to extend. Verified: `cargo test --workspace` exits 0. A PR others wait on (baracuda, fuel).

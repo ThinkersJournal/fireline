@@ -9,7 +9,7 @@ and never edits `CHANGELOG.md`, a `Cargo.toml` version or `Cargo.lock`. When the
 script, which
 
  1. finds every `Cargo.toml` tracked by git whose `[package]` version is the project's current version (one version per
-    project) and sets the new one, including `path`+`version` dependency lines and the matching `Cargo.lock` entries;
+    project) and sets the new one, including `path`+`version` dependency lines (and MAJOR.MINOR requirements like `~0.11`) and the matching `Cargo.lock` entries;
  2. sets `[workspace.package] version` when the root uses it;
  3. turns the fragments into one entry above the newest CHANGELOG entry (heading style copied from the file);
  4. deletes the fragments it used.
@@ -139,6 +139,19 @@ def stamp_dep_lines(t, q, new):
     )
 
 
+def stamp_partial_dep_lines(t, old, new):
+    """Path dependencies whose requirement names only MAJOR.MINOR (`~0.11`, `^0.11`, `0.11`): moved to NEW's MAJOR.MINOR when
+    they match OLD's (a patch bump leaves them alone; the operator is kept)."""
+    om, nm = ".".join(old.split(".")[:2]), ".".join(new.split(".")[:2])
+    if om == nm:
+        return t
+
+    def line(m):
+        return re.sub(r'(version\s*=\s*"[~^]?)' + re.escape(om) + '"', lambda v: v.group(1) + nm + '"', m.group(0))
+
+    return re.sub(r'(?m)^\s*[\w.-]+\s*=\s*\{[^}\n]*\bpath\s*=[^}\n]*\}', line, t)
+
+
 def stamp_manifest(t, old, new, ws_old):
     """One Cargo.toml: returns (new text, crate name when this crate carries the version else None)."""
     pv = package_version(t)
@@ -148,7 +161,8 @@ def stamp_manifest(t, old, new, ws_old):
         t = set_table_version(t, "package", old, new)
     if workspace_version(t) == old:
         t = set_table_version(t, "workspace.package", old, new)
-    return stamp_dep_lines(t, re.escape(old), new), (nm.group(1) if carries and nm else None)
+    t = stamp_partial_dep_lines(stamp_dep_lines(t, re.escape(old), new), old, new)
+    return t, (nm.group(1) if carries and nm else None)
 
 
 def manifest_changes(root, old, new):
