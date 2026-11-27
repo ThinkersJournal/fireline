@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.0] — **BREAKING**: `unpopped-vocab` `~0.61` to `~0.62` in `fireline-synth`
+
+`fireline-synth`'s public API names `unpopped-vocab` types (`OperandDesc`, `ArchSku`, `TargetId` in `Synthesizer`'s request), so taking the breaking 0.62 line is breaking for fireline's consumers: those on `unpopped-vocab` 0.61 move to 0.62 (one copy of the crate per build). Unpopped 0.62.0 added `Stmt::TileLoad`, `TileMma`, `TileFill`, `TileStore` (`Stmt` is exhaustive) and `MemorySpace::Tile`; fireline matches neither type, so nothing in this workspace needed a Tile arm. Verified: `cargo check --workspace --all-targets` and `cargo test --workspace` pass.
+
 ## [0.12.1] — stamp-version moves MAJOR.MINOR path-dependency requirements
 
 `tools/stamp-version.py` now also moves path-dependency requirements that name only MAJOR.MINOR (`version = "~0.12"`), keeping the operator, when the new version changes MAJOR.MINOR. Before, only requirements equal to the full old version were stamped, so a minor bump left `fireline-synth`'s `fireline-grammar` requirement behind and the gate had to hand-fix it (as for #80 and #83). Verified: a unit check on path, reversed-order and non-path lines (non-path untouched; a patch bump is a no-op) and a `--dry-run` 0.12.0 -> 0.13.0 on this tree.
