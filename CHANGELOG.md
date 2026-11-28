@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.14.1] — deps: unpopped-vocab ~0.64 in fireline-synth
+
+`fireline-synth` takes `unpopped-vocab ~0.64` (0.64.0 is published, read on crates.io 2026-11-28; the lock moves 0.63.3 -> 0.64.0). Not Breaking: `crates/unpopped-vocab/src` is byte-identical between the v0.63.3 and v0.64.0 tags of Unpopped (git diff: 0 bytes; the 0.64.0 breaking change is `Stmt::Assume` in the `unpopped` crate, which fireline does not use). check and test green, one copy of unpopped-vocab in the tree (the lane). Number allocated by pm-assist.
+
 ## [0.14.0] — **BREAKING**: unpopped-vocab ~0.63 in fireline-synth
 
 `fireline-synth` now takes `unpopped-vocab ~0.63` (0.63.3 is published; 0.63.0-0.63.3 are breaking: `Numerics` gains a spelling field, so a struct literal without `..Numerics::default()` stops compiling). FireLine builds no `Numerics` literal (`git grep Numerics` over `*.rs` at origin/main finds none; the same grep style finds `unpopped` in 3 files). Verified with `cargo check` and `cargo test`.
