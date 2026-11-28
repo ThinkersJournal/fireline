@@ -15,4 +15,4 @@ categories = ["development-tools", "algorithms"]
 fireline-grammar = { path = "../grammar", version = "~0.14" }
 # The vocabulary a request is described in. Newest published is 0.63.3 (crates.io, read 2026-11-28); a tilde keeps the one-copy rule with unpopped 0.63.
 # One copy of this crate must be in a consumer's build or `OperandDesc` is two types (plan section 11); wave 2 retires it for `fireline-vocab`.
-unpopped-vocab = "~0.63"
+unpopped-vocab = "~0.64"

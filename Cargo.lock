@@ -234,9 +234,9 @@ checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
 name = "unpopped-vocab"
-version = "0.63.3"
+version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c88b8339288cdc55dc5c846bd8253ba37ed940bf7d5dec4f491f1b2699aa3ed"
+checksum = "c8591978cd0eb665468c9cd2bbbbf8f4ed6e034dedc6c6aa03db865ccb7393a4"
 dependencies = [
  "float8",
  "half",
