@@ -22,34 +22,34 @@ checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 
 [[package]]
 name = "fireline"
-version = "0.14.0"
+version = "0.14.1"
 
 [[package]]
 name = "fireline-announce"
-version = "0.14.0"
+version = "0.14.1"
 
 [[package]]
 name = "fireline-classify"
-version = "0.14.0"
+version = "0.14.1"
 
 [[package]]
 name = "fireline-contract"
-version = "0.14.0"
+version = "0.14.1"
 
 [[package]]
 name = "fireline-dlpack"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "fireline-grammar"
-version = "0.14.0"
+version = "0.14.1"
 
 [[package]]
 name = "fireline-synth"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "fireline-grammar",
  "unpopped-vocab",
@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "fireline-tilde-lint"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "toml",
 ]
@@ -234,9 +234,9 @@ checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
 name = "unpopped-vocab"
-version = "0.63.3"
+version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c88b8339288cdc55dc5c846bd8253ba37ed940bf7d5dec4f491f1b2699aa3ed"
+checksum = "c8591978cd0eb665468c9cd2bbbbf8f4ed6e034dedc6c6aa03db865ccb7393a4"
 dependencies = [
  "float8",
  "half",
