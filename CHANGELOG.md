@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.1] — docs: ROADMAP crate table brought to 0.13.0
+
+The ROADMAP crate table read 0.8.0 and `unpopped-vocab` ~0.57.0; it now reads 0.13.0 and ~0.62 (crates.io 0.13.0 read 2026-11-27 for announce, grammar, synth, classify, contract and the root crate). The `op_identity` value types row said "built, pending PR"; it merged as fireline#71. No code change.
+
 ## [0.13.0] — **BREAKING**: `unpopped-vocab` `~0.61` to `~0.62` in `fireline-synth`
 
 `fireline-synth`'s public API names `unpopped-vocab` types (`OperandDesc`, `ArchSku`, `TargetId` in `Synthesizer`'s request), so taking the breaking 0.62 line is breaking for fireline's consumers: those on `unpopped-vocab` 0.61 move to 0.62 (one copy of the crate per build). Unpopped 0.62.0 added `Stmt::TileLoad`, `TileMma`, `TileFill`, `TileStore` (`Stmt` is exhaustive) and `MemorySpace::Tile`; fireline matches neither type, so nothing in this workspace needed a Tile arm. Verified: `cargo check --workspace --all-targets` and `cargo test --workspace` pass.
